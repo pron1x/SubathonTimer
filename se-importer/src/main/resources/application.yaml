@@ -1,0 +1,5 @@
+seimporter.socket:
+  streamelements:
+    baseurl: 'https://realtime.streamelements.com'
+  auth:
+    jwt: ${STREAMELEMENTS_JWT_TOKEN}
