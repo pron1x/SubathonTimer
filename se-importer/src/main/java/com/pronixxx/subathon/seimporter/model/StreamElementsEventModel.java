@@ -12,15 +12,15 @@ import java.time.LocalDateTime;
         property = "type",
         visible = true)
 @JsonSubTypes({
-        @Type(value = SESubscribeModel.class, name = "subscriber"),
-        @Type(value = SEFollowModel.class, name = "follow")
+        @Type(value = StreamElementsSubscribeModel.class, name = "subscriber"),
+        @Type(value = StreamElementsFollowModel.class, name = "follow")
 })
-public class SEEventBaseModel {
+public class StreamElementsEventModel {
     private LocalDateTime createdAt;
     private String activityId;
     private boolean flagged;
     private String provider;
-    private int sessionEventsCont;
+    private int sessionEventsCount;
     private String channel;
     private String type;
     private LocalDateTime updateAt;
@@ -57,12 +57,12 @@ public class SEEventBaseModel {
         this.provider = provider;
     }
 
-    public int getSessionEventsCont() {
-        return sessionEventsCont;
+    public int getSessionEventsCount() {
+        return sessionEventsCount;
     }
 
-    public void setSessionEventsCont(int sessionEventsCont) {
-        this.sessionEventsCont = sessionEventsCont;
+    public void setSessionEventsCount(int sessionEventsCount) {
+        this.sessionEventsCount = sessionEventsCount;
     }
 
     public String getChannel() {
@@ -96,7 +96,7 @@ public class SEEventBaseModel {
                 ", activityId='" + activityId + '\'' +
                 ", flagged=" + flagged +
                 ", provider='" + provider + '\'' +
-                ", sessionEventsCont=" + sessionEventsCont +
+                ", sessionEventsCont=" + sessionEventsCount +
                 ", channel='" + channel + '\'' +
                 ", type='" + type + '\'' +
                 ", updateAt=" + updateAt +

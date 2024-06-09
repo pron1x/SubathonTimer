@@ -2,7 +2,7 @@ package com.pronixxx.subathon.seimporter.model;
 
 import java.net.URI;
 
-public class SEFollowModel extends SEEventBaseModel {
+public class StreamElementsFollowModel extends StreamElementsEventModel {
     private FollowEventData data;
 
     public FollowEventData getData() {
