@@ -1,4 +1,4 @@
-package com.pronixxx.datamodel.enums;
+package com.pronixxx.subathon.datamodel.enums;
 
 public enum EventType {
     SUBSCRIPTION,

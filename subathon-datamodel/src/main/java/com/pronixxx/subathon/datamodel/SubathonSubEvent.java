@@ -1,7 +1,7 @@
-package com.pronixxx.datamodel;
+package com.pronixxx.subathon.datamodel;
 
-import com.pronixxx.datamodel.enums.EventType;
-import com.pronixxx.datamodel.enums.SubTier;
+import com.pronixxx.subathon.datamodel.enums.EventType;
+import com.pronixxx.subathon.datamodel.enums.SubTier;
 
 public class SubathonSubEvent extends SubathonEvent {
     private SubTier tier;

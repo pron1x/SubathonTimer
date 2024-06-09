@@ -1,6 +1,6 @@
-package com.pronixxx.datamodel;
+package com.pronixxx.subathon.datamodel;
 
-import com.pronixxx.datamodel.enums.EventType;
+import com.pronixxx.subathon.datamodel.enums.EventType;
 
 import java.time.LocalDateTime;
 
