@@ -1,6 +1,8 @@
 package com.pronixxx.subathon.seimporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pronixxx.subathon.datamodel.SubathonEvent;
+import com.pronixxx.subathon.seimporter.factory.SubathonEventFactory;
 import com.pronixxx.subathon.seimporter.model.StreamElementsEventModel;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -88,7 +90,8 @@ public class SocketService {
         try {
             event = objectMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
             getLogger().info(event.toString());
-            messageService.produceMessage(event.toString());
+            SubathonEvent subathonEvent = SubathonEventFactory.convertToSubathonEvent(event);
+            messageService.produceMessage(objectMapper.writeValueAsString(subathonEvent));
         } catch (Exception e) {
             getLogger().warn("Unable to map event to event model! Event= {}", events[0]);
         }
