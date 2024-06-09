@@ -1,7 +1,7 @@
 package com.pronixxx.subathon.seimporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pronixxx.subathon.seimporter.model.SEEventBaseModel;
+import com.pronixxx.subathon.seimporter.model.StreamElementsEventModel;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import jakarta.annotation.PostConstruct;
@@ -20,6 +20,9 @@ public class SocketService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private RabbitMessageService messageService;
 
     @Value("${seimporter.socket.streamelements.baseurl}")
     private String url;
@@ -81,10 +84,11 @@ public class SocketService {
 
     private void onEvent(Object... events) {
         if(events.length == 0) return;
-        SEEventBaseModel event;
+        StreamElementsEventModel event;
         try {
-            event = objectMapper.readValue(events[0].toString(), SEEventBaseModel.class);
+            event = objectMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
             getLogger().info(event.toString());
+            messageService.produceMessage(event.toString());
         } catch (Exception e) {
             getLogger().warn("Unable to map event to event model! Event= {}", events[0]);
         }
