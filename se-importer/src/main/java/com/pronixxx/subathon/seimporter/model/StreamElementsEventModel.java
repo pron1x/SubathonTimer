@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class StreamElementsEventModel {
     private LocalDateTime createdAt;
     private String activityId;
+    private boolean isMock = false;
     private boolean flagged;
     private String provider;
     private int sessionEventsCount;
@@ -39,6 +40,14 @@ public class StreamElementsEventModel {
 
     public void setActivityId(String activityId) {
         this.activityId = activityId;
+    }
+
+    public boolean isMock() {
+        return isMock;
+    }
+
+    public void setIsMock(boolean mock) {
+        isMock = mock;
     }
 
     public boolean isFlagged() {
@@ -91,12 +100,13 @@ public class StreamElementsEventModel {
 
     @Override
     public String toString() {
-        return "SEEventBaseModel{" +
+        return "StreamElementsEventModel{" +
                 "createdAt=" + createdAt +
                 ", activityId='" + activityId + '\'' +
+                ", isMock=" + isMock +
                 ", flagged=" + flagged +
                 ", provider='" + provider + '\'' +
-                ", sessionEventsCont=" + sessionEventsCount +
+                ", sessionEventsCount=" + sessionEventsCount +
                 ", channel='" + channel + '\'' +
                 ", type='" + type + '\'' +
                 ", updateAt=" + updateAt +

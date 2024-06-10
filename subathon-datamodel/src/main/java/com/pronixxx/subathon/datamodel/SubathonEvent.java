@@ -8,6 +8,10 @@ public class SubathonEvent {
 
     private Integer id;
     private LocalDateTime eventTimestamp;
+    private boolean isMock;
+
+
+
     private String source;
     private EventType type;
     private String username;
@@ -26,6 +30,14 @@ public class SubathonEvent {
 
     public void setEventTimestamp(LocalDateTime eventTimestamp) {
         this.eventTimestamp = eventTimestamp;
+    }
+
+    public boolean isMock() {
+        return isMock;
+    }
+
+    public void setMock(boolean mock) {
+        isMock = mock;
     }
 
     public String getSource() {

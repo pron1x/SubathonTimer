@@ -16,7 +16,7 @@ public class StreamElementsSubscribeModel extends StreamElementsEventModel {
 
     @Override
     public String toString() {
-        return "SESubscribeModel{" +
+        return "StreamElementsSubscribeModel{" +
                 "data=" + data +
                 "} " + super.toString();
     }

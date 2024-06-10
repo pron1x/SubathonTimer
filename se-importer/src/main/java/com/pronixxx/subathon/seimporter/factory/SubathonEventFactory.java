@@ -16,6 +16,7 @@ public class SubathonEventFactory {
                 SubathonFollowerEvent followerEvent = new SubathonFollowerEvent();
                 followerEvent.setEventTimestamp(event.getCreatedAt());
                 followerEvent.setSource("se-importer");
+                followerEvent.setMock(event.isMock());
                 followerEvent.setUsername(((StreamElementsFollowModel)event).getData().getDisplayName());
                 return followerEvent;
             case "subscriber":
@@ -29,6 +30,7 @@ public class SubathonEventFactory {
         SubathonSubEvent subEvent = new SubathonSubEvent();
         subEvent.setEventTimestamp(event.getCreatedAt());
         subEvent.setSource("se-importer");
+        subEvent.setMock(event.isMock());
         subEvent.setUsername(((StreamElementsSubscribeModel) event).getData().getDisplayName());
         StreamElementsSubscribeModel s = (StreamElementsSubscribeModel) event;
         SubTier tier = "1000".equals(s.getData().getTier()) ? SubTier.TIER_1 :
