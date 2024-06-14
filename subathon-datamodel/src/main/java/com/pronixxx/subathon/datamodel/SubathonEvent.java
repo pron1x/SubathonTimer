@@ -1,17 +1,25 @@
 package com.pronixxx.subathon.datamodel;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.pronixxx.subathon.datamodel.enums.EventType;
 
 import java.time.LocalDateTime;
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type",
+        visible = true)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = SubathonFollowerEvent.class, name = "FOLLOW"),
+        @JsonSubTypes.Type(value = SubathonSubEvent.class, name = "SUBSCRIPTION")
+})
 public class SubathonEvent {
 
     private Integer id;
     private LocalDateTime eventTimestamp;
     private boolean isMock;
-
-
-
     private String source;
     private EventType type;
     private String username;
