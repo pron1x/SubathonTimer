@@ -45,6 +45,13 @@ public class TimerService implements HasLogger {
         getLogger().info("Timer started. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
     }
 
+    public void pauseTimer() {
+        getLogger().debug("Pausing timer. [End: {}]", timer.getEndTime());
+        timer.setState(TimerState.PAUSED);
+        timer.setLastUpdate(nowUTC());
+        getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
+    }
+
     public void addFollowToTimer(SubathonFollowerEvent event) {
         if(timer.getState() == TimerState.INITIALIZED) {
             startTimer();
