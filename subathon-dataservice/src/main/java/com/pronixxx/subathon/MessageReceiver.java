@@ -22,12 +22,12 @@ public class MessageReceiver implements HasLogger {
         SubathonEvent event;
         try {
             event = objectMapper.readValue(message, SubathonEvent.class);
-            getLogger().info("Received Message: {}", event);
+            getLogger().debug("Received Message: {}", event);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
         if(event.isMock()) {
-            getLogger().info("Event is mock: {}", event);
+            getLogger().debug("Event is mock: {}", event);
         }
         switch (event.getType()) {
             case FOLLOW:
