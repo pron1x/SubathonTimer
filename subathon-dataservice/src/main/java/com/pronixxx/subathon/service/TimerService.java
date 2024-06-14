@@ -3,6 +3,7 @@ package com.pronixxx.subathon.service;
 import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
 import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
+import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
@@ -20,14 +21,14 @@ public class TimerService implements HasLogger {
 
     @PostConstruct
     public void init() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
+        LocalDateTime now = nowUTC();
         timer.setStartTime(now);
         timer.setEndTime(now.plusMinutes(60));
         timer.setState(TimerState.INITIALIZED);
     }
 
     public void startTimer() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
+        LocalDateTime now = nowUTC();
         Duration duration = Duration.between(timer.getStartTime(), timer.getEndTime());
 
         timer.setStartTime(now);
@@ -40,6 +41,10 @@ public class TimerService implements HasLogger {
             startTimer();
         }
         timer.setEndTime(timer.getEndTime().plusSeconds(FOLLOWER_SECONDS));
+    }
+
+    private LocalDateTime nowUTC() {
+        return LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ));
     }
 
 }
