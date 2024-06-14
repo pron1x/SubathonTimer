@@ -4,13 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
 import com.pronixxx.subathon.seimporter.factory.SubathonEventFactory;
 import com.pronixxx.subathon.seimporter.model.StreamElementsEventModel;
+import com.pronixxx.subathon.util.interfaces.HasLogger;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import jakarta.annotation.PostConstruct;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 
 @Service
-public class SocketService {
+public class SocketService implements HasLogger {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -97,7 +96,4 @@ public class SocketService {
         }
     }
 
-    private Logger getLogger() {
-        return LoggerFactory.getLogger(SocketService.class.getSimpleName());
-    }
 }

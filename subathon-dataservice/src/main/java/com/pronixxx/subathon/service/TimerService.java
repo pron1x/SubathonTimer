@@ -3,6 +3,7 @@ package com.pronixxx.subathon.service;
 import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
 import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
+import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Service
-public class TimerService {
+public class TimerService implements HasLogger {
 
     private long FOLLOWER_SECONDS = 10;
 

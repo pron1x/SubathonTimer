@@ -23,6 +23,7 @@
         <module>subathon-datamodel</module>
         <module>subathon-dataservice</module>
         <module>se-importer</module>
+        <module>subathon-util</module>
     </modules>
 
     <properties>
