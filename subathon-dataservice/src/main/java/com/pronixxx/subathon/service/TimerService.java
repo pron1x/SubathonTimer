@@ -29,17 +29,19 @@ public class TimerService implements HasLogger {
         timer.setStartTime(now);
         timer.setEndTime(now.plusMinutes(60));
         timer.setState(TimerState.INITIALIZED);
+        timer.setLastUpdate(now);
         getLogger().info("Initialized timer. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
     }
 
     public void startTimer() {
         getLogger().debug("Starting timer");
         LocalDateTime now = nowUTC();
-        Duration duration = Duration.between(timer.getStartTime(), timer.getEndTime());
+        Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
 
         timer.setStartTime(now);
         timer.setEndTime(now.plusSeconds(duration.getSeconds()));
         timer.setState(TimerState.TICKING);
+        timer.setLastUpdate(now);
         getLogger().info("Timer started. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
     }
 
@@ -47,8 +49,14 @@ public class TimerService implements HasLogger {
         if(timer.getState() == TimerState.INITIALIZED) {
             startTimer();
         }
+        LocalDateTime now = nowUTC();
+        if (timer.getState() == TimerState.PAUSED) {
+            Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
+            timer.setEndTime(now.plusSeconds(duration.getSeconds()));
+        }
         getLogger().debug("Adding follow time. [End: {}]", timer.getEndTime());
         timer.setEndTime(timer.getEndTime().plusSeconds(FOLLOWER_SECONDS));
+        timer.setLastUpdate(now);
         getLogger().info("Added follow time. [End: {}]", timer.getEndTime());
     }
 
@@ -57,10 +65,17 @@ public class TimerService implements HasLogger {
             startTimer();
         }
 
+        LocalDateTime now = nowUTC();
+        if (timer.getState() == TimerState.PAUSED) {
+            Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
+            timer.setEndTime(now.plusSeconds(duration.getSeconds()));
+        }
+
         getLogger().debug("Adding subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
         long seconds = event.getTier() == SubTier.TIER_3 ? 3 * SUB_BASE_SECONDS :
                 event.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
         timer.setEndTime(timer.getEndTime().plusSeconds(seconds));
+        timer.setLastUpdate(now);
         getLogger().info("Added subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
     }
 
