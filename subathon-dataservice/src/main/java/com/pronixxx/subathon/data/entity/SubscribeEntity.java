@@ -1,10 +1,13 @@
 package com.pronixxx.subathon.data.entity;
 
 import com.pronixxx.subathon.datamodel.enums.SubTier;
+import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
+@Entity
+@Table(name = "subscription_event")
 public class SubscribeEntity extends EventEntity {
-    private String username;
-    private SubTier tier;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sub_tier", columnDefinition = "ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3')")
+    private SubTier subTier;
 }

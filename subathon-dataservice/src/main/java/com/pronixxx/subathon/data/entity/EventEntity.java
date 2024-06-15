@@ -1,31 +1,31 @@
 package com.pronixxx.subathon.data.entity;
 
 import com.pronixxx.subathon.datamodel.enums.EventType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-public class EventEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private long id;
+@Table(name = "event")
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "event_type", columnDefinition = "enum('FOLLOW','SUBSCRIPTION')")
+public class EventEntity extends BaseEntity {
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_type", columnDefinition = "ENUM('FOLLOW', 'SUBSCRIPTION')")
     private EventType eventType;
-    private LocalDateTime creationTime;
+
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
+
+    @Column(name = "source", length = 20)
+    private String source;
+
+    @Column(name = "username", length = 30)
+    private String username;
+
+    @Column(name = "insert_time")
     private LocalDateTime insertTime;
-    private LocalDateTime currentEndTime;
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public EventType getEventType() {
         return eventType;
@@ -35,12 +35,28 @@ public class EventEntity {
         this.eventType = eventType;
     }
 
-    public LocalDateTime getCreationTime() {
-        return creationTime;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public LocalDateTime getInsertTime() {
@@ -49,13 +65,5 @@ public class EventEntity {
 
     public void setInsertTime(LocalDateTime insertTime) {
         this.insertTime = insertTime;
-    }
-
-    public LocalDateTime getCurrentEndTime() {
-        return currentEndTime;
-    }
-
-    public void setCurrentEndTime(LocalDateTime currentEndTime) {
-        this.currentEndTime = currentEndTime;
     }
 }

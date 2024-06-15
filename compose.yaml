@@ -8,3 +8,10 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+  mariadb:
+    container_name: 'maria-db-11.4'
+    image: 'mariadb:11.4'
+    environment:
+      - 'MARIADB_ROOT_PASSWORD=password'
+    ports:
+      - '3306:3306'
