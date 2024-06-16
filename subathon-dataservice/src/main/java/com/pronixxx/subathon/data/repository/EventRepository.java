@@ -1,4 +1,4 @@
-package com.pronixxx.subathon.repository;
+package com.pronixxx.subathon.data.repository;
 
 import com.pronixxx.subathon.data.entity.EventEntity;
 import org.springframework.data.repository.Repository;

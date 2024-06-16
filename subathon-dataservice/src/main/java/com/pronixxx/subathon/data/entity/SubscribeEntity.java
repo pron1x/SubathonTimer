@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "subscription_event")
+@PrimaryKeyJoinColumn(name = "event_id")
+@DiscriminatorValue(value = "SUBSCRIPTION")
 public class SubscribeEntity extends EventEntity {
 
     @Enumerated(EnumType.STRING)

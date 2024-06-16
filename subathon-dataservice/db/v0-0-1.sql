@@ -1,10 +1,10 @@
-DROP TABLE IF EXISTS `event`;
 DROP TABLE IF EXISTS `follow_event`;
 DROP TABLE IF EXISTS `subscription_event`;
+DROP TABLE IF EXISTS `event`;
 
 CREATE TABLE `event` (
     id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'Id of the event',
-    event_type ENUM('FOLLOW, SUBSCRIPTION') NOT NULL COMMENT 'Type of the event',
+    event_type ENUM('FOLLOW', 'SUBSCRIPTION') NOT NULL COMMENT 'Type of the event',
     timestamp DATETIME NOT NULL COMMENT 'Timestamp of the event',
     source VARCHAR(20) COMMENT 'Source of the event',
     username VARCHAR(30) NOT NULL COMMENT 'Username of the person causing the event',
