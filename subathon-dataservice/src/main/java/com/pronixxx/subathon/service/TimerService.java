@@ -1,5 +1,9 @@
 package com.pronixxx.subathon.service;
 
+import com.pronixxx.subathon.data.entity.EventEntity;
+import com.pronixxx.subathon.data.entity.FollowEntity;
+import com.pronixxx.subathon.data.entity.SubscribeEntity;
+import com.pronixxx.subathon.data.repository.EventRepository;
 import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
 import com.pronixxx.subathon.datamodel.SubathonSubEvent;
 import com.pronixxx.subathon.datamodel.Timer;
@@ -8,6 +12,8 @@ import com.pronixxx.subathon.datamodel.enums.TimerState;
 import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -16,6 +22,12 @@ import java.time.ZoneId;
 
 @Service
 public class TimerService implements HasLogger {
+
+    @Autowired
+    EventRepository eventRepository;
+
+    @Autowired
+    ModelMapper mapper;
 
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
@@ -62,8 +74,12 @@ public class TimerService implements HasLogger {
             timer.setEndTime(now.plusSeconds(duration.getSeconds()));
         }
         getLogger().debug("Adding follow time. [End: {}]", timer.getEndTime());
+
         timer.setEndTime(timer.getEndTime().plusSeconds(FOLLOWER_SECONDS));
         timer.setLastUpdate(now);
+
+        eventRepository.save(mapper.map(event, FollowEntity.class));
+
         getLogger().info("Added follow time. [End: {}]", timer.getEndTime());
     }
 
@@ -83,7 +99,14 @@ public class TimerService implements HasLogger {
                 event.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
         timer.setEndTime(timer.getEndTime().plusSeconds(seconds));
         timer.setLastUpdate(now);
+
+        saveToDatabase(mapper.map(event, SubscribeEntity.class));
+
         getLogger().info("Added subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
+    }
+
+    private EventEntity saveToDatabase(EventEntity event) {
+        return eventRepository.save(event);
     }
 
     private LocalDateTime nowUTC() {
