@@ -7,4 +7,9 @@ public class SubathonFollowerEvent extends SubathonEvent {
     public SubathonFollowerEvent() {
         this.setType(EventType.FOLLOW);
     }
+
+    @Override
+    public String toString() {
+        return "SubathonFollowerEvent{} " + super.toString();
+    }
 }

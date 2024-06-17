@@ -14,7 +14,7 @@ public class SubathonEventFactory {
         switch (event.getType()) {
             case "follow":
                 SubathonFollowerEvent followerEvent = new SubathonFollowerEvent();
-                followerEvent.setEventTimestamp(event.getCreatedAt());
+                followerEvent.setTimestamp(event.getCreatedAt());
                 followerEvent.setSource("se-importer");
                 followerEvent.setMock(event.isMock());
                 followerEvent.setUsername(((StreamElementsFollowModel)event).getData().getDisplayName());
@@ -28,7 +28,7 @@ public class SubathonEventFactory {
 
     private static SubathonSubEvent convertToSubathonSubEvent(StreamElementsEventModel event) {
         SubathonSubEvent subEvent = new SubathonSubEvent();
-        subEvent.setEventTimestamp(event.getCreatedAt());
+        subEvent.setTimestamp(event.getCreatedAt());
         subEvent.setSource("se-importer");
         subEvent.setMock(event.isMock());
         subEvent.setUsername(((StreamElementsSubscribeModel) event).getData().getDisplayName());

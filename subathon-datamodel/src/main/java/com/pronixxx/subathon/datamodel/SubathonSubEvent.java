@@ -17,4 +17,11 @@ public class SubathonSubEvent extends SubathonEvent {
     public void setTier(SubTier tier) {
         this.tier = tier;
     }
+
+    @Override
+    public String toString() {
+        return "SubathonSubEvent{" +
+                "tier=" + tier +
+                "} " + super.toString();
+    }
 }

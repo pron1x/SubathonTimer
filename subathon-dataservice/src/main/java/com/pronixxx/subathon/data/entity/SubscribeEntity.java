@@ -10,6 +10,21 @@ import jakarta.persistence.*;
 public class SubscribeEntity extends EventEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sub_tier", columnDefinition = "ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3')")
-    private SubTier subTier;
+    @Column(name = "tier", columnDefinition = "ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3')")
+    private SubTier tier;
+
+    public SubTier getTier() {
+        return tier;
+    }
+
+    public void setTier(SubTier tier) {
+        this.tier = tier;
+    }
+
+    @Override
+    public String toString() {
+        return "SubscribeEntity{" +
+                "tier=" + tier +
+                "} " + super.toString();
+    }
 }

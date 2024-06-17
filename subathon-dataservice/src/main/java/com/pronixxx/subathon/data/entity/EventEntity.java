@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "event")
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "event_type", columnDefinition = "ENUM('FOLLOW','SUBSCRIPTION')", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "type", columnDefinition = "ENUM('FOLLOW','SUBSCRIPTION')", discriminatorType = DiscriminatorType.STRING)
 public abstract class EventEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", columnDefinition = "ENUM('FOLLOW', 'SUBSCRIPTION'", insertable = false, updatable = false)
-    private EventType eventType;
+    @Column(name = "type", columnDefinition = "ENUM('FOLLOW', 'SUBSCRIPTION'", insertable = false, updatable = false)
+    private EventType type;
 
     @Column(name = "timestamp")
     private LocalDateTime timestamp;
@@ -27,12 +27,12 @@ public abstract class EventEntity extends BaseEntity {
     @Column(name = "insert_time")
     private LocalDateTime insertTime;
 
-    public EventType getEventType() {
-        return eventType;
+    public EventType getType() {
+        return type;
     }
 
-    public void setEventType(EventType eventType) {
-        this.eventType = eventType;
+    public void setType(EventType eventType) {
+        this.type = eventType;
     }
 
     public LocalDateTime getTimestamp() {
@@ -65,5 +65,17 @@ public abstract class EventEntity extends BaseEntity {
 
     public void setInsertTime(LocalDateTime insertTime) {
         this.insertTime = insertTime;
+    }
+
+    @Override
+    public String toString() {
+        return "EventEntity{" +
+                "insertTime=" + insertTime +
+                ", username='" + username + '\'' +
+                ", source='" + source + '\'' +
+                ", timestamp=" + timestamp +
+                ", type=" + type +
+                ", id=" + id +
+                "} ";
     }
 }

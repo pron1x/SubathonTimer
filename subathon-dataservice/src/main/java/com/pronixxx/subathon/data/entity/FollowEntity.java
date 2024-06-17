@@ -10,5 +10,8 @@ import jakarta.persistence.Table;
 @PrimaryKeyJoinColumn(name = "event_id")
 @DiscriminatorValue(value = "FOLLOW")
 public class FollowEntity extends EventEntity {
-
+    @Override
+    public String toString() {
+        return "FollowEntity{} " + super.toString();
+    }
 }

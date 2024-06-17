@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS `event`;
 
 CREATE TABLE `event` (
     id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'Id of the event',
-    event_type ENUM('FOLLOW', 'SUBSCRIPTION') NOT NULL COMMENT 'Type of the event',
+    type ENUM('FOLLOW', 'SUBSCRIPTION') NOT NULL COMMENT 'Type of the event',
     timestamp DATETIME NOT NULL COMMENT 'Timestamp of the event',
     source VARCHAR(20) COMMENT 'Source of the event',
     username VARCHAR(30) NOT NULL COMMENT 'Username of the person causing the event',
@@ -23,7 +23,7 @@ CREATE TABLE `follow_event` (
 
 CREATE TABLE `subscription_event` (
     `event_id`  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
-    `sub_tier`  ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Subscription tier',
+    `tier`  ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Subscription tier',
     PRIMARY KEY (`event_id`),
     CONSTRAINT `fk_subscription_event_event`
         FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)

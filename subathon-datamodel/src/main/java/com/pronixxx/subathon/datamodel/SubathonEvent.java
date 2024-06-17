@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class SubathonEvent {
 
     private Integer id;
-    private LocalDateTime eventTimestamp;
+    private LocalDateTime timestamp;
     private boolean isMock;
     private String source;
     private EventType type;
@@ -32,12 +32,12 @@ public class SubathonEvent {
         this.id = id;
     }
 
-    public LocalDateTime getEventTimestamp() {
-        return eventTimestamp;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setEventTimestamp(LocalDateTime eventTimestamp) {
-        this.eventTimestamp = eventTimestamp;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
     public boolean isMock() {
@@ -70,5 +70,17 @@ public class SubathonEvent {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public String toString() {
+        return "SubathonEvent{" +
+                "id=" + id +
+                ", timestamp=" + timestamp +
+                ", isMock=" + isMock +
+                ", source='" + source + '\'' +
+                ", type=" + type +
+                ", username='" + username + '\'' +
+                '}';
     }
 }
