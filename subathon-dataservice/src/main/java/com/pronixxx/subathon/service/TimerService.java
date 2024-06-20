@@ -7,7 +7,9 @@ import com.pronixxx.subathon.data.repository.EventRepository;
 import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
 import com.pronixxx.subathon.datamodel.SubathonSubEvent;
 import com.pronixxx.subathon.datamodel.Timer;
+import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
+import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
 import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
@@ -46,28 +48,56 @@ public class TimerService implements HasLogger {
     }
 
     public void startTimer() {
+        TimerEvent timerEvent = new TimerEvent();
         getLogger().debug("Starting timer");
         LocalDateTime now = nowUTC();
+
+        timerEvent.setOldTimerState(timer.getState());
+        timerEvent.setOldEndTime(timer.getEndTime());
+
         Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
 
         timer.setStartTime(now);
         timer.setEndTime(now.plusSeconds(duration.getSeconds()));
         timer.setState(TimerState.TICKING);
         timer.setLastUpdate(now);
+
+        timerEvent.setCurrentTimerState(timer.getState());
+        timerEvent.setCurrentEndTime(timer.getEndTime());
+
+        timerEvent.setTimestamp(timer.getLastUpdate());
+        timerEvent.setType(TimerEventType.STATE_CHANGE);
+
         getLogger().info("Timer started. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
     }
 
     public void pauseTimer() {
+        TimerEvent timerEvent = new TimerEvent();
+
+        timerEvent.setOldTimerState(timer.getState());
+        timerEvent.setOldEndTime(timer.getEndTime());
+
         getLogger().debug("Pausing timer. [End: {}]", timer.getEndTime());
         timer.setState(TimerState.PAUSED);
         timer.setLastUpdate(nowUTC());
+
+        timerEvent.setCurrentTimerState(timer.getState());
+        timerEvent.setCurrentEndTime(timer.getEndTime());
+
+        timerEvent.setTimestamp(timer.getLastUpdate());
+        timerEvent.setType(TimerEventType.STATE_CHANGE);
         getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
     }
 
     public void addFollowToTimer(SubathonFollowerEvent event) {
+        TimerEvent timerEvent = new TimerEvent();
         if(timer.getState() == TimerState.INITIALIZED) {
             startTimer();
         }
+
+        timerEvent.setOldTimerState(timer.getState());
+        timerEvent.setOldEndTime(timer.getEndTime());
+
         LocalDateTime now = nowUTC();
         if (timer.getState() == TimerState.PAUSED) {
             Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
@@ -78,15 +108,25 @@ public class TimerService implements HasLogger {
         timer.setEndTime(timer.getEndTime().plusSeconds(FOLLOWER_SECONDS));
         timer.setLastUpdate(now);
 
+        timerEvent.setCurrentTimerState(timer.getState());
+        timerEvent.setCurrentEndTime(timer.getEndTime());
+
+        timerEvent.setTimestamp(timer.getLastUpdate());
+        timerEvent.setType(TimerEventType.TIME_ADDITION);
+
         eventRepository.save(mapper.map(event, FollowEntity.class));
 
         getLogger().info("Added follow time. [End: {}]", timer.getEndTime());
     }
 
     public void addSubscriptionToTimer(SubathonSubEvent event) {
+        TimerEvent timerEvent = new TimerEvent();
         if(timer.getState() == TimerState.INITIALIZED) {
             startTimer();
         }
+
+        timerEvent.setOldTimerState(timer.getState());
+        timerEvent.setOldEndTime(timer.getEndTime());
 
         LocalDateTime now = nowUTC();
         if (timer.getState() == TimerState.PAUSED) {
@@ -100,6 +140,12 @@ public class TimerService implements HasLogger {
         timer.setEndTime(timer.getEndTime().plusSeconds(seconds));
         timer.setLastUpdate(now);
 
+        timerEvent.setCurrentTimerState(timer.getState());
+        timerEvent.setCurrentEndTime(timer.getEndTime());
+
+        timerEvent.setTimestamp(timer.getLastUpdate());
+        timerEvent.setType(TimerEventType.TIME_ADDITION);
+        
         saveToDatabase(mapper.map(event, SubscribeEntity.class));
 
         getLogger().info("Added subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
