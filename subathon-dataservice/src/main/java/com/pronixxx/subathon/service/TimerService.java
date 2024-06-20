@@ -4,10 +4,7 @@ import com.pronixxx.subathon.data.entity.EventEntity;
 import com.pronixxx.subathon.data.entity.FollowEntity;
 import com.pronixxx.subathon.data.entity.SubscribeEntity;
 import com.pronixxx.subathon.data.repository.EventRepository;
-import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
-import com.pronixxx.subathon.datamodel.SubathonSubEvent;
-import com.pronixxx.subathon.datamodel.Timer;
-import com.pronixxx.subathon.datamodel.TimerEvent;
+import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
@@ -89,59 +86,44 @@ public class TimerService implements HasLogger {
         timerEvent.setType(TimerEventType.STATE_CHANGE);
         getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
     }
-
-    public void addFollowToTimer(SubathonFollowerEvent event) {
+    
+    public void addSubathonEventTime(SubathonEvent event) {
         TimerEvent timerEvent = new TimerEvent();
-
         timerEvent.setOldTimerState(timer.getState());
         timerEvent.setOldEndTime(timer.getEndTime());
 
+        EventEntity entity = null;
+        
         LocalDateTime now = nowUTC();
+        getLogger().debug("Adding time for event: {}", event);
         if (timer.getState() == TimerState.PAUSED) {
             timer.setEndTime(now.plusSeconds(timer.getDurationLastUpdateToEnd().getSeconds()));
         }
-        getLogger().debug("Adding follow time. [End: {}]", timer.getEndTime());
-
-        timer.setEndTime(timer.getEndTime().plusSeconds(FOLLOWER_SECONDS));
+        double seconds = switch (event.getType()) {
+            case SUBSCRIPTION -> {
+                SubathonSubEvent subEvent = (SubathonSubEvent) event;
+                entity = mapper.map(event, SubscribeEntity.class);
+                yield subEvent.getTier() == SubTier.TIER_3 ? 3 * SUB_BASE_SECONDS :
+                        subEvent.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
+            }
+            case TIP -> 0.0;
+            case FOLLOW -> {
+                entity = mapper.map(event, FollowEntity.class);
+                yield FOLLOWER_SECONDS;
+            }
+            case COMMAND -> 0.0;
+        };
+        long secondsToAdd = (long) Math.ceil(seconds);
+        timer.setEndTime(timer.getEndTime().plusSeconds(secondsToAdd));
         timer.setLastUpdate(now);
 
+        getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
         timerEvent.setCurrentTimerState(timer.getState());
         timerEvent.setCurrentEndTime(timer.getEndTime());
 
         timerEvent.setTimestamp(timer.getLastUpdate());
         timerEvent.setType(TimerEventType.TIME_ADDITION);
-
-        eventRepository.save(mapper.map(event, FollowEntity.class));
-
-        getLogger().info("Added follow time. [End: {}]", timer.getEndTime());
-    }
-
-    public void addSubscriptionToTimer(SubathonSubEvent event) {
-        TimerEvent timerEvent = new TimerEvent();
-
-        timerEvent.setOldTimerState(timer.getState());
-        timerEvent.setOldEndTime(timer.getEndTime());
-
-        LocalDateTime now = nowUTC();
-        if (timer.getState() == TimerState.PAUSED) {
-            timer.setEndTime(now.plusSeconds(timer.getDurationLastUpdateToEnd().getSeconds()));
-        }
-
-        getLogger().debug("Adding subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
-        long seconds = event.getTier() == SubTier.TIER_3 ? 3 * SUB_BASE_SECONDS :
-                event.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
-        timer.setEndTime(timer.getEndTime().plusSeconds(seconds));
-        timer.setLastUpdate(now);
-
-        timerEvent.setCurrentTimerState(timer.getState());
-        timerEvent.setCurrentEndTime(timer.getEndTime());
-
-        timerEvent.setTimestamp(timer.getLastUpdate());
-        timerEvent.setType(TimerEventType.TIME_ADDITION);
-
-        saveToDatabase(mapper.map(event, SubscribeEntity.class));
-
-        getLogger().info("Added subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
+        saveToDatabase(entity);
     }
 
     private EventEntity saveToDatabase(EventEntity event) {

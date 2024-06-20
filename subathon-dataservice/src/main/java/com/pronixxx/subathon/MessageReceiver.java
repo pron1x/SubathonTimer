@@ -3,8 +3,6 @@ package com.pronixxx.subathon;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
-import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
-import com.pronixxx.subathon.datamodel.SubathonSubEvent;
 import com.pronixxx.subathon.service.TimerService;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,13 +27,6 @@ public class MessageReceiver implements HasLogger {
         if(event.isMock()) {
             getLogger().debug("Event is mock: {}", event);
         }
-        switch (event.getType()) {
-            case FOLLOW:
-                timerService.addFollowToTimer((SubathonFollowerEvent) event);
-                break;
-            case SUBSCRIPTION:
-                timerService.addSubscriptionToTimer((SubathonSubEvent) event);
-            default:
-        }
+        timerService.addSubathonEventTime(event);
     }
 }
