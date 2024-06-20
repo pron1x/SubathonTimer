@@ -100,8 +100,7 @@ public class TimerService implements HasLogger {
 
         LocalDateTime now = nowUTC();
         if (timer.getState() == TimerState.PAUSED) {
-            Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
-            timer.setEndTime(now.plusSeconds(duration.getSeconds()));
+            timer.setEndTime(now.plusSeconds(timer.getDurationLastUpdateToEnd().getSeconds()));
         }
         getLogger().debug("Adding follow time. [End: {}]", timer.getEndTime());
 
@@ -130,8 +129,7 @@ public class TimerService implements HasLogger {
 
         LocalDateTime now = nowUTC();
         if (timer.getState() == TimerState.PAUSED) {
-            Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
-            timer.setEndTime(now.plusSeconds(duration.getSeconds()));
+            timer.setEndTime(now.plusSeconds(timer.getDurationLastUpdateToEnd().getSeconds()));
         }
 
         getLogger().debug("Adding subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());
@@ -145,7 +143,7 @@ public class TimerService implements HasLogger {
 
         timerEvent.setTimestamp(timer.getLastUpdate());
         timerEvent.setType(TimerEventType.TIME_ADDITION);
-        
+
         saveToDatabase(mapper.map(event, SubscribeEntity.class));
 
         getLogger().info("Added subscription time. [Tier: {}, End: {}]", event.getTier(), timer.getEndTime());

@@ -2,6 +2,7 @@ package com.pronixxx.subathon.datamodel;
 
 import com.pronixxx.subathon.datamodel.enums.TimerState;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Timer {
@@ -12,6 +13,14 @@ public class Timer {
 
     public Timer() {
         state = TimerState.UNINITIALIZED;
+    }
+
+    public Duration getDurationStartToEnd() {
+        return Duration.between(startTime, endTime);
+    }
+
+    public Duration getDurationLastUpdateToEnd() {
+        return Duration.between(lastUpdate, endTime);
     }
 
     public TimerState getState() {
