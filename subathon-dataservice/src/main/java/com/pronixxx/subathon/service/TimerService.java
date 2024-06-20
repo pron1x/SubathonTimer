@@ -45,6 +45,7 @@ public class TimerService implements HasLogger {
         timer.setState(TimerState.INITIALIZED);
         timer.setLastUpdate(now);
         getLogger().info("Initialized timer. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
+        startTimer();
     }
 
     public void startTimer() {
@@ -91,9 +92,6 @@ public class TimerService implements HasLogger {
 
     public void addFollowToTimer(SubathonFollowerEvent event) {
         TimerEvent timerEvent = new TimerEvent();
-        if(timer.getState() == TimerState.INITIALIZED) {
-            startTimer();
-        }
 
         timerEvent.setOldTimerState(timer.getState());
         timerEvent.setOldEndTime(timer.getEndTime());
@@ -120,9 +118,6 @@ public class TimerService implements HasLogger {
 
     public void addSubscriptionToTimer(SubathonSubEvent event) {
         TimerEvent timerEvent = new TimerEvent();
-        if(timer.getState() == TimerState.INITIALIZED) {
-            startTimer();
-        }
 
         timerEvent.setOldTimerState(timer.getState());
         timerEvent.setOldEndTime(timer.getEndTime());
