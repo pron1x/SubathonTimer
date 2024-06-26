@@ -24,9 +24,6 @@ public abstract class EventEntity extends BaseEntity {
     @Column(name = "username", length = 30)
     private String username;
 
-    @Column(name = "insert_time")
-    private LocalDateTime insertTime;
-
     public EventType getType() {
         return type;
     }
@@ -59,18 +56,9 @@ public abstract class EventEntity extends BaseEntity {
         this.username = username;
     }
 
-    public LocalDateTime getInsertTime() {
-        return insertTime;
-    }
-
-    public void setInsertTime(LocalDateTime insertTime) {
-        this.insertTime = insertTime;
-    }
-
     @Override
     public String toString() {
         return "EventEntity{" +
-                "insertTime=" + insertTime +
                 ", username='" + username + '\'' +
                 ", source='" + source + '\'' +
                 ", timestamp=" + timestamp +
