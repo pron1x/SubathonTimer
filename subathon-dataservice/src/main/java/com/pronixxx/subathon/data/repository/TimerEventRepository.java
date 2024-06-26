@@ -11,6 +11,6 @@ public interface TimerEventRepository extends Repository<TimerEventEntity, Long>
 
     Optional<TimerEventEntity> findById(long id);
 
-    TimerEventEntity findFirstByOrderByInsertTimeDesc();
+    TimerEventEntity findFirstByOrderByInsertTimeDescIdDesc();
 
 }

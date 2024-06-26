@@ -43,7 +43,7 @@ public class TimerService implements HasLogger {
     @PostConstruct
     public void init() {
         getLogger().debug("Initializing timer.");
-        TimerEventEntity event = timerEventRepository.findFirstByOrderByInsertTimeDesc();
+        TimerEventEntity event = timerEventRepository.findFirstByOrderByInsertTimeDescIdDesc();
         if(event == null) {
             getLogger().debug("Did not find previous timer event, initializing!");
             lastEvent = initializeTimer();
