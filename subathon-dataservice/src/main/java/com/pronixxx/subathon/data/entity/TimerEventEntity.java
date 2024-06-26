@@ -1,20 +1,42 @@
-package com.pronixxx.subathon.datamodel;
+package com.pronixxx.subathon.data.entity;
 
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-public class TimerEvent {
+@Entity
+@Table(name = "timer_event")
+public class TimerEventEntity extends BaseEntity {
 
+    @Column(name = "timestamp")
     private LocalDateTime timestamp;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", columnDefinition = "ENUM('TIME_ADDITION', 'TIME_SUBTRACTION', 'STATE_CHANGE')")
     private TimerEventType type;
+
+    @Column(name = "old_end_time")
     private LocalDateTime oldEndTime;
+
+    @Column(name = "current_end_time")
     private LocalDateTime currentEndTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "old_timer_state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
     private TimerState oldTimerState;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_timer_state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
     private TimerState currentTimerState;
+
+    @Column(name = "start_time")
     private LocalDateTime startTime;
-    private SubathonEvent subathonEvent;
+
+    @OneToOne(targetEntity = EventEntity.class, cascade = CascadeType.ALL)
+    @JoinColumn(name = "event_id", referencedColumnName = "id")
+    private EventEntity subathonEvent;
 
     public LocalDateTime getTimestamp() {
         return timestamp;
@@ -72,25 +94,11 @@ public class TimerEvent {
         this.startTime = startTime;
     }
 
-    public SubathonEvent getSubathonEvent() {
+    public EventEntity getSubathonEvent() {
         return subathonEvent;
     }
 
-    public void setSubathonEvent(SubathonEvent subathonEvent) {
+    public void setSubathonEvent(EventEntity subathonEvent) {
         this.subathonEvent = subathonEvent;
-    }
-
-    @Override
-    public String toString() {
-        return "TimerEvent{" +
-                "timestamp=" + timestamp +
-                ", type=" + type +
-                ", oldEndTime=" + oldEndTime +
-                ", currentEndTime=" + currentEndTime +
-                ", oldTimerState=" + oldTimerState +
-                ", currentTimerState=" + currentTimerState +
-                ", startTime=" + startTime +
-                ", subathonEvent=" + subathonEvent +
-                '}';
     }
 }

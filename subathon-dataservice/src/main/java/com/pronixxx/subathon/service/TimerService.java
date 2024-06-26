@@ -3,7 +3,9 @@ package com.pronixxx.subathon.service;
 import com.pronixxx.subathon.data.entity.EventEntity;
 import com.pronixxx.subathon.data.entity.FollowEntity;
 import com.pronixxx.subathon.data.entity.SubscribeEntity;
+import com.pronixxx.subathon.data.entity.TimerEventEntity;
 import com.pronixxx.subathon.data.repository.EventRepository;
+import com.pronixxx.subathon.data.repository.TimerEventRepository;
 import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
@@ -26,12 +28,17 @@ public class TimerService implements HasLogger {
     EventRepository eventRepository;
 
     @Autowired
+    TimerEventRepository timerEventRepository;
+
+    @Autowired
     ModelMapper mapper;
 
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
 
     Timer timer = new Timer();
+    @Autowired
+    private ModelMapper modelMapper;
 
     @PostConstruct
     public void init() {
@@ -120,14 +127,18 @@ public class TimerService implements HasLogger {
         getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
         timerEvent.setCurrentTimerState(timer.getState());
         timerEvent.setCurrentEndTime(timer.getEndTime());
+        timerEvent.setStartTime(timer.getStartTime());
 
         timerEvent.setTimestamp(timer.getLastUpdate());
         timerEvent.setType(TimerEventType.TIME_ADDITION);
-        saveToDatabase(entity);
+
+        TimerEventEntity timerEventEntity = mapper.map(timerEvent, TimerEventEntity.class);
+        timerEventEntity.setSubathonEvent(entity);
+        saveTimerEventToDatabase(timerEventEntity);
     }
 
-    private EventEntity saveToDatabase(EventEntity event) {
-        return eventRepository.save(event);
+    private TimerEventEntity saveTimerEventToDatabase(TimerEventEntity timerEvent) {
+        return timerEventRepository.save(timerEvent);
     }
 
     private LocalDateTime nowUTC() {
