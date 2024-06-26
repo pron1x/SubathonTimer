@@ -10,6 +10,7 @@ import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
+import com.pronixxx.subathon.executor.AdjustableDateTimeExecuteControl;
 import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
@@ -33,9 +34,11 @@ public class TimerService implements HasLogger {
     @Autowired
     ModelMapper mapper;
 
+    AdjustableDateTimeExecuteControl timerControl;
+
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
-    private final long INITIAL_TIMER_SECONDS = 3600;
+    private final long INITIAL_TIMER_SECONDS = 10;
 
     Timer timer = new Timer();
     private TimerEvent lastEvent;
@@ -51,7 +54,9 @@ public class TimerService implements HasLogger {
         } else {
             getLogger().debug("Found previous timer event: {}", event);
             lastEvent = mapper.map(event, TimerEvent.class);
+            timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), lastEvent.getCurrentTimerState() != TimerState.TICKING);
         }
+        timerControl.scheduleCommand(() -> {getLogger().warn("STOPPING THE TIMER NOW!");});
     }
 
     public TimerEvent initializeTimer() {
@@ -83,6 +88,8 @@ public class TimerService implements HasLogger {
 
         TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
         lastEvent = mapper.map(entity, TimerEvent.class);
+
+        timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), false);
         getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
     }
 
@@ -149,6 +156,8 @@ public class TimerService implements HasLogger {
         long secondsToAdd = (long) Math.ceil(seconds);
         // Add the seconds from the event
         timerEvent.setCurrentEndTime(timerEvent.getCurrentEndTime().plusSeconds(secondsToAdd));
+
+        timerControl.setExecutionTime(timerEvent.getCurrentEndTime());
 
         getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
 
