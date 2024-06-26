@@ -34,11 +34,11 @@ CREATE TABLE `subscription_event` (
 
 CREATE TABLE `timer_event` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Id of the timer event',
-    `event_id` BIGINT UNSIGNED NOT NULL COMMENT 'Reference to the subathon event',
+    `event_id` BIGINT UNSIGNED COMMENT 'Reference to the subathon event',
     `timestamp` DATETIME NOT NULL COMMENT 'Timestamp of the timer event',
     `type` ENUM('TIME_ADDITION', 'TIME_SUBTRACTION', 'STATE_CHANGE') NOT NULL COMMENT 'Type of the timer event',
     `old_end_time` DATETIME COMMENT 'End timestamp before timer event',
-    `current_end_time` DATETIME NOT NULL COMMENT 'End timestamp after timer event',
+    `current_end_time` DATETIME COMMENT 'End timestamp after timer event',
     `old_timer_state` ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED') NOT NULL COMMENT 'Timer state before the timer event',
     `current_timer_state` ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED') NOT NULL COMMENT 'Timer state after the timer event',
     `start_time` DATETIME COMMENT 'Start time of the timer',
