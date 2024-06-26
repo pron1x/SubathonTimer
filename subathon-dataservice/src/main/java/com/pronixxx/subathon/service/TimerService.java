@@ -35,21 +35,34 @@ public class TimerService implements HasLogger {
 
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
+    private final long INITIAL_TIMER_SECONDS = 3600;
 
     Timer timer = new Timer();
-    @Autowired
-    private ModelMapper modelMapper;
+    private TimerEvent lastEvent;
 
     @PostConstruct
     public void init() {
         getLogger().debug("Initializing timer.");
-        LocalDateTime now = nowUTC();
-        timer.setStartTime(now);
-        timer.setEndTime(now.plusMinutes(60));
-        timer.setState(TimerState.INITIALIZED);
-        timer.setLastUpdate(now);
-        getLogger().info("Initialized timer. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
-        startTimer();
+        TimerEventEntity event = timerEventRepository.findFirstByOrderByInsertTimeDesc();
+        if(event == null) {
+            getLogger().debug("Did not find previous timer event, initializing!");
+            lastEvent = initializeTimer();
+            startTimer();
+        } else {
+            getLogger().debug("Found previous timer event: {}", event);
+            lastEvent = mapper.map(event, TimerEvent.class);
+        }
+    }
+
+    public TimerEvent initializeTimer() {
+        TimerEvent initialEvent = new TimerEvent();
+        initialEvent.setType(TimerEventType.STATE_CHANGE);
+        initialEvent.setOldTimerState(TimerState.UNINITIALIZED);
+        initialEvent.setCurrentTimerState(TimerState.INITIALIZED);
+        initialEvent.setTimestamp(nowUTC());
+
+        TimerEventEntity eventEntity = timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
+        return mapper.map(eventEntity, TimerEvent.class);
     }
 
     public void startTimer() {
@@ -57,23 +70,20 @@ public class TimerService implements HasLogger {
         getLogger().debug("Starting timer");
         LocalDateTime now = nowUTC();
 
-        timerEvent.setOldTimerState(timer.getState());
-        timerEvent.setOldEndTime(timer.getEndTime());
-
-        Duration duration = Duration.between(timer.getLastUpdate(), timer.getEndTime());
-
-        timer.setStartTime(now);
-        timer.setEndTime(now.plusSeconds(duration.getSeconds()));
-        timer.setState(TimerState.TICKING);
-        timer.setLastUpdate(now);
-
-        timerEvent.setCurrentTimerState(timer.getState());
-        timerEvent.setCurrentEndTime(timer.getEndTime());
-
-        timerEvent.setTimestamp(timer.getLastUpdate());
         timerEvent.setType(TimerEventType.STATE_CHANGE);
+        timerEvent.setTimestamp(now);
 
-        getLogger().info("Timer started. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
+        timerEvent.setOldTimerState(lastEvent.getCurrentTimerState());
+        timerEvent.setOldEndTime(lastEvent.getCurrentEndTime());
+
+        timerEvent.setCurrentTimerState(TimerState.TICKING);
+        timerEvent.setCurrentEndTime(now.plusSeconds(INITIAL_TIMER_SECONDS));
+
+        timerEvent.setStartTime(now);
+
+        TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
+        lastEvent = mapper.map(entity, TimerEvent.class);
+        getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
     }
 
     public void pauseTimer() {
@@ -95,17 +105,33 @@ public class TimerService implements HasLogger {
     }
     
     public void addSubathonEventTime(SubathonEvent event) {
+        LocalDateTime now = nowUTC();
+
         TimerEvent timerEvent = new TimerEvent();
-        timerEvent.setOldTimerState(timer.getState());
-        timerEvent.setOldEndTime(timer.getEndTime());
+        timerEvent.setType(TimerEventType.TIME_ADDITION);
+        timerEvent.setTimestamp(now);
+
+        // Set the old state and end time based on the last event
+        timerEvent.setOldTimerState(lastEvent.getCurrentTimerState());
+        timerEvent.setOldEndTime(lastEvent.getCurrentEndTime());
+
+        // Set the current state and start time based on last event, since the state won't change here
+        timerEvent.setCurrentTimerState(lastEvent.getCurrentTimerState());
+        timerEvent.setStartTime(lastEvent.getStartTime());
 
         EventEntity entity = null;
-        
-        LocalDateTime now = nowUTC();
+
         getLogger().debug("Adding time for event: {}", event);
-        if (timer.getState() == TimerState.PAUSED) {
-            timer.setEndTime(now.plusSeconds(timer.getDurationLastUpdateToEnd().getSeconds()));
+        if (lastEvent.getCurrentTimerState() == TimerState.PAUSED) {
+            // Calculate extra duration in case the timer is paused before adding the event time
+            Duration d = Duration.between(lastEvent.getTimestamp() ,lastEvent.getCurrentEndTime());
+            timerEvent.setCurrentEndTime(now.plusSeconds(d.getSeconds()));
         }
+        else {
+            // If the timer is ticking, we keep the current end time before adding the event time
+            timerEvent.setCurrentEndTime(lastEvent.getCurrentEndTime());
+        }
+
         double seconds = switch (event.getType()) {
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
@@ -121,20 +147,15 @@ public class TimerService implements HasLogger {
             case COMMAND -> 0.0;
         };
         long secondsToAdd = (long) Math.ceil(seconds);
-        timer.setEndTime(timer.getEndTime().plusSeconds(secondsToAdd));
-        timer.setLastUpdate(now);
+        // Add the seconds from the event
+        timerEvent.setCurrentEndTime(timerEvent.getCurrentEndTime().plusSeconds(secondsToAdd));
 
         getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
-        timerEvent.setCurrentTimerState(timer.getState());
-        timerEvent.setCurrentEndTime(timer.getEndTime());
-        timerEvent.setStartTime(timer.getStartTime());
-
-        timerEvent.setTimestamp(timer.getLastUpdate());
-        timerEvent.setType(TimerEventType.TIME_ADDITION);
 
         TimerEventEntity timerEventEntity = mapper.map(timerEvent, TimerEventEntity.class);
         timerEventEntity.setSubathonEvent(entity);
-        saveTimerEventToDatabase(timerEventEntity);
+        TimerEventEntity savedEntity = saveTimerEventToDatabase(timerEventEntity);
+        lastEvent = mapper.map(savedEntity, TimerEvent.class);
     }
 
     private TimerEventEntity saveTimerEventToDatabase(TimerEventEntity timerEvent) {
