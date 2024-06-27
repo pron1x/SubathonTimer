@@ -2,3 +2,8 @@ spring:
   rabbitmq:
     password: 'secret'
     username: 'myuser'
+
+bot:
+  twitch:
+    oauth:
+      token: ${TWITCH_OAUTH_TOKEN}
