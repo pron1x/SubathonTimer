@@ -24,6 +24,7 @@
         <module>subathon-dataservice</module>
         <module>se-importer</module>
         <module>subathon-util</module>
+        <module>subathon-bot</module>
     </modules>
 
     <properties>
