@@ -38,7 +38,7 @@ public class TimerService implements HasLogger {
 
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
-    private final long INITIAL_TIMER_SECONDS = 10;
+    private final long INITIAL_TIMER_SECONDS = 100;
 
     Timer timer = new Timer();
     private TimerEvent lastEvent;
@@ -56,7 +56,10 @@ public class TimerService implements HasLogger {
             lastEvent = mapper.map(event, TimerEvent.class);
             timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), lastEvent.getCurrentTimerState() != TimerState.TICKING);
         }
-        timerControl.scheduleCommand(() -> {getLogger().warn("STOPPING THE TIMER NOW!");});
+        timerControl.scheduleCommand(() -> {
+            getLogger().warn("STOPPING THE TIMER NOW!");
+            stopTimer();
+        });
     }
 
     public TimerEvent initializeTimer() {
@@ -91,6 +94,28 @@ public class TimerService implements HasLogger {
 
         timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), false);
         getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
+    }
+
+    public void stopTimer() {
+        TimerEvent timerEvent = new TimerEvent();
+        getLogger().debug("Stopping timer!");
+        LocalDateTime now = nowUTC();
+
+        timerEvent.setType(TimerEventType.STATE_CHANGE);
+        timerEvent.setTimestamp(now);
+        timerEvent.setStartTime(lastEvent.getStartTime());
+
+        timerEvent.setOldTimerState(lastEvent.getCurrentTimerState());
+        timerEvent.setOldEndTime(lastEvent.getCurrentEndTime());
+
+        timerEvent.setCurrentEndTime(now);
+        timerEvent.setCurrentTimerState(TimerState.ENDED);
+
+        TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
+        lastEvent = mapper.map(entity, TimerEvent.class);
+        timerControl.cancelCommand();
+
+        getLogger().info("Stopped timer at {}. End timestamp: {}", timerEvent.getTimestamp(), timerEvent.getCurrentEndTime());
     }
 
     public void pauseTimer() {
