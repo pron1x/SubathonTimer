@@ -7,3 +7,14 @@ bot:
   twitch:
     oauth:
       token: ${TWITCH_OAUTH_TOKEN}
+  subathon:
+    channel: 'trizze'
+    command:
+      prefix: '!'
+
+logging:
+  level:
+    com:
+      pronixxx:
+        subathon:
+          bot: trace
