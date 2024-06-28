@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
         visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = SubathonFollowerEvent.class, name = "FOLLOW"),
-        @JsonSubTypes.Type(value = SubathonSubEvent.class, name = "SUBSCRIPTION")
+        @JsonSubTypes.Type(value = SubathonSubEvent.class, name = "SUBSCRIPTION"),
+        @JsonSubTypes.Type(value = SubathonCommandEvent.class, name = "COMMAND")
 })
 public class SubathonEvent {
 
