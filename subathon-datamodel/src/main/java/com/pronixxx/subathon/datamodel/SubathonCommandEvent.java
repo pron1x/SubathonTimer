@@ -27,4 +27,12 @@ public class SubathonCommandEvent extends SubathonEvent {
     public void setSeconds(long seconds) {
         this.seconds = seconds;
     }
+
+    @Override
+    public String toString() {
+        return "SubathonCommandEvent{" +
+                "command=" + command +
+                ", seconds=" + seconds +
+                "} " + super.toString();
+    }
 }

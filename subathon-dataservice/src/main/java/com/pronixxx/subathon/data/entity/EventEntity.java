@@ -59,11 +59,12 @@ public abstract class EventEntity extends BaseEntity {
     @Override
     public String toString() {
         return "EventEntity{" +
+                ", id=" + id +
+                ", type=" + type +
                 ", username='" + username + '\'' +
                 ", source='" + source + '\'' +
                 ", timestamp=" + timestamp +
-                ", type=" + type +
-                ", id=" + id +
+                ", insertTime=" + insertTime +
                 "} ";
     }
 }

@@ -101,4 +101,20 @@ public class TimerEventEntity extends BaseEntity {
     public void setSubathonEvent(EventEntity subathonEvent) {
         this.subathonEvent = subathonEvent;
     }
+
+    @Override
+    public String toString() {
+        return "TimerEventEntity{" +
+                "timestamp=" + timestamp +
+                ", id=" + id +
+                ", type=" + type +
+                ", oldEndTime=" + oldEndTime +
+                ", currentEndTime=" + currentEndTime +
+                ", oldTimerState=" + oldTimerState +
+                ", currentTimerState=" + currentTimerState +
+                ", startTime=" + startTime +
+                ", subathonEvent=" + subathonEvent +
+                ", insertTime=" + insertTime +
+                "} ";
+    }
 }

@@ -19,7 +19,7 @@ public abstract class BaseEntity {
     protected Integer id;
 
     @Column(name = "insert_time")
-    private LocalDateTime insertTime;
+    protected LocalDateTime insertTime;
 
     public Integer getId() {
         return id;
