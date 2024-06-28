@@ -1,11 +1,12 @@
 DROP TABLE IF EXISTS `timer_event`;
 DROP TABLE IF EXISTS `follow_event`;
 DROP TABLE IF EXISTS `subscription_event`;
+DROP TABLE IF EXISTS `command_event`;
 DROP TABLE IF EXISTS `event`;
 
 CREATE TABLE `event` (
     id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'Id of the event',
-    type ENUM('FOLLOW', 'SUBSCRIPTION') NOT NULL COMMENT 'Type of the event',
+    type ENUM('FOLLOW','SUBSCRIPTION','COMMAND') NOT NULL COMMENT 'Type of the event',
     timestamp DATETIME NOT NULL COMMENT 'Timestamp of the event',
     source VARCHAR(20) COMMENT 'Source of the event',
     username VARCHAR(30) NOT NULL COMMENT 'Username of the person causing the event',
@@ -27,6 +28,17 @@ CREATE TABLE `subscription_event` (
     `tier`  ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Subscription tier',
     PRIMARY KEY (`event_id`),
     CONSTRAINT `fk_subscription_event_event`
+        FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+CREATE TABLE `command_event` (
+    `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
+    `command` ENUM('START','PAUSE','ADD','REMOVE') NOT NULL COMMENT 'Type of the executed command',
+    `seconds` BIGINT COMMENT 'Seconds that the command potentially changed',
+    PRIMARY KEY (`event_id`),
+    CONSTRAINT `fk_command_event_event`
         FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION
