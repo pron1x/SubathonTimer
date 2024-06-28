@@ -3,6 +3,7 @@ package com.pronixxx.subathon;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
+import com.pronixxx.subathon.datamodel.enums.EventType;
 import com.pronixxx.subathon.service.TimerService;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,15 @@ public class MessageReceiver implements HasLogger {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        if(event.isMock()) {
+
+        if (event.isMock()) {
             getLogger().debug("Event is mock: {}", event);
         }
-        timerService.addSubathonEventTime(event);
+
+        if (event.getType() == EventType.COMMAND) {
+            getLogger().info("Received command!");
+        } else {
+            timerService.addSubathonEventTime(event);
+        }
     }
 }

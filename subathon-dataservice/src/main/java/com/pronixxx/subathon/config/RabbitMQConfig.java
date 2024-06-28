@@ -14,12 +14,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
     public static final String EXCHANGE_NAME = "subathon-exchange";
-    public static final String QUEUE_NAME = "subathon-queue";
-    public static final String ROUTING_KEY = "subathon.event.#";
+    public static final String SUBATHON_QUEUE_NAME = "subathon-queue";
+    public static final String SUBATHON_ROUTING_KEY = "subathon.event.#";
+
+    public static final String BOT_QUEUE_NAME = "bot-queue";
+    public static final String BOT_ROUTING_KEY = "bot.event.#";
 
     @Bean
-    Queue queue() {
-        return new Queue(QUEUE_NAME, true);
+    Queue subathonQueue() {
+        return new Queue(SUBATHON_QUEUE_NAME, true);
+    }
+
+    @Bean
+    Queue botQueue() {
+        return new Queue(BOT_QUEUE_NAME, true);
     }
 
     @Bean
@@ -28,15 +36,29 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+    Binding subathonBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(subathonQueue()).to(exchange).with(SUBATHON_ROUTING_KEY);
     }
 
     @Bean
-    SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
+    Binding botBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(botQueue()).to(exchange).with(BOT_ROUTING_KEY);
+    }
+
+    @Bean
+    SimpleMessageListenerContainer subathonContainer(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(QUEUE_NAME);
+        container.setQueueNames(SUBATHON_QUEUE_NAME);
+        container.setMessageListener(listenerAdapter);
+        return container;
+    }
+
+    @Bean
+    SimpleMessageListenerContainer botContainer(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setQueueNames(BOT_QUEUE_NAME);
         container.setMessageListener(listenerAdapter);
         return container;
     }
