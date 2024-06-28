@@ -11,14 +11,14 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.BOT_QUEUE_NAME;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.BOT_ROUTING_KEY;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.EXCHANGE_NAME;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.SUBATHON_QUEUE_NAME;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.SUBATHON_ROUTING_KEY;
+
 @Configuration
 public class RabbitMQConfig {
-    public static final String EXCHANGE_NAME = "subathon-exchange";
-    public static final String SUBATHON_QUEUE_NAME = "subathon-queue";
-    public static final String SUBATHON_ROUTING_KEY = "subathon.event.#";
-
-    public static final String BOT_QUEUE_NAME = "bot-queue";
-    public static final String BOT_ROUTING_KEY = "bot.event.#";
 
     @Bean
     Queue subathonQueue() {

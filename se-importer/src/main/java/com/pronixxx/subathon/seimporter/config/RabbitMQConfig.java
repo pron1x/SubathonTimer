@@ -9,16 +9,17 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.EXCHANGE_NAME;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.SUBATHON_QUEUE_NAME;
+import static com.pronixxx.subathon.util.GlobalRabbitMQ.SUBATHON_ROUTING_KEY;
+
 @Configuration
 public class RabbitMQConfig {
-    public static final String EXCHANGE_NAME = "subathon-exchange";
-    public static final String QUEUE_NAME = "subathon-queue";
-    public static final String ROUTING_KEY = "subathon.event.#";
 
 
     @Bean
     Queue queue() {
-        return new Queue(QUEUE_NAME, true);
+        return new Queue(SUBATHON_QUEUE_NAME, true);
     }
 
     @Bean
@@ -28,7 +29,7 @@ public class RabbitMQConfig {
 
     @Bean
     Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+        return BindingBuilder.bind(queue).to(exchange).with(SUBATHON_ROUTING_KEY);
     }
 
     @Bean
