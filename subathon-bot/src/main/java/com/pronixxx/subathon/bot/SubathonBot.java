@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class SubathonBot implements HasLogger {
@@ -25,7 +22,6 @@ public class SubathonBot implements HasLogger {
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
-    private Map<BotCommand, List<CommandPermission>> permissionsMap;
 
     @Autowired
     RabbitMessageService messageService;
@@ -35,45 +31,39 @@ public class SubathonBot implements HasLogger {
 
     @PostConstruct
     public void init() {
-        permissionsMap = new HashMap<>();
-        permissionsMap.put(BotCommand.TIMER_START, List.of(CommandPermission.BROADCASTER, CommandPermission.MODERATOR));
-
         twitchClient.getChat().joinChannel(CHANNEL_NAME);
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
             getLogger().trace("Received message. [{}: {}]", event.getUser().getName(), event.getMessage());
-            if(event.getMessage().startsWith(COMMAND_PREFIX)) {
-                handleCommand(event);
+            if (event.getMessage().startsWith(COMMAND_PREFIX)) {
+                String[] split = event.getMessage().trim().split(" ");
+                String command = split[0].substring(1);
+
+                // !timer command needs at least a subcommand, subcommand args will be checked for the command
+                if ("timer".equals(command) && split.length > 1 && hasPermission(event.getPermissions())) {
+                    String[] args = Arrays.stream(split).skip(2).toArray(String[]::new);
+                    handleCommand(split[1], event.getUser(), args);
+                }
             }
         });
     }
 
-    private void handleCommand(ChannelMessageEvent event) {
-        getLogger().debug("Received command [{}: {}]", event.getUser().getName(), event.getMessage());
-        String[] args = event.getMessage().trim().split(" ");
-        String command = args[0].substring(1);
+    private void handleCommand(String command, EventUser user, String... args) {
+        getLogger().debug("Handling '!timer' command. Sub command: {}, args: {}", command, args);
         switch (command) {
-            case "timerstart" -> handleStartCommand(event.getPermissions(), event.getUser());
-            case "timerpause" -> getLogger().info("Pausing timer");
-            case "timerresume" -> getLogger().info("Resuming timer");
-            case "timeradd" -> getLogger().info("Adding time");
-            case "timerremove" -> getLogger().info("Removing time");
-            default -> getLogger().info("Unknown command '{}'!", command);
+            case "start" -> handleStartCommand(user);
+            case "pause" -> getLogger().debug("Pausing timer.");
+            case "add" -> getLogger().debug("Adding time to timer: {}", Arrays.toString(args));
+            case "del" -> getLogger().debug("Removing time from timer: {}", Arrays.toString(args));
         }
     }
 
-    private void handleStartCommand(Set<CommandPermission> permissions, EventUser user) {
-        if(hasPermission(permissions, BotCommand.TIMER_START)) {
-            getLogger().info("Starting the timer!");
-        }
+    private void handleStartCommand(EventUser user) {
+        getLogger().info("Starting the timer!");
     }
 
-    private boolean hasPermission(Set<CommandPermission> permissions, BotCommand command) {
-        return permissions.stream().anyMatch(permission -> permissionsMap.get(command).contains(permission));
-    }
-
-    enum BotCommand {
-        TIMER_START
+    private boolean hasPermission(Set<CommandPermission> permissions) {
+        return permissions.stream().anyMatch(p -> p == CommandPermission.OWNER || p == CommandPermission.MODERATOR);
     }
 
 }
