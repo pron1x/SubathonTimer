@@ -16,9 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
 
 @Component
 public class SubathonBot implements HasLogger {
@@ -64,8 +66,30 @@ public class SubathonBot implements HasLogger {
         switch (command) {
             case "start" -> handleStateChangeCommand(user, false);
             case "pause" -> handleStateChangeCommand(user, true);
-            case "add" -> getLogger().debug("Adding time to timer: {}", Arrays.toString(args));
-            case "del" -> getLogger().debug("Removing time from timer: {}", Arrays.toString(args));
+            case "add" -> {
+                long seconds;
+                try {
+                    seconds = parseArgsToSeconds(args);
+                } catch (IllegalArgumentException e) {
+                    getLogger().info("Not executing add command due to invalid args.");
+                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    return;
+                }
+                handleTimeChangeCommand(user, seconds, false);
+                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued adding %d seconds to timer.", seconds));
+            }
+            case "del" -> {
+                long seconds;
+                try {
+                    seconds = parseArgsToSeconds(args);
+                } catch (IllegalArgumentException e) {
+                    getLogger().info("Not executing del command due to invalid args.");
+                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    return;
+                }
+                handleTimeChangeCommand(user, seconds, true);
+                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued removing %d seconds from timer.", seconds));
+            }
         }
     }
 
@@ -78,6 +102,35 @@ public class SubathonBot implements HasLogger {
         } catch (JsonProcessingException e) {
             getLogger().error("Failed to serialize subathon command event!", e);
         }
+    }
+
+    private void handleTimeChangeCommand(EventUser user, long seconds, boolean isRemove) {
+        getLogger().debug("Handling timer time change command [{}]", isRemove ? "del" : "add");
+        SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
+                createCommandEvent(user.getName(), Command.ADD, seconds);
+        try {
+            messageService.sendMessage(objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException e) {
+            getLogger().error("Failed to serialize subathon command event!", e);
+        }
+    }
+
+    private long parseArgsToSeconds(String[] args) throws IllegalArgumentException {
+        if(args.length < 1) {
+            throw new IllegalArgumentException("Missing argument to parse!");
+        }
+        long seconds = 0;
+        for(String s : args) {
+            String iso = "PT" + s.toUpperCase();
+            try {
+                Duration d = Duration.parse(iso);
+                seconds += d.getSeconds();
+            } catch (Exception e) {
+                getLogger().warn("Unable to parse arguments for time change command! Args: {}", Arrays.toString(args));
+                throw new IllegalArgumentException(e);
+            }
+        }
+        return seconds;
     }
 
     private SubathonCommandEvent createCommandEvent(String user, Command command) {
