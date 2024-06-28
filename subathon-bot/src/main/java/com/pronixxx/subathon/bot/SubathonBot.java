@@ -63,15 +63,25 @@ public class SubathonBot implements HasLogger {
         getLogger().debug("Handling '!timer' command. Sub command: {}, args: {}", command, args);
         switch (command) {
             case "start" -> handleStartCommand(user);
-            case "pause" -> getLogger().debug("Pausing timer.");
+            case "pause" -> handlePauseCommand(user);
             case "add" -> getLogger().debug("Adding time to timer: {}", Arrays.toString(args));
             case "del" -> getLogger().debug("Removing time from timer: {}", Arrays.toString(args));
         }
     }
 
     private void handleStartCommand(EventUser user) {
-        getLogger().info("Starting the timer!");
+        getLogger().debug("Handling start command.");
         SubathonCommandEvent event = createCommandEvent(user.getName(), Command.START);
+        try {
+            messageService.sendMessage(objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException e) {
+            getLogger().error("Failed to serialize subathon command event!", e);
+        }
+    }
+
+    private void handlePauseCommand(EventUser user) {
+        getLogger().debug("Handling pause command.");
+        SubathonCommandEvent event = createCommandEvent(user.getName(), Command.PAUSE);
         try {
             messageService.sendMessage(objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
