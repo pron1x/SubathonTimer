@@ -62,26 +62,17 @@ public class SubathonBot implements HasLogger {
     private void handleCommand(String command, EventUser user, String... args) {
         getLogger().debug("Handling '!timer' command. Sub command: {}, args: {}", command, args);
         switch (command) {
-            case "start" -> handleStartCommand(user);
-            case "pause" -> handlePauseCommand(user);
+            case "start" -> handleStateChangeCommand(user, false);
+            case "pause" -> handleStateChangeCommand(user, true);
             case "add" -> getLogger().debug("Adding time to timer: {}", Arrays.toString(args));
             case "del" -> getLogger().debug("Removing time from timer: {}", Arrays.toString(args));
         }
     }
 
-    private void handleStartCommand(EventUser user) {
-        getLogger().debug("Handling start command.");
-        SubathonCommandEvent event = createCommandEvent(user.getName(), Command.START);
-        try {
-            messageService.sendMessage(objectMapper.writeValueAsString(event));
-        } catch (JsonProcessingException e) {
-            getLogger().error("Failed to serialize subathon command event!", e);
-        }
-    }
-
-    private void handlePauseCommand(EventUser user) {
-        getLogger().debug("Handling pause command.");
-        SubathonCommandEvent event = createCommandEvent(user.getName(), Command.PAUSE);
+    private void handleStateChangeCommand(EventUser user, boolean isPause) {
+        getLogger().debug("Handling timer state change command [{}]", isPause ? "pause" : "start");
+        SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
+                createCommandEvent(user.getName(), Command.START);
         try {
             messageService.sendMessage(objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
