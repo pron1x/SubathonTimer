@@ -2,6 +2,7 @@ package com.pronixxx.subathon;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pronixxx.subathon.datamodel.SubathonCommandEvent;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
 import com.pronixxx.subathon.datamodel.enums.EventType;
 import com.pronixxx.subathon.service.TimerService;
@@ -31,7 +32,7 @@ public class MessageReceiver implements HasLogger {
         }
 
         if (event.getType() == EventType.COMMAND) {
-            getLogger().info("Received command!");
+            timerService.executeBotCommand((SubathonCommandEvent) event);
         } else {
             timerService.addSubathonEventTime(event);
         }
