@@ -23,6 +23,8 @@ import java.util.*;
 @Component
 public class SubathonBot implements HasLogger {
 
+    private static final String EVENT_SOURCE = "subathon-bot";
+
     @Value("${bot.subathon.channel}")
     private String CHANNEL_NAME;
 
@@ -69,17 +71,26 @@ public class SubathonBot implements HasLogger {
 
     private void handleStartCommand(EventUser user) {
         getLogger().info("Starting the timer!");
-        SubathonCommandEvent event = new SubathonCommandEvent();
-        event.setSource("subathon-bot");
-        event.setUsername(user.getName());
-        event.setTimestamp(LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)));
-        event.setCommand(Command.START);
-
+        SubathonCommandEvent event = createCommandEvent(user.getName(), Command.START);
         try {
             messageService.sendMessage(objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
             getLogger().error("Failed to serialize subathon command event!", e);
         }
+    }
+
+    private SubathonCommandEvent createCommandEvent(String user, Command command) {
+        return createCommandEvent(user, command, 0);
+    }
+
+    private SubathonCommandEvent createCommandEvent(String user, Command command, long seconds) {
+        SubathonCommandEvent event = new SubathonCommandEvent();
+        event.setSource(EVENT_SOURCE);
+        event.setUsername(user);
+        event.setCommand(command);
+        event.setSeconds(seconds);
+        event.setTimestamp(LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)));
+        return event;
     }
 
     private boolean hasPermission(Set<CommandPermission> permissions) {
