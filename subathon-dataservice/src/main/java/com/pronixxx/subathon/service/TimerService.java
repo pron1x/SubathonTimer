@@ -94,6 +94,33 @@ public class TimerService implements HasLogger {
         getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
     }
 
+    public void pauseTimer(SubathonCommandEvent command) {
+        getLogger().debug("Pausing timer");
+        TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE, PAUSED, lastEvent.getCurrentEndTime());
+        TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
+        toSave.setSubathonEvent(mapper.map(command, CommandEntity.class));
+
+        TimerEventEntity entity = saveTimerEventToDatabase(toSave);
+        lastEvent = mapper.map(entity, TimerEvent.class);
+        timerControl.setTimerPaused(true);
+        getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
+    }
+
+    private void resumeTimer(SubathonCommandEvent command) {
+        getLogger().debug("Resuming timer!");
+        // Calculate the seconds the timer has been paused for to get new end time
+        Duration d = Duration.between(lastEvent.getTimestamp(), lastEvent.getCurrentEndTime());
+        LocalDateTime newEnd = nowUTC().plusSeconds(d.getSeconds());
+        TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE, TICKING, newEnd);
+        TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
+        toSave.setSubathonEvent(mapper.map(command, CommandEntity.class));
+
+        TimerEventEntity entity = saveTimerEventToDatabase(toSave);
+        lastEvent = mapper.map(entity, TimerEvent.class);
+        timerControl.setExecutionTime(newEnd);
+        timerControl.setTimerPaused(false);
+    }
+
     public void stopTimer() {
         getLogger().debug("Stopping timer!");
         LocalDateTime now = nowUTC();
@@ -106,24 +133,6 @@ public class TimerService implements HasLogger {
         getLogger().info("Stopped timer at {}. End timestamp: {}", timerEvent.getTimestamp(), timerEvent.getCurrentEndTime());
     }
 
-    public void pauseTimer() {
-        TimerEvent timerEvent = new TimerEvent();
-
-        timerEvent.setOldTimerState(timer.getState());
-        timerEvent.setOldEndTime(timer.getEndTime());
-
-        getLogger().debug("Pausing timer. [End: {}]", timer.getEndTime());
-        timer.setState(PAUSED);
-        timer.setLastUpdate(nowUTC());
-
-        timerEvent.setCurrentTimerState(timer.getState());
-        timerEvent.setCurrentEndTime(timer.getEndTime());
-
-        timerEvent.setTimestamp(timer.getLastUpdate());
-        timerEvent.setType(TimerEventType.STATE_CHANGE);
-        getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
-    }
-
     public void executeBotCommand(SubathonCommandEvent command) {
         getLogger().debug("Executing bot command: {}", command);
         switch (command.getCommand()) {
@@ -131,9 +140,11 @@ public class TimerService implements HasLogger {
                 if(lastEvent.getCurrentTimerState() == INITIALIZED) {
                     startTimer(command);
                 } else {
-                    //resumeTimer();
-                    getLogger().debug("Resuming the timer!");
+                    resumeTimer(command);
                 }
+            }
+            case PAUSE -> {
+                pauseTimer(command);
             }
             default -> getLogger().warn("Command {} not yet implemented!", command.getCommand());
         }
