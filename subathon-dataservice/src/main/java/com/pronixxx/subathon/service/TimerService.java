@@ -39,7 +39,6 @@ public class TimerService implements HasLogger {
     private final long SUB_BASE_SECONDS = 300;
     private final long INITIAL_TIMER_SECONDS = 100;
 
-    Timer timer = new Timer();
     private TimerEvent lastEvent;
 
     @PostConstruct
@@ -111,7 +110,6 @@ public class TimerService implements HasLogger {
         TimerEventEntity entity = saveTimerEventToDatabase(toSave);
         lastEvent = mapper.map(entity, TimerEvent.class);
         timerControl.setTimerPaused(true);
-        getLogger().info("Paused timer. [End: {}, Last Update: {}]", timer.getEndTime(), timer.getLastUpdate());
     }
 
     private void resumeTimer(SubathonCommandEvent command) {
