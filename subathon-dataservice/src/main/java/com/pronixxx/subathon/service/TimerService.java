@@ -146,6 +146,12 @@ public class TimerService implements HasLogger {
             case PAUSE -> {
                 pauseTimer(command);
             }
+            case ADD -> {
+                addSubathonEventTime(command);
+            }
+            case REMOVE -> {
+                subtractSubathonEventTime(command);
+            }
             default -> getLogger().warn("Command {} not yet implemented!", command.getCommand());
         }
     }
@@ -166,12 +172,16 @@ public class TimerService implements HasLogger {
                 entity = mapper.map(event, FollowEntity.class);
                 yield FOLLOWER_SECONDS;
             }
-            case COMMAND -> 0.0;
+            case COMMAND -> {
+                SubathonCommandEvent command = (SubathonCommandEvent) event;
+                entity = mapper.map(event, CommandEntity.class);
+                yield command.getSeconds();
+            }
         };
 
         if (lastEvent.getCurrentTimerState() == PAUSED) {
             // Calculate extra duration in case the timer is paused before adding the event time
-            Duration d = Duration.between(lastEvent.getTimestamp() ,lastEvent.getCurrentEndTime());
+            Duration d = Duration.between(lastEvent.getTimestamp(), nowUTC());
             seconds += d.getSeconds();
         }
 
@@ -187,6 +197,29 @@ public class TimerService implements HasLogger {
         TimerEventEntity timerEventEntity = mapper.map(timerEvent, TimerEventEntity.class);
         timerEventEntity.setSubathonEvent(entity);
         TimerEventEntity savedEntity = saveTimerEventToDatabase(timerEventEntity);
+        lastEvent = mapper.map(savedEntity, TimerEvent.class);
+    }
+
+    private void subtractSubathonEventTime(SubathonCommandEvent command) {
+        getLogger().debug("Removing time from the timer.");
+        long seconds = 0;
+        if(lastEvent.getCurrentTimerState() == PAUSED) {
+            Duration d = Duration.between(lastEvent.getTimestamp(), nowUTC());
+            seconds += d.getSeconds();
+        }
+        seconds -= command.getSeconds();
+        LocalDateTime newEnd = lastEvent.getCurrentEndTime().plusSeconds(seconds);
+        if(newEnd.isBefore(nowUTC())) {
+            getLogger().info("Removing {} seconds from the timer would stop it, ignoring!", command.getSeconds());
+            return;
+        }
+        TimerEvent timerEvent = createTimerEvent(TimerEventType.TIME_SUBTRACTION, lastEvent.getCurrentTimerState(), newEnd);
+
+        timerControl.setExecutionTime(timerEvent.getCurrentEndTime());
+
+        TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
+        toSave.setSubathonEvent(mapper.map(command, CommandEntity.class));
+        TimerEventEntity savedEntity = saveTimerEventToDatabase(toSave);
         lastEvent = mapper.map(savedEntity, TimerEvent.class);
     }
 
