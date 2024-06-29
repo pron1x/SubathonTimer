@@ -7,7 +7,7 @@ import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
-import com.pronixxx.subathon.executor.AdjustableDateTimeExecuteControl;
+import com.pronixxx.subathon.executor.AdjustableScheduledExecutorService;
 import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
@@ -33,7 +33,7 @@ public class TimerService implements HasLogger {
     @Autowired
     ModelMapper mapper;
 
-    AdjustableDateTimeExecuteControl timerControl;
+    AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
     private final long FOLLOWER_SECONDS = 10;
     private final long SUB_BASE_SECONDS = 300;
@@ -52,11 +52,8 @@ public class TimerService implements HasLogger {
             getLogger().debug("Found previous timer event: {}", event);
             lastEvent = mapper.map(event, TimerEvent.class);
             if(lastEvent.getCurrentTimerState() == TICKING || lastEvent.getCurrentTimerState() == PAUSED) {
-                timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), lastEvent.getCurrentTimerState() != TICKING);
-                timerControl.scheduleCommand(() -> {
-                    getLogger().warn("STOPPING THE TIMER NOW!");
-                    stopTimer();
-                });
+                timerControl.setTimerPaused(lastEvent.getCurrentTimerState() != TICKING);
+                timerControl.scheduleCommand(this::stopTimer, lastEvent.getCurrentEndTime());
             }
         }
     }
@@ -89,11 +86,8 @@ public class TimerService implements HasLogger {
         TimerEventEntity entity = saveTimerEventToDatabase(toSave);
         lastEvent = mapper.map(entity, TimerEvent.class);
 
-        timerControl = new AdjustableDateTimeExecuteControl(lastEvent.getCurrentEndTime(), false);
-        timerControl.scheduleCommand(() -> {
-            getLogger().warn("STOPPING THE TIMER NOW!");
-            stopTimer();
-        });
+        timerControl.setTimerPaused(false);
+        timerControl.scheduleCommand(this::stopTimer, lastEvent.getCurrentEndTime());
         getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
     }
 
@@ -138,7 +132,6 @@ public class TimerService implements HasLogger {
 
         TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
         lastEvent = mapper.map(entity, TimerEvent.class);
-        timerControl.cancelCommand();
 
         getLogger().info("Stopped timer at {}. End timestamp: {}", timerEvent.getTimestamp(), timerEvent.getCurrentEndTime());
     }
