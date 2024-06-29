@@ -48,8 +48,10 @@ public class AdjustableDateTimeExecuteControl implements HasLogger {
     public void scheduleCommand(Runnable command) {
         final Runnable scheduledCommand = new Runnable() {
             public void run() {
-                if(isExecutionTime()) {
+                if (isExecutionTime()) {
                     command.run();
+                } else if (isTimerPaused()) {
+                    getLogger().debug("Execution is paused.");
                 } else {
                     getLogger().debug("Not executing the command, yet. [Time={}, Execution={}]", LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)), getExecutionTime());
                 }
