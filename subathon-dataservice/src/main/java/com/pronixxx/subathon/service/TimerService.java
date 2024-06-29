@@ -74,6 +74,10 @@ public class TimerService implements HasLogger {
     }
 
     public void startTimer(SubathonCommandEvent command) {
+        if(lastEvent.getCurrentTimerState() != INITIALIZED) {
+            getLogger().warn("Cannot start the timer if it is not initialized or already started. A started timer has to be resumed!");
+            return;
+        }
         getLogger().debug("Starting timer");
         LocalDateTime now = nowUTC();
         TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE,
@@ -95,6 +99,10 @@ public class TimerService implements HasLogger {
     }
 
     public void pauseTimer(SubathonCommandEvent command) {
+        if(lastEvent.getCurrentTimerState() != TICKING) {
+            getLogger().info("Not pausing a not ticking timer. Ignoring!");
+            return;
+        }
         getLogger().debug("Pausing timer");
         TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE, PAUSED, lastEvent.getCurrentEndTime());
         TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
@@ -107,6 +115,10 @@ public class TimerService implements HasLogger {
     }
 
     private void resumeTimer(SubathonCommandEvent command) {
+        if(lastEvent.getCurrentTimerState() != TICKING) {
+            getLogger().info("Not resuming a not ticking timer. Ignoring!");
+            return;
+        }
         getLogger().debug("Resuming timer!");
         // Calculate the seconds the timer has been paused for to get new end time
         Duration d = Duration.between(lastEvent.getTimestamp(), lastEvent.getCurrentEndTime());
@@ -157,6 +169,10 @@ public class TimerService implements HasLogger {
     }
     
     public void addSubathonEventTime(SubathonEvent event) {
+        if(lastEvent.getCurrentTimerState() != TICKING && lastEvent.getCurrentTimerState() != PAUSED) {
+            getLogger().info("Not adding time to timer because it is {}. Ignoring {}.", lastEvent.getCurrentTimerState(), event);
+            return;
+        }
         getLogger().debug("Adding time for event: {}", event);
         EventEntity entity = null;
 
@@ -201,6 +217,10 @@ public class TimerService implements HasLogger {
     }
 
     private void subtractSubathonEventTime(SubathonCommandEvent command) {
+        if(lastEvent.getCurrentTimerState() != TICKING && lastEvent.getCurrentTimerState() != PAUSED) {
+            getLogger().info("Not removing time from timer because it is {}. Ignoring {}.", lastEvent.getCurrentTimerState(), command);
+            return;
+        }
         getLogger().debug("Removing time from the timer.");
         long seconds = 0;
         if(lastEvent.getCurrentTimerState() == PAUSED) {
