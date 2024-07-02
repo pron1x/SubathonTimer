@@ -23,6 +23,8 @@ public class SubathonEventFactory {
                 return convertToSubathonRaidEvent(event);
             case "communityGiftPurchase":
                 return convertToSubathonCommunityGiftEvent(event);
+            case "cheer":
+                return convertToSubathonBitEvent(event);
             default:
                 throw new IllegalStateException("Converting for type '" + event.getType() + "' not yet implemented.");
         }
@@ -77,6 +79,18 @@ public class SubathonEventFactory {
         giftEvent.setTier(tier);
         giftEvent.setAmount(s.getAmount());
         return giftEvent;
+    }
+
+    private static SubathonBitEvent convertToSubathonBitEvent(StreamElementsEventModel event) {
+        SubathonBitEvent bitEvent = new SubathonBitEvent();
+        bitEvent.setTimestamp(event.getCreatedAt());
+        bitEvent.setSource("se-importer");
+        bitEvent.setMock(event.isMock());
+        StreamElementsBitEventModel.BitEventData s = ((StreamElementsBitEventModel) event).getData();
+
+        bitEvent.setUsername(s.getDisplayName());
+        bitEvent.setAmount(s.getAmount());
+        return bitEvent;
     }
 
     private static SubTier parseToSubTier(String tier) {

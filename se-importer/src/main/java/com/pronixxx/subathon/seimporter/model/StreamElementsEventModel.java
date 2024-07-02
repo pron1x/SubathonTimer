@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
         @Type(value = StreamElementsFollowModel.class, name = "follow"),
         @Type(value = StreamElementsTipModel.class, name = "tip"),
         @Type(value = StreamElementsRaidModel.class, name = "raid"),
-        @Type(value = StreamElementsSubGiftModel.class, name = "communityGiftPurchase")
+        @Type(value = StreamElementsSubGiftModel.class, name = "communityGiftPurchase"),
+        @Type(value = StreamElementsBitEventModel.class, name = "cheer")
 })
 public class StreamElementsEventModel {
     private LocalDateTime createdAt;
