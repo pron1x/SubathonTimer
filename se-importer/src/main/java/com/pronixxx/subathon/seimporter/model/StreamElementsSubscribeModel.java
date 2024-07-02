@@ -21,10 +21,12 @@ public class StreamElementsSubscribeModel extends StreamElementsEventModel {
                 "} " + super.toString();
     }
 
-    public class SubscribeEventData {
+    public static class SubscribeEventData {
         private int amount;
         private int quantity;
         private String tier;
+        private boolean gifted;
+        private String sender;
         private String displayName;
         private String providerId;
         private URI avatar;
@@ -53,6 +55,22 @@ public class StreamElementsSubscribeModel extends StreamElementsEventModel {
 
         public void setTier(String tier) {
             this.tier = tier;
+        }
+
+        public boolean isGifted() {
+            return gifted;
+        }
+
+        public void setGifted(boolean gifted) {
+            this.gifted = gifted;
+        }
+
+        public String getSender() {
+            return sender;
+        }
+
+        public void setSender(String sender) {
+            this.sender = sender;
         }
 
         public String getDisplayName() {
@@ -101,6 +119,8 @@ public class StreamElementsSubscribeModel extends StreamElementsEventModel {
                     "amount=" + amount +
                     ", quantity=" + quantity +
                     ", tier='" + tier + '\'' +
+                    ", gifted=" + gifted +
+                    ", sender='" + sender + '\'' +
                     ", displayName='" + displayName + '\'' +
                     ", providerId='" + providerId + '\'' +
                     ", avatar=" + avatar +
