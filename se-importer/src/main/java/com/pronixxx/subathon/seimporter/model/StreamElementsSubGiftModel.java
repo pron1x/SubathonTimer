@@ -24,6 +24,7 @@ public class StreamElementsSubGiftModel extends StreamElementsEventModel {
     public static class GiftSubEventData {
         private int amount;
         private int quantity;
+        private String tier;
         private String displayName;
         private String providerId;
         private URI avatar;
@@ -43,6 +44,14 @@ public class StreamElementsSubGiftModel extends StreamElementsEventModel {
 
         public void setQuantity(int quantity) {
             this.quantity = quantity;
+        }
+
+        public String getTier() {
+            return tier;
+        }
+
+        public void setTier(String tier) {
+            this.tier = tier;
         }
 
         public String getDisplayName() {
@@ -82,6 +91,7 @@ public class StreamElementsSubGiftModel extends StreamElementsEventModel {
             return "GiftSubEventData{" +
                     "amount=" + amount +
                     ", quantity=" + quantity +
+                    ", tier='" + tier + '\'' +
                     ", displayName='" + displayName + '\'' +
                     ", providerId='" + providerId + '\'' +
                     ", avatar=" + avatar +

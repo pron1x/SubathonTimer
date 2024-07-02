@@ -1,12 +1,8 @@
 package com.pronixxx.subathon.seimporter.factory;
 
-import com.pronixxx.subathon.datamodel.SubathonEvent;
-import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
-import com.pronixxx.subathon.datamodel.SubathonSubEvent;
+import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
-import com.pronixxx.subathon.seimporter.model.StreamElementsEventModel;
-import com.pronixxx.subathon.seimporter.model.StreamElementsFollowModel;
-import com.pronixxx.subathon.seimporter.model.StreamElementsSubscribeModel;
+import com.pronixxx.subathon.seimporter.model.*;
 
 public class SubathonEventFactory {
 
@@ -21,6 +17,12 @@ public class SubathonEventFactory {
                 return followerEvent;
             case "subscriber":
                 return convertToSubathonSubEvent(event);
+            case "tip":
+                return convertToSubathonTipEvent(event);
+            case "raid":
+                return convertToSubathonRaidEvent(event);
+            case "communityGiftPurchase":
+                return convertToSubathonCommunityGiftEvent(event);
             default:
                 throw new IllegalStateException("Converting for type '" + event.getType() + "' not yet implemented.");
         }
@@ -33,10 +35,57 @@ public class SubathonEventFactory {
         subEvent.setMock(event.isMock());
         subEvent.setUsername(((StreamElementsSubscribeModel) event).getData().getDisplayName());
         StreamElementsSubscribeModel s = (StreamElementsSubscribeModel) event;
-        SubTier tier = "1000".equals(s.getData().getTier()) ? SubTier.TIER_1 :
-                        "2000".equals(s.getData().getTier()) ? SubTier.TIER_2 :
-                        "3000".equals(s.getData().getTier()) ? SubTier.TIER_3 : SubTier.PRIME;
+        SubTier tier = parseToSubTier(s.getData().getTier());
         subEvent.setTier(tier);
         return subEvent;
+    }
+
+    private static SubathonTipEvent convertToSubathonTipEvent(StreamElementsEventModel event) {
+        SubathonTipEvent tipEvent = new SubathonTipEvent();
+        tipEvent.setTimestamp(event.getCreatedAt());
+        tipEvent.setSource("se-importer");
+        tipEvent.setMock(event.isMock());
+        StreamElementsTipModel.TipEventData s = ((StreamElementsTipModel) event).getData();
+
+        tipEvent.setUsername(s.getDisplayName());
+        tipEvent.setAmount(s.getAmount());
+        tipEvent.setCurrency(s.getCurrency());
+        return tipEvent;
+    }
+
+    private static SubathonRaidEvent convertToSubathonRaidEvent(StreamElementsEventModel event) {
+        SubathonRaidEvent raidEvent = new SubathonRaidEvent();
+        raidEvent.setTimestamp(event.getCreatedAt());
+        raidEvent.setSource("se-importer");
+        raidEvent.setMock(event.isMock());
+        StreamElementsRaidModel.RaidDataModel s = ((StreamElementsRaidModel) event).getData();
+
+        raidEvent.setUsername(s.getDisplayName());
+        raidEvent.setAmount(s.getAmount());
+        return raidEvent;
+    }
+
+    private static SubathonCommunityGiftEvent convertToSubathonCommunityGiftEvent(StreamElementsEventModel event) {
+        SubathonCommunityGiftEvent giftEvent = new SubathonCommunityGiftEvent();
+        giftEvent.setTimestamp(event.getCreatedAt());
+        giftEvent.setSource("se-importer");
+        giftEvent.setMock(event.isMock());
+        StreamElementsSubGiftModel.GiftSubEventData s = ((StreamElementsSubGiftModel) event).getData();
+
+        giftEvent.setUsername(s.getDisplayName());
+        SubTier tier = parseToSubTier(s.getTier());
+        giftEvent.setTier(tier);
+        giftEvent.setAmount(s.getAmount());
+        return giftEvent;
+    }
+
+    private static SubTier parseToSubTier(String tier) {
+        return switch (tier) {
+            case "1000" -> SubTier.TIER_1;
+            case "2000" -> SubTier.TIER_2;
+            case "3000" -> SubTier.TIER_3;
+            case "prime" -> SubTier.PRIME;
+            default -> throw new IllegalStateException("Unexpected value: " + tier);
+        };
     }
 }

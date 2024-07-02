@@ -4,5 +4,8 @@ public enum EventType {
     SUBSCRIPTION,
     TIP,
     FOLLOW,
+    GIFT,
+    BITS,
+    RAID,
     COMMAND
 }
