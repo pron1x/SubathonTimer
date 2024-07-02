@@ -22,7 +22,7 @@ public class SubathonEventFactory {
             case "subscriber":
                 return convertToSubathonSubEvent(event);
             default:
-                throw new IllegalStateException("Unexpected value: " + event.getType());
+                throw new IllegalStateException("Converting for type '" + event.getType() + "' not yet implemented.");
         }
     }
 

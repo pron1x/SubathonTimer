@@ -13,7 +13,10 @@ import java.time.LocalDateTime;
         visible = true)
 @JsonSubTypes({
         @Type(value = StreamElementsSubscribeModel.class, name = "subscriber"),
-        @Type(value = StreamElementsFollowModel.class, name = "follow")
+        @Type(value = StreamElementsFollowModel.class, name = "follow"),
+        @Type(value = StreamElementsTipModel.class, name = "tip"),
+        @Type(value = StreamElementsRaidModel.class, name = "raid"),
+        @Type(value = StreamElementsSubGiftModel.class, name = "communityGiftPurchase")
 })
 public class StreamElementsEventModel {
     private LocalDateTime createdAt;

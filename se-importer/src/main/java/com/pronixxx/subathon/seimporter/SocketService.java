@@ -85,6 +85,7 @@ public class SocketService implements HasLogger {
 
     private void onEvent(Object... events) {
         if(events.length == 0) return;
+        getLogger().info("Received StreamElements event: {}.", events[0].toString());
         StreamElementsEventModel event;
         try {
             event = objectMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
@@ -92,7 +93,7 @@ public class SocketService implements HasLogger {
             SubathonEvent subathonEvent = SubathonEventFactory.convertToSubathonEvent(event);
             messageService.produceMessage(objectMapper.writeValueAsString(subathonEvent));
         } catch (Exception e) {
-            getLogger().warn("Unable to map event to event model! Event= {}", events[0]);
+            getLogger().warn("Unable to map event to event model! Event= {}", events[0], e);
         }
     }
 
