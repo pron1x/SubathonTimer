@@ -13,6 +13,12 @@ public class SubscribeEntity extends EventEntity {
     @Column(name = "tier", columnDefinition = "ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3')")
     private SubTier tier;
 
+    @Column(name = "gifted")
+    private boolean gifted;
+
+    @Column(name = "sender")
+    private String sender;
+
     public SubTier getTier() {
         return tier;
     }
@@ -21,10 +27,28 @@ public class SubscribeEntity extends EventEntity {
         this.tier = tier;
     }
 
+    public boolean isGifted() {
+        return gifted;
+    }
+
+    public void setGifted(boolean gifted) {
+        this.gifted = gifted;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
     @Override
     public String toString() {
         return "SubscribeEntity{" +
                 "tier=" + tier +
+                ", gifted=" + gifted +
+                ", sender='" + sender + '\'' +
                 "} " + super.toString();
     }
 }

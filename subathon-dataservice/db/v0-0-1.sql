@@ -40,6 +40,8 @@ CREATE TABLE `raid_event` (
 CREATE TABLE `subscription_event` (
     `event_id`  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
     `tier`  ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Subscription tier',
+    `gifted` BOOLEAN NOT NULL COMMENT 'If the subscription was gifted',
+    `sender` VARCHAR(30) COMMENT 'The sender in case of a gifted subscription',
     PRIMARY KEY (`event_id`),
     CONSTRAINT `fk_subscription_event_event`
         FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)

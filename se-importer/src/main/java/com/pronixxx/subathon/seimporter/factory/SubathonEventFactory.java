@@ -39,6 +39,8 @@ public class SubathonEventFactory {
         StreamElementsSubscribeModel s = (StreamElementsSubscribeModel) event;
         SubTier tier = parseToSubTier(s.getData().getTier());
         subEvent.setTier(tier);
+        subEvent.setGifted(s.getData().isGifted());
+        subEvent.setSender(s.getData().getSender());
         return subEvent;
     }
 
