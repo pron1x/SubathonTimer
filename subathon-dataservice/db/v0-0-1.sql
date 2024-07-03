@@ -1,12 +1,16 @@
 DROP TABLE IF EXISTS `timer_event`;
 DROP TABLE IF EXISTS `follow_event`;
+DROP TABLE IF EXISTS `raid_event`;
 DROP TABLE IF EXISTS `subscription_event`;
+DROP TABLE IF EXISTS `community_gift_event`;
+DROP TABLE IF EXISTS `tip_event`;
+DROP TABLE IF EXISTS `cheer_event`;
 DROP TABLE IF EXISTS `command_event`;
 DROP TABLE IF EXISTS `event`;
 
 CREATE TABLE `event` (
     id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'Id of the event',
-    type ENUM('FOLLOW','SUBSCRIPTION','COMMAND') NOT NULL COMMENT 'Type of the event',
+    type ENUM('FOLLOW', 'RAID', 'SUBSCRIPTION', 'GIFT', 'TIP', 'CHEER', 'COMMAND') NOT NULL COMMENT 'Type of the event',
     timestamp DATETIME NOT NULL COMMENT 'Timestamp of the event',
     source VARCHAR(20) COMMENT 'Source of the event',
     username VARCHAR(30) NOT NULL COMMENT 'Username of the person causing the event',
@@ -23,11 +27,53 @@ CREATE TABLE `follow_event` (
         ON UPDATE NO ACTION
 );
 
+CREATE TABLE `raid_event` (
+    `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
+    `amount` BIGINT NOT NULL COMMENT 'Amount of raiders brought in by the raid',
+    PRIMARY KEY (`event_id`),
+    CONSTRAINT `fk_raid_event_event`
+        FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
 CREATE TABLE `subscription_event` (
     `event_id`  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
     `tier`  ENUM('PRIME', 'TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Subscription tier',
     PRIMARY KEY (`event_id`),
     CONSTRAINT `fk_subscription_event_event`
+        FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+CREATE TABLE `community_gift_event` (
+    `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
+    `amount` BIGINT NOT NULL COMMENT 'Amount of gifted subs',
+    `tier` ENUM('TIER_1', 'TIER_2', 'TIER_3') NOT NULL COMMENT 'Tier of the gifted subs',
+    PRIMARY KEY (`event_id`),
+    CONSTRAINT `fk_community_gift_event_event`
+        FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+CREATE TABLE `tip_event` (
+    `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
+    `amount` BIGINT NOT NULL COMMENT 'Amount of money tipped',
+    `currency` VARCHAR(30) COMMENT 'Currency of the tip',
+    PRIMARY KEY (`event_id`),
+    CONSTRAINT `fk_tip_event_event`
+        FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+CREATE TABLE `cheer_event` (
+    `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
+    `amount` BIGINT NOT NULL COMMENT 'Amount of bits cheered',
+    PRIMARY KEY (`event_id`),
+    CONSTRAINT `fk_cheer_event_event`
         FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION

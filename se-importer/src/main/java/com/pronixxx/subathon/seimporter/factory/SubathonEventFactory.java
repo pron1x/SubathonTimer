@@ -81,8 +81,8 @@ public class SubathonEventFactory {
         return giftEvent;
     }
 
-    private static SubathonBitEvent convertToSubathonBitEvent(StreamElementsEventModel event) {
-        SubathonBitEvent bitEvent = new SubathonBitEvent();
+    private static SubathonBitCheerEvent convertToSubathonBitEvent(StreamElementsEventModel event) {
+        SubathonBitCheerEvent bitEvent = new SubathonBitCheerEvent();
         bitEvent.setTimestamp(event.getCreatedAt());
         bitEvent.setSource("se-importer");
         bitEvent.setMock(event.isMock());

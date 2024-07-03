@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "event")
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "type", columnDefinition = "ENUM('FOLLOW','SUBSCRIPTION','COMMAND')", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "type", columnDefinition = "ENUM('FOLLOW', 'RAID', 'SUBSCRIPTION', 'GIFT', 'TIP', 'CHEER', 'COMMAND')", discriminatorType = DiscriminatorType.STRING)
 public abstract class EventEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", columnDefinition = "ENUM('FOLLOW','SUBSCRIPTION','COMMAND')", insertable = false, updatable = false)
+    @Column(name = "type", columnDefinition = "ENUM('FOLLOW', 'RAID', 'SUBSCRIPTION', 'GIFT', 'TIP', 'CHEER', 'COMMAND')", insertable = false, updatable = false)
     private EventType type;
 
     @Column(name = "timestamp")

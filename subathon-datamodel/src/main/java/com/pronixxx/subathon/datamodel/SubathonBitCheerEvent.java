@@ -2,11 +2,11 @@ package com.pronixxx.subathon.datamodel;
 
 import com.pronixxx.subathon.datamodel.enums.EventType;
 
-public class SubathonBitEvent extends SubathonEvent {
+public class SubathonBitCheerEvent extends SubathonEvent {
     private int amount;
 
-    public SubathonBitEvent() {
-        this.setType(EventType.BITS);
+    public SubathonBitCheerEvent() {
+        this.setType(EventType.CHEER);
     }
 
     public int getAmount() {
