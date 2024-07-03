@@ -36,7 +36,10 @@ public class TimerService implements HasLogger {
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
     private final long FOLLOWER_SECONDS = 10;
+    private final long RAIDER_SECONDS = 1;
     private final long SUB_BASE_SECONDS = 300;
+    private final long EURO_SECONDS = 60; // Seconds added per 100 Euro cents
+    private final long BITS_SECONDS = 60; // Seconds added per 100 bits
     private final long INITIAL_TIMER_SECONDS = 100;
 
     private TimerEvent lastEvent;
@@ -168,16 +171,34 @@ public class TimerService implements HasLogger {
         EventEntity entity = null;
 
         double seconds = switch (event.getType()) {
+            case FOLLOW -> {
+                entity = mapper.map(event, FollowEntity.class);
+                yield FOLLOWER_SECONDS;
+            }
+            case RAID -> {
+                entity = mapper.map(event, RaidEntity.class);
+                yield ((SubathonRaidEvent)event).getAmount() * RAIDER_SECONDS;
+            }
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 entity = mapper.map(event, SubscribeEntity.class);
                 yield subEvent.getTier() == SubTier.TIER_3 ? 3 * SUB_BASE_SECONDS :
                         subEvent.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
             }
-            case TIP -> 0.0;
-            case FOLLOW -> {
-                entity = mapper.map(event, FollowEntity.class);
-                yield FOLLOWER_SECONDS;
+            case GIFT -> {
+                SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;
+                entity = mapper.map(event, CommunityGiftEntity.class);
+                SubTier tier = giftEvent.getTier();
+                int mult = tier == SubTier.TIER_3 ? 3 : tier == SubTier.TIER_2 ? 2 : 1;
+                yield mult * SUB_BASE_SECONDS * giftEvent.getAmount();
+            }
+            case TIP -> {
+                entity = mapper.map(event, TipEntity.class);
+                yield EURO_SECONDS * ((SubathonTipEvent)event).getAmount();
+            }
+            case CHEER -> {
+                entity = mapper.map(event, CheerEntity.class);
+                yield BITS_SECONDS * (((SubathonBitCheerEvent)event).getAmount() / 100.0);
             }
             case COMMAND -> {
                 SubathonCommandEvent command = (SubathonCommandEvent) event;

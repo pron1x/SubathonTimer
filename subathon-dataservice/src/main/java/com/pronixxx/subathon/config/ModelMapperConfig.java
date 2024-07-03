@@ -1,13 +1,7 @@
 package com.pronixxx.subathon.config;
 
-import com.pronixxx.subathon.data.entity.CommandEntity;
-import com.pronixxx.subathon.data.entity.EventEntity;
-import com.pronixxx.subathon.data.entity.FollowEntity;
-import com.pronixxx.subathon.data.entity.SubscribeEntity;
-import com.pronixxx.subathon.datamodel.SubathonCommandEvent;
-import com.pronixxx.subathon.datamodel.SubathonEvent;
-import com.pronixxx.subathon.datamodel.SubathonFollowerEvent;
-import com.pronixxx.subathon.datamodel.SubathonSubEvent;
+import com.pronixxx.subathon.data.entity.*;
+import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
@@ -37,18 +31,22 @@ public class ModelMapperConfig implements HasLogger {
 
                 SubathonEvent eventModel = null;
                 switch (eventEntity.getType()) {
-                    case FOLLOW -> {
-                        eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonFollowerEvent.class));
-                    }
-                    case SUBSCRIPTION -> {
-                        eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonSubEvent.class));
-                    }
-                    case COMMAND -> {
-                        eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonCommandEvent.class));
-                    }
-                    default -> {
-                        getLogger().warn("Mapping event entity to model not yet implemented for type {} ! {}", eventEntity.getType(), eventEntity);
-                    }
+                    case FOLLOW ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonFollowerEvent.class));
+                    case RAID ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonRaidEvent.class));
+                    case SUBSCRIPTION ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonSubEvent.class));
+                    case GIFT ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonCommunityGiftEvent.class));
+                    case TIP ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonTipEvent.class));
+                    case CHEER ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonBitCheerEvent.class));
+                    case COMMAND ->
+                            eventModel = context.getMappingEngine().map(context.create(eventEntity, SubathonCommandEvent.class));
+                    default ->
+                            getLogger().warn("Mapping event entity to model not yet implemented for type {} ! {}", eventEntity.getType(), eventEntity);
                 }
 
                 return eventModel;
@@ -62,11 +60,39 @@ public class ModelMapperConfig implements HasLogger {
             }
         });
 
+        modelMapper.addConverter(new Converter<RaidEntity, SubathonEvent>() {
+            @Override
+            public SubathonEvent convert(MappingContext<RaidEntity, SubathonEvent> context) {
+                return context.getMappingEngine().map(context.create(context.getSource(), SubathonRaidEvent.class));
+            }
+        });
+
         modelMapper.addConverter(new Converter<SubscribeEntity, SubathonEvent>() {
 
             @Override
             public SubathonEvent convert(MappingContext<SubscribeEntity, SubathonEvent> context) {
                 return context.getMappingEngine().map(context.create(context.getSource(), SubathonSubEvent.class));
+            }
+        });
+
+        modelMapper.addConverter(new Converter<CommunityGiftEntity, SubathonEvent>() {
+            @Override
+            public SubathonEvent convert(MappingContext<CommunityGiftEntity, SubathonEvent> context) {
+                return context.getMappingEngine().map(context.create(context.getSource(), SubathonCommunityGiftEvent.class));
+            }
+        });
+
+        modelMapper.addConverter(new Converter<TipEntity, SubathonEvent>() {
+            @Override
+            public SubathonEvent convert(MappingContext<TipEntity, SubathonEvent> context) {
+                return context.getMappingEngine().map(context.create(context.getSource(), SubathonTipEvent.class));
+            }
+        });
+
+        modelMapper.addConverter(new Converter<CheerEntity, SubathonEvent>() {
+            @Override
+            public SubathonEvent convert(MappingContext<CheerEntity, SubathonEvent> context) {
+                return context.getMappingEngine().map(context.create(context.getSource(), SubathonBitCheerEvent.class));
             }
         });
 
