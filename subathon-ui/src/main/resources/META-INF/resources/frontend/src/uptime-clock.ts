@@ -1,3 +1,5 @@
+import {millisToTimeString} from "./utils";
+
 import {html, LitElement} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 
@@ -14,30 +16,21 @@ class UptimeClock extends LitElement {
         super.connectedCallback();
         this._clockInterval = setInterval(() => {
             if(this._startTimestamp) {
-                this._uptimeString = this.convertMillisToTimeString(new Date().getTime() - this._startTimestamp.getTime());
+                this._uptimeString = millisToTimeString(new Date().getTime() - this._startTimestamp.getTime());
                 console.log(this._uptimeString);
             } else {
-                console.log("Shit's fucked!");
-                this._uptimeString = "No start time!";
+                this._uptimeString = "00:00:00";
             }
         }, 1000)
     }
 
-    setStartTime(date: string) {
-        console.log("Setting new start timestamp!", date);
-        this._startTimestamp = new Date(date);
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        clearInterval(this._clockInterval);
     }
 
-    convertMillisToTimeString(milliseconds: number): string {
-        const seconds = Math.floor((milliseconds / 1000) % 60);
-        const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
-        const hours = Math.floor((milliseconds / 1000 / 3600) % 24);
-
-        return [
-            hours.toString(),
-            (minutes.toString().length < 2 ? "0" : "") + minutes.toString(),
-            (seconds.toString().length < 2 ? "0" : "") + seconds.toString()
-        ].join(':');
+    setStartTime(date: string) {
+        this._startTimestamp = new Date(date);
     }
 
 
