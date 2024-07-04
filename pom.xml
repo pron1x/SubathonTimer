@@ -25,6 +25,7 @@
         <module>se-importer</module>
         <module>subathon-util</module>
         <module>subathon-bot</module>
+        <module>subathon-ui</module>
     </modules>
 
     <properties>
