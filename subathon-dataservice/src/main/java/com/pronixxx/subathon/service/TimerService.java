@@ -110,7 +110,7 @@ public class TimerService implements HasLogger {
     }
 
     private void resumeTimer(SubathonCommandEvent command) {
-        if(lastEvent.getCurrentTimerState() != TICKING) {
+        if(lastEvent.getCurrentTimerState() != PAUSED) {
             getLogger().info("Not resuming a not ticking timer. Ignoring!");
             return;
         }
