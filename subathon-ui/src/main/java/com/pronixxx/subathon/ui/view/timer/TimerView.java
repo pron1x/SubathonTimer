@@ -1,75 +1,63 @@
 package com.pronixxx.subathon.ui.view.timer;
 
-import com.pronixxx.subathon.datamodel.enums.TimerState;
+import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.ui.component.SubathonTimer;
-import com.vaadin.flow.component.button.Button;
+import com.pronixxx.subathon.ui.service.TimerEventService;
+import com.pronixxx.subathon.ui.service.TimerEventService.TimerEventListener;
+import com.pronixxx.subathon.util.interfaces.HasLogger;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.ZonedDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(value = "timer")
-public class TimerView extends HorizontalLayout {
+public class TimerView extends HorizontalLayout implements TimerEventListener, HasLogger {
 
-    ZonedDateTime startTime;
-    ZonedDateTime endTime;
-    ZonedDateTime lastUpdate;
-    TimerState state;
-    Clock clock = Clock.systemUTC();
+    @Autowired
+    private TimerEventService timerEventService;
 
-    public TimerView() {
-        lastUpdate = ZonedDateTime.now(clock);
-        startTime = ZonedDateTime.now(clock);
-        endTime = ZonedDateTime.now(clock).plusMinutes(10);
-        state = TimerState.INITIALIZED;
-        SubathonTimer timer = new SubathonTimer(startTime, endTime, lastUpdate, state);
+    private final SubathonTimer timer;
+
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        timerEventService.addEventListener(this);
+        TimerEvent initial = timerEventService.getLatestTimerEvent();
+        timer.setStartTime(initial.getStartTime());
+        timer.setTimerState(initial.getCurrentTimerState());
+        timer.setLastUpdate(initial.getTimestamp());
+        timer.setEndTime(initial.getCurrentEndTime());
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        timerEventService.removeEventListener(this);
+    }
+
+    public TimerView(TimerEventService timerEventService) {
+        this.timerEventService = timerEventService;
+        TimerEvent initial = timerEventService.getLatestTimerEvent();
+        timer = new SubathonTimer(initial.getStartTime(), initial.getCurrentEndTime(),
+                initial.getTimestamp(), initial.getCurrentTimerState());
         Div timerWrapper = new Div(timer);
         add(timerWrapper);
+    }
 
-        VerticalLayout controls = new VerticalLayout();
-        Button start = new Button("Start");
-        start.addClickListener(event -> {
-            if(state == TimerState.PAUSED) {
-                endTime = endTime.plusSeconds(Duration.between(lastUpdate, ZonedDateTime.now(clock)).toSeconds());
-            }
-            state = TimerState.TICKING;
-            lastUpdate = ZonedDateTime.now(clock);
+    @Override
+    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
+        getUI().ifPresent(
+                ui -> ui.access(() -> {
+                    getLogger().info("Handling TimerEvent: {}", timerEvent);
+                    timer.setStartTime(timerEvent.getStartTime());
+                    timer.setTimerState(timerEvent.getCurrentTimerState());
+                    timer.setEndTime(timerEvent.getCurrentEndTime());
+                    timer.setLastUpdate(timerEvent.getTimestamp());
+                })
+        );
 
-            timer.setTimerState(state);
-            timer.setEndTime(endTime);
-            timer.setLastUpdate(lastUpdate);
-        });
-
-        Button pause = new Button("Pause");
-        pause.addClickListener(event -> {
-            if(state == TimerState.ENDED || state == TimerState.INITIALIZED) {
-                return;
-            }
-            state = TimerState.PAUSED;
-            lastUpdate = ZonedDateTime.now(clock);
-            timer.setTimerState(state);
-            timer.setLastUpdate(lastUpdate);
-        });
-
-        Button addTime = new Button("Add 1m");
-        addTime.addClickListener(event -> {
-            if(state == TimerState.ENDED || state == TimerState.INITIALIZED) {
-                return;
-            }
-            if(state == TimerState.PAUSED) {
-                endTime = endTime.plusSeconds(Duration.between(lastUpdate, ZonedDateTime.now(clock)).toSeconds());
-            }
-            lastUpdate = ZonedDateTime.now(clock);
-            endTime = endTime.plusMinutes(1);
-            timer.setEndTime(endTime);
-            timer.setLastUpdate(lastUpdate);
-        });
-
-        controls.add(start, pause, addTime);
-        add(controls);
     }
 }

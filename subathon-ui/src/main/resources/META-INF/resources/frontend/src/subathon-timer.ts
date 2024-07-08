@@ -10,9 +10,9 @@ class SubathonTimer extends LitElement {
     readonly STATE_INITIALIZED: string = "INITIALIZED";
     readonly STATE_ENDED: string = "ENDED";
 
-    _startTime: Date;
-    _endTime: Date;
-    _lastUpdateTime: Date;
+    _startTime: number;
+    _endTime: number;
+    _lastUpdateTime: number;
     _timerState: string;
 
     @state()
@@ -34,25 +34,24 @@ class SubathonTimer extends LitElement {
 
     setStartTime(date: string) {
         if(date) {
-            this._startTime = new Date(date);
+            this._startTime = new Date(date).getTime();
         }
     }
 
     setEndTime(date: string) {
         if(date) {
-            this._endTime = new Date(date);
+            this._endTime = new Date(date).getTime();
         }
     }
 
     setLastUpdateTime(date: string) {
         if(date) {
-            this._lastUpdateTime = new Date(date);
+            this._lastUpdateTime = new Date(date).getTime();
         }
     }
 
     setTimerState(state: string) {
         if(state) {
-            console.log(state);
             this._timerState = state;
         }
     }
@@ -61,11 +60,11 @@ class SubathonTimer extends LitElement {
         if(this._timerState === this.STATE_ENDED) {
             return -1;
         } else if (this._timerState === this.STATE_INITIALIZED) {
-            return 3600 * 1000;
+            return (3600 * 1000);
         } else if (this._timerState === this.STATE_PAUSED) {
-            return this._endTime.getTime() - this._lastUpdateTime.getTime();
+            return (this._endTime - this._lastUpdateTime);
         } else if (this._timerState === this.STATE_TICKING) {
-            return this._endTime.getTime() - Date.now();
+            return (this._endTime - new Date().getTime());
         } else {
             return 0;
         }
