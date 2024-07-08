@@ -24,36 +24,32 @@ class SubathonTimer extends LitElement {
         super.connectedCallback();
         this._clockInterval = setInterval(() => {
             const ms = this.calculateTimeLeft();
-            if(ms < 0) {
-                this._timeLeftString = "SUBATHON ENDED!";
-            } else {
-                this._timeLeftString = millisToTimeString(ms);
-            }
+            this._timeLeftString = this.createTimeLeftString(ms);
         }, 1000);
     }
 
-    setStartTime(date: string) {
-        if(date) {
-            this._startTime = new Date(date).getTime();
+    updateToNewTimerEvent(startDate: string, endDate: string, updateDate: string, timerState: string) {
+        if(startDate) {
+            console.log(startDate)
+            this._startTime = new Date(startDate).getTime();
         }
+        if(endDate) {
+            console.log(endDate)
+            this._endTime = new Date(endDate).getTime();
+        }
+        if(updateDate) {
+            console.log(updateDate)
+            this._lastUpdateTime = new Date(updateDate).getTime();
+        }
+        if(timerState) {
+            console.log(timerState)
+            this._timerState = timerState;
+        }
+        this._timeLeftString = this.createTimeLeftString(this.calculateTimeLeft());
     }
 
-    setEndTime(date: string) {
-        if(date) {
-            this._endTime = new Date(date).getTime();
-        }
-    }
-
-    setLastUpdateTime(date: string) {
-        if(date) {
-            this._lastUpdateTime = new Date(date).getTime();
-        }
-    }
-
-    setTimerState(state: string) {
-        if(state) {
-            this._timerState = state;
-        }
+    createTimeLeftString(milliseconds) {
+        return milliseconds < 0 ? "SUBATHON ENDED!" : millisToTimeString(milliseconds);
     }
 
     calculateTimeLeft(): number {

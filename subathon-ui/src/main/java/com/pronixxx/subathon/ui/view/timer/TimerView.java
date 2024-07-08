@@ -20,16 +20,11 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
 
     private final SubathonTimer timer;
 
-
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         timerEventService.addEventListener(this);
-        TimerEvent initial = timerEventService.getLatestTimerEvent();
-        timer.setStartTime(initial.getStartTime());
-        timer.setTimerState(initial.getCurrentTimerState());
-        timer.setLastUpdate(initial.getTimestamp());
-        timer.setEndTime(initial.getCurrentEndTime());
+        timer.updateWithNewEvent(timerEventService.getLatestTimerEvent());
     }
 
     @Override
@@ -41,8 +36,7 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
     public TimerView(TimerEventService timerEventService) {
         this.timerEventService = timerEventService;
         TimerEvent initial = timerEventService.getLatestTimerEvent();
-        timer = new SubathonTimer(initial.getStartTime(), initial.getCurrentEndTime(),
-                initial.getTimestamp(), initial.getCurrentTimerState());
+        timer = new SubathonTimer(initial);
         Div timerWrapper = new Div(timer);
         add(timerWrapper);
     }
@@ -52,10 +46,7 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
         getUI().ifPresent(
                 ui -> ui.access(() -> {
                     getLogger().info("Handling TimerEvent: {}", timerEvent);
-                    timer.setStartTime(timerEvent.getStartTime());
-                    timer.setTimerState(timerEvent.getCurrentTimerState());
-                    timer.setEndTime(timerEvent.getCurrentEndTime());
-                    timer.setLastUpdate(timerEvent.getTimestamp());
+                    timer.updateWithNewEvent(timerEvent);
                 })
         );
 
