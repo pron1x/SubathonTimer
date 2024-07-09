@@ -1,0 +1,76 @@
+name: subathon-timer
+
+services:
+  rabbitmq:
+    container_name: 'rabbit-mq-prod'
+    image: 'rabbitmq:3'
+    restart: always
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS='
+      - 'RABBITMQ_DEFAULT_USER='
+
+  mariadb:
+    container_name: 'maria-db-11.4-prod'
+    image: 'mariadb:11.4'
+    restart: always
+    volumes:
+      - ~/.docker-conf/mariadb/data/:/var/lib/mysql
+    environment:
+      - 'MARIADB_ROOT_PASSWORD='
+
+  subathon-importer:
+    container_name: 'seimporter'
+    image: 'pronixxx.com/seimporter:0.0.1'
+    restart: always
+    environment:
+      - 'STREAMELEMENTS_JWT_TOKEN='
+      - 'SPRING_RABBITMQ_PASSWORD='
+      - 'SPRING_RABBITMQ_USERNAME='
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+    depends_on:
+      - rabbitmq
+
+  subathon-bot:
+    container_name: 'subathonbot'
+    image: 'pronixxx.com/subathonbot:0.0.1'
+    restart: always
+    environment:
+      - 'TWITCH_OAUTH_TOKEN='
+      - 'SPRING_RABBITMQ_PASSWORD='
+      - 'SPRING_RABBITMQ_USERNAME='
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+    depends_on:
+      - rabbitmq
+
+  subathon-dataservice:
+    container_name: 'subathondataservice'
+    image: 'pronixxx.com/subathondataservice:0.0.1'
+    restart: always
+    environment:
+      - 'DATASERVICE_DATASOURCE_URL=DATASERVICE_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/subathon'
+      - 'DATASERVICE_DATASOURCE_USERNAME=root'
+      - 'DATASERVICE_DATASOURCE_PASSWORD='
+      - 'SPRING_RABBITMQ_PASSWORD='
+      - 'SPRING_RABBITMQ_USERNAME='
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+    depends_on:
+      - rabbitmq
+      - mariadb
+      - subathon-bot
+      - subathon-importer
+
+  subathon-ui:
+    container_name: 'subathonui'
+    image: 'pronixxx.com/subathonui:0.0.1'
+    restart: always
+    environment:
+      - 'DATASERVICE_URL=http://subathon-dataservice:8081'
+      - 'SPRING_RABBITMQ_PASSWORD='
+      - 'SPRING_RABBITMQ_USERNAME='
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+    depends_on:
+      - subathon-dataservice
+
