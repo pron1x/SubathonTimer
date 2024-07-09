@@ -211,7 +211,7 @@ public class TimerService implements HasLogger {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 entity = mapper.map(event, SubscribeEntity.class);
                 yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_SECONDS :
-                        subEvent.getTier() == SubTier.TIER_2 ? 2 * TIER_2_SECONDS : TIER_1_SECONDS;
+                        subEvent.getTier() == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
             }
             case GIFT -> {
                 SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;
