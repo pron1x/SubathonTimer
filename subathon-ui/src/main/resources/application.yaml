@@ -1,0 +1,8 @@
+spring:
+  rabbitmq:
+    password: 'secret'
+    username: 'myuser'
+
+ui:
+  endpoints:
+    dataservice: ${DATASERVICE_URL}

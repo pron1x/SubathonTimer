@@ -8,4 +8,7 @@ public class GlobalRabbitMQ {
 
     public static final String BOT_QUEUE_NAME = "bot-queue";
     public static final String BOT_ROUTING_KEY = "bot.event.#";
+
+    public static final String TIMER_EVENT_QUEUE_NAME = "timer-event-queue";
+    public static final String TIMER_EVENT_ROUTING_KEY = "timer.event.#";
 }

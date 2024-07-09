@@ -13,3 +13,6 @@ logging:
     com:
       pronixxx:
         subathon: debug
+
+server:
+  port: 8081

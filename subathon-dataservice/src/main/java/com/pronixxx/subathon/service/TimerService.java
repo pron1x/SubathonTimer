@@ -1,5 +1,7 @@
 package com.pronixxx.subathon.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.data.entity.*;
 import com.pronixxx.subathon.data.repository.EventRepository;
 import com.pronixxx.subathon.data.repository.TimerEventRepository;
@@ -12,6 +14,7 @@ import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +31,16 @@ public class TimerService implements HasLogger {
     EventRepository eventRepository;
 
     @Autowired
+    RabbitMessageService messageService;
+
+    @Autowired
     TimerEventRepository timerEventRepository;
 
     @Autowired
     ModelMapper mapper;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
@@ -91,6 +100,7 @@ public class TimerService implements HasLogger {
 
         timerControl.setTimerPaused(false);
         timerControl.scheduleCommand(this::stopTimer, lastEvent.getCurrentEndTime());
+        publishEvent();
         getLogger().info("Timer started. [Start: {}, End: {}]", lastEvent.getStartTime(), lastEvent.getCurrentEndTime());
     }
 
@@ -107,6 +117,7 @@ public class TimerService implements HasLogger {
         TimerEventEntity entity = saveTimerEventToDatabase(toSave);
         lastEvent = mapper.map(entity, TimerEvent.class);
         timerControl.setTimerPaused(true);
+        publishEvent();
     }
 
     private void resumeTimer(SubathonCommandEvent command) {
@@ -126,6 +137,7 @@ public class TimerService implements HasLogger {
         lastEvent = mapper.map(entity, TimerEvent.class);
         timerControl.setExecutionTime(newEnd);
         timerControl.setTimerPaused(false);
+        publishEvent();
     }
 
     public void stopTimer() {
@@ -135,6 +147,7 @@ public class TimerService implements HasLogger {
 
         TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
         lastEvent = mapper.map(entity, TimerEvent.class);
+        publishEvent();
 
         getLogger().info("Stopped timer at {}. End timestamp: {}", timerEvent.getTimestamp(), timerEvent.getCurrentEndTime());
     }
@@ -226,6 +239,7 @@ public class TimerService implements HasLogger {
         timerEventEntity.setSubathonEvent(entity);
         TimerEventEntity savedEntity = saveTimerEventToDatabase(timerEventEntity);
         lastEvent = mapper.map(savedEntity, TimerEvent.class);
+        publishEvent();
     }
 
     private void subtractSubathonEventTime(SubathonCommandEvent command) {
@@ -253,6 +267,7 @@ public class TimerService implements HasLogger {
         toSave.setSubathonEvent(mapper.map(command, CommandEntity.class));
         TimerEventEntity savedEntity = saveTimerEventToDatabase(toSave);
         lastEvent = mapper.map(savedEntity, TimerEvent.class);
+        publishEvent();
     }
 
     private TimerEvent createTimerEvent(TimerEventType type, TimerState newTimerState, LocalDateTime newEndTime) {
@@ -277,6 +292,21 @@ public class TimerService implements HasLogger {
 
     private LocalDateTime nowUTC() {
         return LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ));
+    }
+
+    public TimerEvent getLastEvent() {
+        return lastEvent;
+    }
+
+    private void publishEvent() {
+        try {
+            String message = objectMapper.writeValueAsString(lastEvent);
+            messageService.sendMessage(message);
+        } catch (JsonProcessingException e) {
+            getLogger().warn("Could not convert event to string! {}", lastEvent, e);
+        } catch (AmqpException e) {
+            getLogger().warn("Could not send message! {}", lastEvent, e);
+        }
     }
 
 }
