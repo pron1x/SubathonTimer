@@ -16,6 +16,7 @@ import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
 import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -44,12 +45,22 @@ public class TimerService implements HasLogger {
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
-    private final long FOLLOWER_SECONDS = 10;
-    private final long RAIDER_SECONDS = 1;
-    private final long SUB_BASE_SECONDS = 300;
-    private final long EURO_SECONDS = 60; // Seconds added per 100 Euro cents
-    private final long BITS_SECONDS = 60; // Seconds added per 100 bits
-    private final long INITIAL_TIMER_SECONDS = 100;
+    @Value("${timer.seconds.follow}")
+    private long FOLLOWER_SECONDS = 10;
+    @Value("${timer.seconds.raid}")
+    private long RAIDER_SECONDS = 1;
+    @Value("${timer.seconds.tier1}")
+    private long TIER_1_SECONDS = 300;
+    @Value("${timer.seconds.tier2}")
+    private long TIER_2_SECONDS = 300;
+    @Value("${timer.seconds.tier3}")
+    private long TIER_3_SECONDS = 300;
+    @Value("${timer.seconds.euro}")
+    private long EURO_SECONDS = 60; // Seconds added per 100 Euro cents
+    @Value("${timer.seconds.bits}")
+    private long BITS_SECONDS = 60; // Seconds added per 100 bits
+    @Value("${timer.seconds.initial}")
+    private long INITIAL_TIMER_SECONDS = 100;
 
     private TimerEvent lastEvent;
 
@@ -199,15 +210,15 @@ public class TimerService implements HasLogger {
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 entity = mapper.map(event, SubscribeEntity.class);
-                yield subEvent.getTier() == SubTier.TIER_3 ? 3 * SUB_BASE_SECONDS :
-                        subEvent.getTier() == SubTier.TIER_2 ? 2 * SUB_BASE_SECONDS : SUB_BASE_SECONDS;
+                yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_SECONDS :
+                        subEvent.getTier() == SubTier.TIER_2 ? 2 * TIER_2_SECONDS : TIER_1_SECONDS;
             }
             case GIFT -> {
                 SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;
                 entity = mapper.map(event, CommunityGiftEntity.class);
                 SubTier tier = giftEvent.getTier();
-                int mult = tier == SubTier.TIER_3 ? 3 : tier == SubTier.TIER_2 ? 2 : 1;
-                yield mult * SUB_BASE_SECONDS * giftEvent.getAmount();
+                long s = tier == SubTier.TIER_3 ? TIER_3_SECONDS : tier == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
+                yield s * giftEvent.getAmount();
             }
             case TIP -> {
                 entity = mapper.map(event, TipEntity.class);

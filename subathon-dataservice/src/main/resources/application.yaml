@@ -16,3 +16,14 @@ logging:
 
 server:
   port: 8081
+
+timer:
+  seconds:
+    follow: 60
+    raid: 3
+    tier1: 300
+    tier2: 600
+    tier3: 1500
+    euro: 60
+    bits: 60
+    initial: 172800
