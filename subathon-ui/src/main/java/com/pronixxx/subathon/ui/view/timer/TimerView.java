@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Route(value = "timer")
 public class TimerView extends HorizontalLayout implements TimerEventListener, HasLogger {
 
-    @Autowired
-    private TimerEventService timerEventService;
+    private final TimerEventService timerEventService;
 
     private final SubathonTimer timer;
 
@@ -33,7 +32,7 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
         timerEventService.removeEventListener(this);
     }
 
-    public TimerView(TimerEventService timerEventService) {
+    public TimerView(@Autowired TimerEventService timerEventService) {
         this.timerEventService = timerEventService;
         TimerEvent initial = timerEventService.getLatestTimerEvent();
         timer = new SubathonTimer(initial);

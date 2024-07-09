@@ -5,7 +5,9 @@ import {customElement, state} from 'lit/decorators.js';
 
 @customElement('uptime-clock')
 class UptimeClock extends LitElement {
-    _startTimestamp: Date;
+    _startTimestamp: number;
+    _endTimestamp: number;
+    _timerState: string;
 
     @state()
     _uptimeString: string;
@@ -15,11 +17,12 @@ class UptimeClock extends LitElement {
     connectedCallback(): void {
         super.connectedCallback();
         this._clockInterval = setInterval(() => {
-            if(this._startTimestamp) {
-                this._uptimeString = millisToTimeString(new Date().getTime() - this._startTimestamp.getTime());
-                console.log(this._uptimeString);
+            if(this._startTimestamp && (this._timerState === "TICKING" || this._timerState === "PAUSED")) {
+                this._uptimeString = millisToTimeString(new Date().getTime() - this._startTimestamp);
+            } else if(this._startTimestamp && this._endTimestamp && this._timerState === "ENDED"){
+                this._uptimeString = millisToTimeString(this._endTimestamp - this._startTimestamp);
             } else {
-                this._uptimeString = "00:00:00";
+                this._uptimeString = millisToTimeString(0);
             }
         }, 1000)
     }
@@ -29,10 +32,17 @@ class UptimeClock extends LitElement {
         clearInterval(this._clockInterval);
     }
 
-    setStartTime(date: string) {
-        this._startTimestamp = new Date(date);
+    setState(start: string, end: string, state: string) {
+        if(start) {
+            this._startTimestamp = new Date(start).getTime();
+        }
+        if(end) {
+            this._endTimestamp = new Date(end).getTime();
+        }
+        if(state) {
+            this._timerState = state;
+        }
     }
-
 
     render() {
         return html`
