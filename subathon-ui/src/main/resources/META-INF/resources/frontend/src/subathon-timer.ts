@@ -56,7 +56,7 @@ class SubathonTimer extends LitElement {
         if(this._timerState === this.STATE_ENDED) {
             return -1;
         } else if (this._timerState === this.STATE_INITIALIZED) {
-            return (3600 * 1000);
+            return (this._endTime - this._lastUpdateTime);
         } else if (this._timerState === this.STATE_PAUSED) {
             return (this._endTime - this._lastUpdateTime);
         } else if (this._timerState === this.STATE_TICKING) {

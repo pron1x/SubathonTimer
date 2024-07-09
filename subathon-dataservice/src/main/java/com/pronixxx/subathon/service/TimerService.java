@@ -75,6 +75,10 @@ public class TimerService implements HasLogger {
         initialEvent.setType(TimerEventType.STATE_CHANGE);
         initialEvent.setOldTimerState(UNINITIALIZED);
         initialEvent.setCurrentTimerState(INITIALIZED);
+
+        initialEvent.setStartTime(nowUTC());
+        initialEvent.setCurrentEndTime(nowUTC().plusSeconds(INITIAL_TIMER_SECONDS));
+
         initialEvent.setTimestamp(nowUTC());
 
         TimerEventEntity eventEntity = timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
