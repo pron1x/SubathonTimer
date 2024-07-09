@@ -1,3 +1,6 @@
+CREATE DATABASE subathon;
+USE subathon;
+
 DROP TABLE IF EXISTS `timer_event`;
 DROP TABLE IF EXISTS `follow_event`;
 DROP TABLE IF EXISTS `raid_event`;
