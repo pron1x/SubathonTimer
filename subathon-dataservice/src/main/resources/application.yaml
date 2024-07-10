@@ -18,6 +18,7 @@ server:
   port: 8081
 
 timer:
+  ignoremock: true
   seconds:
     follow: 60
     raid: 3
