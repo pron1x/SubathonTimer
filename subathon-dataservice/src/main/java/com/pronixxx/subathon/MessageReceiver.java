@@ -27,7 +27,6 @@ public class MessageReceiver implements HasLogger {
     @Autowired
     TimerService timerService;
 
-    private final Map<String, Integer> communityGiftFilter = new HashMap<>();
 
     public void receiveMessage(String message) {
         SubathonEvent event;
@@ -45,20 +44,6 @@ public class MessageReceiver implements HasLogger {
 
         if (event.getType() == EventType.COMMAND) { // We handle bot commands differently
             timerService.executeBotCommand((SubathonCommandEvent) event);
-        } else if (event.getType() == EventType.GIFT) { // If it's a community gift, we need to filter out incoming sub events!
-            SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;
-            // Add the sender and the amount of gifted subs to the map
-            communityGiftFilter.merge(event.getUsername(), giftEvent.getAmount(), Integer::sum);
-            // Then log the event
-            timerService.addSubathonEventTime(event);
-        } else if (event.getType() == EventType.SUBSCRIPTION) {
-            SubathonSubEvent subEvent = (SubathonSubEvent) event;
-            // If the sub is gifted AND the sender has subs left in the map, remove one from the gifted amounts
-            if (subEvent.isGifted() && subEvent.getSender() != null && communityGiftFilter.getOrDefault(subEvent.getSender(), 0) > 0) {
-                communityGiftFilter.merge(subEvent.getSender(), -1, Integer::sum);
-            } else { // Gift sub is not from any gift bomb, handle as normal sub
-                timerService.addSubathonEventTime(event);
-            }
         } else { // Everything else gets handled normally
             timerService.addSubathonEventTime(event);
         }

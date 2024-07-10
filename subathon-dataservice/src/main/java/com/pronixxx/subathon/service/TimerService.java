@@ -216,9 +216,12 @@ public class TimerService implements HasLogger {
             case GIFT -> {
                 SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;
                 entity = mapper.map(event, CommunityGiftEntity.class);
-                SubTier tier = giftEvent.getTier();
-                long s = tier == SubTier.TIER_3 ? TIER_3_SECONDS : tier == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
-                yield s * giftEvent.getAmount();
+                //SubTier tier = giftEvent.getTier();
+                //long s = tier == SubTier.TIER_3 ? TIER_3_SECONDS : tier == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
+                //yield s * giftEvent.getAmount();
+                // Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
+                // Time is added for the individual gifted subscriptions
+                yield 0;
             }
             case TIP -> {
                 entity = mapper.map(event, TipEntity.class);
