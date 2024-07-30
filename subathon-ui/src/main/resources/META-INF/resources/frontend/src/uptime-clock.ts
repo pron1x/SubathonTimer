@@ -24,7 +24,7 @@ class UptimeClock extends LitElement {
             } else {
                 this._uptimeString = millisToTimeString(0);
             }
-        }, 1000)
+        }, 100)
     }
 
     disconnectedCallback() {

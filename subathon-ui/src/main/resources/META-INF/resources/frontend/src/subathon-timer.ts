@@ -25,7 +25,7 @@ class SubathonTimer extends LitElement {
         this._clockInterval = setInterval(() => {
             const ms = this.calculateTimeLeft();
             this._timeLeftString = this.createTimeLeftString(ms);
-        }, 1000);
+        }, 100);
     }
 
     updateToNewTimerEvent(startDate: string, endDate: string, updateDate: string, timerState: string) {
