@@ -52,9 +52,15 @@ public class TimerService implements HasLogger {
     @Value("${timer.seconds.tier1}")
     private long TIER_1_SECONDS = 300;
     @Value("${timer.seconds.tier2}")
-    private long TIER_2_SECONDS = 300;
+    private long TIER_2_SECONDS = 600;
     @Value("${timer.seconds.tier3}")
-    private long TIER_3_SECONDS = 300;
+    private long TIER_3_SECONDS = 1500;
+    @Value("${timer.seconds.tier1-gift}")
+    private long TIER_1_GIFT_SECONDS = 300;
+    @Value("${timer.seconds.tier2-gift}")
+    private long TIER_2_GIFT_SECONDS = 600;
+    @Value("${timer.seconds.tier3-gift}")
+    private long TIER_3_GIFT_SECONDS = 1500;
     @Value("${timer.seconds.euro}")
     private long EURO_SECONDS = 60; // Seconds added per 100 Euro cents
     @Value("${timer.seconds.bits}")
@@ -210,8 +216,13 @@ public class TimerService implements HasLogger {
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 entity = mapper.map(event, SubscribeEntity.class);
-                yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_SECONDS :
-                        subEvent.getTier() == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
+                if(subEvent.isGifted()) {
+                    yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_GIFT_SECONDS :
+                            subEvent.getTier() == SubTier.TIER_2 ? TIER_2_GIFT_SECONDS : TIER_1_GIFT_SECONDS;
+                } else {
+                    yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_SECONDS :
+                            subEvent.getTier() == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
+                }
             }
             case GIFT -> {
                 SubathonCommunityGiftEvent giftEvent = (SubathonCommunityGiftEvent) event;

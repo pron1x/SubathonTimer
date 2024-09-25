@@ -25,6 +25,9 @@ timer:
     tier1: 300
     tier2: 600
     tier3: 1500
+    tier1-gift: 300
+    tier2-gift: 600
+    tier3-gift: 1500
     euro: 60
     bits: 60
     initial: 172800
