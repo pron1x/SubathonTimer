@@ -1,6 +1,7 @@
 package com.pronixxx.subathon.ui.view.timer;
 
 import com.pronixxx.subathon.datamodel.TimerEvent;
+import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.ui.component.SubathonTimer;
 import com.pronixxx.subathon.ui.service.TimerEventService;
 import com.pronixxx.subathon.ui.service.TimerEventService.TimerEventListener;
@@ -51,7 +52,9 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
                 ui -> ui.access(() -> {
                     getLogger().info("Handling TimerEvent: {}", timerEvent);
                     timer.updateWithNewEvent(timerEvent);
-                    addTimeAddedTheme();
+                    if(timerEvent.getType() == TimerEventType.TIME_ADDITION) {
+                        addTimeAddedTheme();
+                    }
                 })
         );
 
