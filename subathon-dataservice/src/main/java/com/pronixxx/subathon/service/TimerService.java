@@ -3,7 +3,6 @@ package com.pronixxx.subathon.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.data.entity.*;
-import com.pronixxx.subathon.data.repository.EventRepository;
 import com.pronixxx.subathon.data.repository.TimerEventRepository;
 import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
@@ -27,9 +26,6 @@ import static com.pronixxx.subathon.datamodel.enums.TimerState.*;
 
 @Service
 public class TimerService implements HasLogger {
-
-    @Autowired
-    EventRepository eventRepository;
 
     @Autowired
     RabbitMessageService messageService;
@@ -183,15 +179,9 @@ public class TimerService implements HasLogger {
                     resumeTimer(command);
                 }
             }
-            case PAUSE -> {
-                pauseTimer(command);
-            }
-            case ADD -> {
-                addSubathonEventTime(command);
-            }
-            case REMOVE -> {
-                subtractSubathonEventTime(command);
-            }
+            case PAUSE -> pauseTimer(command);
+            case ADD -> addSubathonEventTime(command);
+            case REMOVE -> subtractSubathonEventTime(command);
             default -> getLogger().warn("Command {} not yet implemented!", command.getCommand());
         }
     }
@@ -202,7 +192,7 @@ public class TimerService implements HasLogger {
             return;
         }
         getLogger().debug("Adding time for event: {}", event);
-        EventEntity entity = null;
+        EventEntity entity;
 
         double seconds = switch (event.getType()) {
             case FOLLOW -> {
