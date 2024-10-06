@@ -34,5 +34,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.amashchenko.maven.plugin</groupId>
+                <artifactId>gitflow-maven-plugin</artifactId>
+                <version>1.21.0</version>
+                <configuration>
+                    <gitFlowConfig>
+                        <productionBranch>main</productionBranch>
+                        <developmentBranch>develop</developmentBranch>
+                    </gitFlowConfig>
+                    <!-- We release via a pull request on GitHub, so only update versions via the plugin.
+                         In the future potentially change to releasing and merging via the plugin -->
+                    <skipReleaseMergeProdBranch>true</skipReleaseMergeProdBranch>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>
