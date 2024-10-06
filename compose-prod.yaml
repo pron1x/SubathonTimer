@@ -24,7 +24,7 @@ services:
 
   subathon-importer:
     container_name: 'seimporter'
-    image: 'pronixxx.com/seimporter:0.0.1'
+    image: 'seimporter:latest'
     restart: always
     environment:
       - 'STREAMELEMENTS_JWT_TOKEN='
@@ -36,7 +36,7 @@ services:
 
   subathon-bot:
     container_name: 'subathonbot'
-    image: 'pronixxx.com/subathonbot:0.0.1'
+    image: 'subathonbot:latest'
     restart: always
     environment:
       - 'TWITCH_OAUTH_TOKEN='
@@ -48,10 +48,10 @@ services:
 
   subathon-dataservice:
     container_name: 'subathondataservice'
-    image: 'pronixxx.com/subathondataservice:0.0.1'
+    image: 'subathondataservice:latest'
     restart: always
     environment:
-      - 'DATASERVICE_DATASOURCE_URL=DATASERVICE_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/subathon'
+      - 'DATASERVICE_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/subathon'
       - 'DATASERVICE_DATASOURCE_USERNAME=root'
       - 'DATASERVICE_DATASOURCE_PASSWORD='
       - 'SPRING_RABBITMQ_PASSWORD='
@@ -60,12 +60,10 @@ services:
     depends_on:
       - rabbitmq
       - mariadb
-      - subathon-bot
-      - subathon-importer
 
   subathon-ui:
     container_name: 'subathonui'
-    image: 'pronixxx.com/subathonui:0.0.1'
+    image: 'subathonui:latest'
     restart: always
     ports:
       - '8080:8080'
