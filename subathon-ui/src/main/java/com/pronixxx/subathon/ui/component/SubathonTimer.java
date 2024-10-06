@@ -33,6 +33,7 @@ public class SubathonTimer extends Component implements HasLogger {
         getElement().callJsFunction("updateToNewTimerEvent", Json.create(start), Json.create(end), Json.create(update), state);
     }
 
+    @SuppressWarnings("unused")
     @ClientCallable
     public JsonNumber getCurrentServerTimestamp() {
         return Json.create(System.currentTimeMillis());

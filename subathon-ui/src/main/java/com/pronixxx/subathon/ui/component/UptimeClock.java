@@ -25,6 +25,7 @@ public class UptimeClock extends Component {
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
     }
 
+    @SuppressWarnings("unused")
     @ClientCallable
     public JsonNumber getCurrentServerTimestamp() {
         return Json.create(System.currentTimeMillis());
