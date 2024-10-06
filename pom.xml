@@ -13,7 +13,7 @@
 
     <groupId>com.pronixxx</groupId>
     <artifactId>subathon-root</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Subathon-Root</name>
@@ -48,6 +48,7 @@
                     <!-- We release via a pull request on GitHub, so only update versions via the plugin.
                          In the future potentially change to releasing and merging via the plugin -->
                     <skipReleaseMergeProdBranch>true</skipReleaseMergeProdBranch>
+
                 </configuration>
             </plugin>
         </plugins>
