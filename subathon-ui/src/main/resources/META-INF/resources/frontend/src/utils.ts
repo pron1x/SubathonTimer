@@ -9,3 +9,8 @@ export function millisToTimeString(ms: number) {
         (s.toString().length < 2 ? "0" : "") + s.toString()
     ].join(":");
 }
+
+export const STATE_TICKING = "TICKING";
+export const STATE_PAUSED: string = "PAUSED";
+export const STATE_INITIALIZED: string = "INITIALIZED";
+export const STATE_ENDED: string = "ENDED";

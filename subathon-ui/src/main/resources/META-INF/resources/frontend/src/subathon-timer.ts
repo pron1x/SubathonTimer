@@ -1,14 +1,9 @@
 import {html, LitElement} from "lit";
 import {customElement, state} from "lit/decorators.js";
-import {millisToTimeString} from "./utils";
+import {millisToTimeString, STATE_INITIALIZED, STATE_TICKING, STATE_PAUSED, STATE_ENDED} from "./utils";
 
 @customElement('subathon-timer')
 class SubathonTimer extends LitElement {
-
-    readonly STATE_TICKING: string = "TICKING";
-    readonly STATE_PAUSED: string = "PAUSED";
-    readonly STATE_INITIALIZED: string = "INITIALIZED";
-    readonly STATE_ENDED: string = "ENDED";
 
     _startTime: number;
     _endTime: number;
@@ -60,13 +55,13 @@ class SubathonTimer extends LitElement {
     }
 
     calculateTimeLeft(): number {
-        if(this._timerState === this.STATE_ENDED) {
+        if(this._timerState === STATE_ENDED) {
             return -1;
-        } else if (this._timerState === this.STATE_INITIALIZED) {
+        } else if (this._timerState === STATE_INITIALIZED) {
             return (this._endTime - this._lastUpdateTime);
-        } else if (this._timerState === this.STATE_PAUSED) {
+        } else if (this._timerState === STATE_PAUSED) {
             return (this._endTime - this._lastUpdateTime);
-        } else if (this._timerState === this.STATE_TICKING) {
+        } else if (this._timerState === STATE_TICKING) {
             return (this._endTime - this.getTime());
         } else {
             return 0;

@@ -1,4 +1,4 @@
-import {millisToTimeString} from "./utils";
+import {millisToTimeString, STATE_TICKING, STATE_PAUSED, STATE_ENDED} from "./utils";
 
 import {html, LitElement} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
@@ -17,9 +17,9 @@ class UptimeClock extends LitElement {
     connectedCallback(): void {
         super.connectedCallback();
         this._clockInterval = setInterval(() => {
-            if(this._startTimestamp && (this._timerState === "TICKING" || this._timerState === "PAUSED")) {
+            if(this._startTimestamp && (this._timerState === STATE_TICKING || this._timerState === STATE_PAUSED)) {
                 this._uptimeString = millisToTimeString(new Date().getTime() - this._startTimestamp);
-            } else if(this._startTimestamp && this._endTimestamp && this._timerState === "ENDED"){
+            } else if(this._startTimestamp && this._endTimestamp && this._timerState === STATE_ENDED){
                 this._uptimeString = millisToTimeString(this._endTimestamp - this._startTimestamp);
             } else {
                 this._uptimeString = millisToTimeString(0);
