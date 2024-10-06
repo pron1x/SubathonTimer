@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.pronixxx</groupId>
         <artifactId>subathon-root</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>subathon-dataservice</artifactId>
@@ -39,13 +39,13 @@
         <dependency>
             <groupId>com.pronixxx</groupId>
             <artifactId>subathon-datamodel</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.pronixxx</groupId>
             <artifactId>subathon-util</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
