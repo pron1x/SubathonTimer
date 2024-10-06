@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.pronixxx</groupId>
         <artifactId>subathon-root</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>subathon-bot</artifactId>
@@ -24,18 +24,18 @@
         <dependency>
             <groupId>com.github.twitch4j</groupId>
             <artifactId>twitch4j</artifactId>
-            <version>1.20.0</version>
+            <version>1.22.0</version>
         </dependency>
         <dependency>
             <groupId>com.pronixxx</groupId>
             <artifactId>subathon-util</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.pronixxx</groupId>
             <artifactId>subathon-datamodel</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

@@ -8,7 +8,7 @@ bot:
     oauth:
       token: ${TWITCH_OAUTH_TOKEN}
   subathon:
-    channel: 'trizze'
+    channel:
     command:
       prefix: '!'
 

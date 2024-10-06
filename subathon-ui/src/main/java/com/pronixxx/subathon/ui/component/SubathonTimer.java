@@ -2,19 +2,18 @@ package com.pronixxx.subathon.ui.component;
 
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
+import elemental.json.Json;
+import elemental.json.JsonNumber;
 
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 @JsModule("./src/subathon-timer.ts")
 @Tag("subathon-timer")
 public class SubathonTimer extends Component implements HasLogger {
-
-    private final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
 
     public SubathonTimer(TimerEvent event) {
         updateWithNewEvent(event);
@@ -27,11 +26,17 @@ public class SubathonTimer extends Component implements HasLogger {
     }
 
     private void pushNewTimerEvent(TimerEvent event) {
-        String start = event.getStartTime().atOffset(ZoneOffset.UTC).format(UTC_FORMATTER);
-        String end = event.getCurrentEndTime().atOffset(ZoneOffset.UTC).format(UTC_FORMATTER);
-        String update = event.getTimestamp().atOffset(ZoneOffset.UTC).format(UTC_FORMATTER);
+        long start = event.getStartTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
+        long end = event.getCurrentEndTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
+        long update = event.getTimestamp().toEpochSecond(ZoneOffset.UTC) * 1000L;
         String state = event.getCurrentTimerState().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", start, end, update, state);
+        getElement().callJsFunction("updateToNewTimerEvent", Json.create(start), Json.create(end), Json.create(update), state);
+    }
+
+    @SuppressWarnings("unused")
+    @ClientCallable
+    public JsonNumber getCurrentServerTimestamp() {
+        return Json.create(System.currentTimeMillis());
     }
 
 }
