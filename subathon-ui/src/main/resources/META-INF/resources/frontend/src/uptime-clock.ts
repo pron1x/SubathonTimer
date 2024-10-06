@@ -46,7 +46,7 @@ class UptimeClock extends LitElement {
 
     render() {
         return html`
-            <span .textContent="${this._uptimeString}"></span>
+            <span>${this._uptimeString}</span>
         `;
     }
 }

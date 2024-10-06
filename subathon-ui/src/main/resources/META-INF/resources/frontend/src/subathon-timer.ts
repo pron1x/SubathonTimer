@@ -68,7 +68,7 @@ class SubathonTimer extends LitElement {
 
     render() {
         return html`
-            <span .textContent="${this._timeLeftString}"></span>
+            <span>${this._timeLeftString}</span>
         `;
     }
 
