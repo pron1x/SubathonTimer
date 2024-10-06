@@ -12,7 +12,7 @@
     <artifactId>subathon-ui</artifactId>
 
     <properties>
-        <vaadin.version>24.4.4</vaadin.version>
+        <vaadin.version>24.4.13</vaadin.version>
     </properties>
 
     <dependencies>
