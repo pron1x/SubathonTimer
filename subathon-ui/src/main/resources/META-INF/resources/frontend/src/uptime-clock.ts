@@ -37,6 +37,7 @@ class UptimeClock extends LitElement {
     disconnectedCallback() {
         super.disconnectedCallback();
         clearInterval(this._clockInterval);
+        clearInterval(this._syncInterval);
     }
 
     setState(start: number, end: number, state: string) {

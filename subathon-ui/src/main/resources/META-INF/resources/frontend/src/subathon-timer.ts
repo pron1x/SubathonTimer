@@ -30,6 +30,12 @@ class SubathonTimer extends LitElement {
         }, 60000);
     }
 
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        clearInterval(this._clockInterval);
+        clearInterval(this._syncInterval);
+    }
+
     updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string) {
         if(startDate) {
             console.log("Start: " + startDate);
