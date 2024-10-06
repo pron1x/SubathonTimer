@@ -28,21 +28,21 @@ class SubathonTimer extends LitElement {
         }, 100);
     }
 
-    updateToNewTimerEvent(startDate: string, endDate: string, updateDate: string, timerState: string) {
+    updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string) {
         if(startDate) {
-            console.log(startDate)
-            this._startTime = new Date(startDate).getTime();
+            console.log("Start: " + startDate);
+            this._startTime = startDate;
         }
         if(endDate) {
-            console.log(endDate)
-            this._endTime = new Date(endDate).getTime();
+            console.log("End: " + endDate);
+            this._endTime = endDate;
         }
         if(updateDate) {
-            console.log(updateDate)
-            this._lastUpdateTime = new Date(updateDate).getTime();
+            console.log("Update: " + updateDate);
+            this._lastUpdateTime = updateDate;
         }
         if(timerState) {
-            console.log(timerState)
+            console.log("State: " + timerState);
             this._timerState = timerState;
         }
         this._timeLeftString = this.createTimeLeftString(this.calculateTimeLeft());

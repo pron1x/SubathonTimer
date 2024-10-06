@@ -32,12 +32,12 @@ class UptimeClock extends LitElement {
         clearInterval(this._clockInterval);
     }
 
-    setState(start: string, end: string, state: string) {
+    setState(start: number, end: number, state: string) {
         if(start) {
-            this._startTimestamp = new Date(start).getTime();
+            this._startTimestamp = start;
         }
         if(end) {
-            this._endTimestamp = new Date(end).getTime();
+            this._endTimestamp = end;
         }
         if(state) {
             this._timerState = state;
