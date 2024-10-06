@@ -11,6 +11,7 @@ class UptimeClock extends LitElement {
 
     _timeDelta: number = 0;
 
+    // @ts-ignore
     @state()
     _uptimeString: string;
 
@@ -20,7 +21,7 @@ class UptimeClock extends LitElement {
     connectedCallback(): void {
         super.connectedCallback();
         this.syncWithServerTime();
-        this._clockInterval = setInterval(() => {
+        this._clockInterval = setInterval((): void => {
             if(this._startTimestamp && (this._timerState === STATE_TICKING || this._timerState === STATE_PAUSED)) {
                 this._uptimeString = millisToTimeString(this.getTime() - this._startTimestamp);
             } else if(this._startTimestamp && this._endTimestamp && this._timerState === STATE_ENDED){
@@ -29,18 +30,18 @@ class UptimeClock extends LitElement {
                 this._uptimeString = millisToTimeString(0);
             }
         }, 100);
-        this._syncInterval = setInterval(() => {
+        this._syncInterval = setInterval((): void => {
             this.syncWithServerTime();
         }, 60000);
     }
 
-    disconnectedCallback() {
+    disconnectedCallback(): void {
         super.disconnectedCallback();
         clearInterval(this._clockInterval);
         clearInterval(this._syncInterval);
     }
 
-    setState(start: number, end: number, state: string) {
+    setState(start: number, end: number, state: string): void {
         if(start) {
             this._startTimestamp = start;
         }
@@ -52,14 +53,15 @@ class UptimeClock extends LitElement {
         }
     }
 
-    syncWithServerTime() {
+    syncWithServerTime(): void {
+        // @ts-ignore
         let serverTimePromise: Promise<number> = this.$server.getCurrentServerTimestamp();
-        serverTimePromise.then(t => {
+        serverTimePromise.then((t: number) => {
             this._timeDelta = Date.now() - t;
         });
     }
 
-    getTime() {
+    getTime(): number {
         return Date.now() - this._timeDelta;
     }
 

@@ -12,6 +12,7 @@ class SubathonTimer extends LitElement {
 
     _timeDelta: number = 0;
 
+    // @ts-ignore
     @state()
     _timeLeftString: string;
 
@@ -21,22 +22,22 @@ class SubathonTimer extends LitElement {
     connectedCallback() : void {
         super.connectedCallback();
         this.syncWithServerTime();
-        this._clockInterval = setInterval(() => {
+        this._clockInterval = setInterval((): void => {
             const ms = this.calculateTimeLeft();
             this._timeLeftString = this.createTimeLeftString(ms);
         }, 100);
-        this._syncInterval = setInterval(() => {
+        this._syncInterval = setInterval((): void => {
             this.syncWithServerTime();
         }, 60000);
     }
 
-    disconnectedCallback() {
+    disconnectedCallback(): void {
         super.disconnectedCallback();
         clearInterval(this._clockInterval);
         clearInterval(this._syncInterval);
     }
 
-    updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string) {
+    updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string): void {
         if(startDate) {
             console.log("Start: " + startDate);
             this._startTime = startDate;
@@ -56,7 +57,7 @@ class SubathonTimer extends LitElement {
         this._timeLeftString = this.createTimeLeftString(this.calculateTimeLeft());
     }
 
-    createTimeLeftString(milliseconds) {
+    createTimeLeftString(milliseconds: number): string {
         return milliseconds < 0 ? "SUBATHON ENDED!" : millisToTimeString(milliseconds);
     }
 
@@ -74,14 +75,15 @@ class SubathonTimer extends LitElement {
         }
     }
 
-    syncWithServerTime() {
+    syncWithServerTime(): void {
+        // @ts-ignore
         let serverTimePromise: Promise<number> = this.$server.getCurrentServerTimestamp();
-        serverTimePromise.then(t => {
+        serverTimePromise.then((t: number) => {
             this._timeDelta = Date.now() - t;
         });
     }
 
-    getTime() {
+    getTime(): number {
         return Date.now() - this._timeDelta;
     }
 
