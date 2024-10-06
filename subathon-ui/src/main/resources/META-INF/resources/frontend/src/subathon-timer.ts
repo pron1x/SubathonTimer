@@ -15,17 +15,24 @@ class SubathonTimer extends LitElement {
     _lastUpdateTime: number;
     _timerState: string;
 
+    _timeDelta: number = 0;
+
     @state()
     _timeLeftString: string;
 
     _clockInterval: number;
+    _syncInterval: number;
 
     connectedCallback() : void {
         super.connectedCallback();
+        this.syncWithServerTime();
         this._clockInterval = setInterval(() => {
             const ms = this.calculateTimeLeft();
             this._timeLeftString = this.createTimeLeftString(ms);
         }, 100);
+        this._syncInterval = setInterval(() => {
+            this.syncWithServerTime();
+        }, 60000);
     }
 
     updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string) {
@@ -60,10 +67,21 @@ class SubathonTimer extends LitElement {
         } else if (this._timerState === this.STATE_PAUSED) {
             return (this._endTime - this._lastUpdateTime);
         } else if (this._timerState === this.STATE_TICKING) {
-            return (this._endTime - new Date().getTime());
+            return (this._endTime - this.getTime());
         } else {
             return 0;
         }
+    }
+
+    syncWithServerTime() {
+        let serverTimePromise: Promise<number> = this.$server.getCurrentServerTimestamp();
+        serverTimePromise.then(t => {
+            this._timeDelta = Date.now() - t;
+        });
+    }
+
+    getTime() {
+        return Date.now() - this._timeDelta;
     }
 
     render() {

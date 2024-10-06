@@ -2,10 +2,12 @@ package com.pronixxx.subathon.ui.component;
 
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import elemental.json.Json;
+import elemental.json.JsonNumber;
 
 import java.time.ZoneOffset;
 
@@ -29,6 +31,11 @@ public class SubathonTimer extends Component implements HasLogger {
         long update = event.getTimestamp().toEpochSecond(ZoneOffset.UTC) * 1000L;
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("updateToNewTimerEvent", Json.create(start), Json.create(end), Json.create(update), state);
+    }
+
+    @ClientCallable
+    public JsonNumber getCurrentServerTimestamp() {
+        return Json.create(System.currentTimeMillis());
     }
 
 }
