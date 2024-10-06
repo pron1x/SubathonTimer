@@ -9,22 +9,29 @@ class UptimeClock extends LitElement {
     _endTimestamp: number;
     _timerState: string;
 
+    _timeDelta: number = 0;
+
     @state()
     _uptimeString: string;
 
     _clockInterval: number;
+    _syncInterval: number;
 
     connectedCallback(): void {
         super.connectedCallback();
+        this.syncWithServerTime();
         this._clockInterval = setInterval(() => {
             if(this._startTimestamp && (this._timerState === STATE_TICKING || this._timerState === STATE_PAUSED)) {
-                this._uptimeString = millisToTimeString(new Date().getTime() - this._startTimestamp);
+                this._uptimeString = millisToTimeString(this.getTime() - this._startTimestamp);
             } else if(this._startTimestamp && this._endTimestamp && this._timerState === STATE_ENDED){
                 this._uptimeString = millisToTimeString(this._endTimestamp - this._startTimestamp);
             } else {
                 this._uptimeString = millisToTimeString(0);
             }
-        }, 100)
+        }, 100);
+        this._syncInterval = setInterval(() => {
+            this.syncWithServerTime();
+        }, 60000);
     }
 
     disconnectedCallback() {
@@ -42,6 +49,17 @@ class UptimeClock extends LitElement {
         if(state) {
             this._timerState = state;
         }
+    }
+
+    syncWithServerTime() {
+        let serverTimePromise: Promise<number> = this.$server.getCurrentServerTimestamp();
+        serverTimePromise.then(t => {
+            this._timeDelta = Date.now() - t;
+        });
+    }
+
+    getTime() {
+        return Date.now() - this._timeDelta;
     }
 
     render() {

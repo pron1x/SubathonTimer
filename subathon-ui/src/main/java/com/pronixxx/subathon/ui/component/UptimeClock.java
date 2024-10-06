@@ -1,10 +1,12 @@
 package com.pronixxx.subathon.ui.component;
 
 import com.pronixxx.subathon.datamodel.TimerEvent;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import elemental.json.Json;
+import elemental.json.JsonNumber;
 
 import java.time.ZoneOffset;
 
@@ -21,5 +23,10 @@ public class UptimeClock extends Component {
         long end = event.getCurrentEndTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
+    }
+
+    @ClientCallable
+    public JsonNumber getCurrentServerTimestamp() {
+        return Json.create(System.currentTimeMillis());
     }
 }
