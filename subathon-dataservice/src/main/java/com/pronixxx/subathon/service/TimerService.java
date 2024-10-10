@@ -9,7 +9,6 @@ import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
 import com.pronixxx.subathon.executor.AdjustableScheduledExecutorService;
-import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
@@ -20,8 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 import static com.pronixxx.subathon.datamodel.enums.TimerState.*;
 

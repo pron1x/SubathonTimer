@@ -9,7 +9,6 @@ import com.github.twitch4j.common.events.domain.EventUser;
 import com.pronixxx.subathon.bot.service.RabbitMessageService;
 import com.pronixxx.subathon.datamodel.SubathonCommandEvent;
 import com.pronixxx.subathon.datamodel.enums.Command;
-import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Set;
 
