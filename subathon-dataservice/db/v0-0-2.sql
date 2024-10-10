@@ -1,4 +1,4 @@
-CREATE DATABASE subathon;
+CREATE OR REPLACE DATABASE subathon;
 USE subathon;
 
 DROP TABLE IF EXISTS `timer_event`;
