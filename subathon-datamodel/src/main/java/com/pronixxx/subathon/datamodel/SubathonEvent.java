@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.pronixxx.subathon.datamodel.enums.EventType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 public class SubathonEvent {
 
     private Integer id;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private boolean isMock;
     private String source;
     private EventType type;
@@ -37,11 +37,11 @@ public class SubathonEvent {
         this.id = id;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 

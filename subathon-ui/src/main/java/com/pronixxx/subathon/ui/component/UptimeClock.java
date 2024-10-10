@@ -8,8 +8,6 @@ import com.vaadin.flow.component.dependency.JsModule;
 import elemental.json.Json;
 import elemental.json.JsonNumber;
 
-import java.time.ZoneOffset;
-
 @JsModule("./src/uptime-clock.ts")
 @Tag("uptime-clock")
 public class UptimeClock extends Component {
@@ -19,8 +17,8 @@ public class UptimeClock extends Component {
     }
 
     public void pushState(TimerEvent event) {
-        long start = event.getStartTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
-        long end = event.getCurrentEndTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
+        long start = event.getStartTime().toEpochMilli();
+        long end = event.getCurrentEndTime().toEpochMilli();
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
     }

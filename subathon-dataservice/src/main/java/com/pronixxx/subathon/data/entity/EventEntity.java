@@ -3,7 +3,7 @@ package com.pronixxx.subathon.data.entity;
 import com.pronixxx.subathon.datamodel.enums.EventType;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "event")
@@ -16,7 +16,7 @@ public abstract class EventEntity extends BaseEntity {
     private EventType type;
 
     @Column(name = "timestamp")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Column(name = "source", length = 20)
     private String source;
@@ -32,11 +32,11 @@ public abstract class EventEntity extends BaseEntity {
         this.type = eventType;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 

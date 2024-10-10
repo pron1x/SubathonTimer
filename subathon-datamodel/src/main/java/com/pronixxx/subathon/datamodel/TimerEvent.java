@@ -3,24 +3,24 @@ package com.pronixxx.subathon.datamodel;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class TimerEvent {
 
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private TimerEventType type;
-    private LocalDateTime oldEndTime;
-    private LocalDateTime currentEndTime;
+    private Instant oldEndTime;
+    private Instant currentEndTime;
     private TimerState oldTimerState;
     private TimerState currentTimerState;
-    private LocalDateTime startTime;
+    private Instant startTime;
     private SubathonEvent subathonEvent;
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -32,19 +32,19 @@ public class TimerEvent {
         this.type = type;
     }
 
-    public LocalDateTime getOldEndTime() {
+    public Instant getOldEndTime() {
         return oldEndTime;
     }
 
-    public void setOldEndTime(LocalDateTime oldEndTime) {
+    public void setOldEndTime(Instant oldEndTime) {
         this.oldEndTime = oldEndTime;
     }
 
-    public LocalDateTime getCurrentEndTime() {
+    public Instant getCurrentEndTime() {
         return currentEndTime;
     }
 
-    public void setCurrentEndTime(LocalDateTime currentEndTime) {
+    public void setCurrentEndTime(Instant currentEndTime) {
         this.currentEndTime = currentEndTime;
     }
 
@@ -64,11 +64,11 @@ public class TimerEvent {
         this.currentTimerState = currentTimerState;
     }
 
-    public LocalDateTime getStartTime() {
+    public Instant getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setStartTime(Instant startTime) {
         this.startTime = startTime;
     }
 

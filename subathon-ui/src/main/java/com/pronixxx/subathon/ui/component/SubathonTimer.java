@@ -9,8 +9,6 @@ import com.vaadin.flow.component.dependency.JsModule;
 import elemental.json.Json;
 import elemental.json.JsonNumber;
 
-import java.time.ZoneOffset;
-
 @JsModule("./src/subathon-timer.ts")
 @Tag("subathon-timer")
 public class SubathonTimer extends Component implements HasLogger {
@@ -26,9 +24,9 @@ public class SubathonTimer extends Component implements HasLogger {
     }
 
     private void pushNewTimerEvent(TimerEvent event) {
-        long start = event.getStartTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
-        long end = event.getCurrentEndTime().toEpochSecond(ZoneOffset.UTC) * 1000L;
-        long update = event.getTimestamp().toEpochSecond(ZoneOffset.UTC) * 1000L;
+        long start = event.getStartTime().toEpochMilli();
+        long end = event.getCurrentEndTime().toEpochMilli();
+        long update = event.getTimestamp().toEpochMilli();
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("updateToNewTimerEvent", Json.create(start), Json.create(end), Json.create(update), state);
     }

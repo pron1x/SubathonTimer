@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -89,10 +90,11 @@ public class TimerService implements HasLogger {
         initialEvent.setOldTimerState(UNINITIALIZED);
         initialEvent.setCurrentTimerState(INITIALIZED);
 
-        initialEvent.setStartTime(nowUTC());
-        initialEvent.setCurrentEndTime(nowUTC().plusSeconds(INITIAL_TIMER_SECONDS));
+        Instant now = Instant.now();
+        initialEvent.setStartTime(now);
+        initialEvent.setCurrentEndTime(now.plusSeconds(INITIAL_TIMER_SECONDS));
 
-        initialEvent.setTimestamp(nowUTC());
+        initialEvent.setTimestamp(Instant.now());
 
         TimerEventEntity eventEntity = timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
         return mapper.map(eventEntity, TimerEvent.class);
@@ -104,7 +106,7 @@ public class TimerService implements HasLogger {
             return;
         }
         getLogger().debug("Starting timer");
-        LocalDateTime now = nowUTC();
+        Instant now = Instant.now();
         TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE,
                 TICKING,
                 now.plusSeconds(INITIAL_TIMER_SECONDS));
@@ -145,7 +147,7 @@ public class TimerService implements HasLogger {
         getLogger().debug("Resuming timer!");
         // Calculate the seconds the timer has been paused for to get new end time
         Duration d = Duration.between(lastEvent.getTimestamp(), lastEvent.getCurrentEndTime());
-        LocalDateTime newEnd = nowUTC().plusSeconds(d.getSeconds());
+        Instant newEnd = Instant.now().plusSeconds(d.getSeconds());
         TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE, TICKING, newEnd);
         TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
         toSave.setSubathonEvent(mapper.map(command, CommandEntity.class));
@@ -159,7 +161,7 @@ public class TimerService implements HasLogger {
 
     public void stopTimer() {
         getLogger().debug("Stopping timer!");
-        LocalDateTime now = nowUTC();
+        Instant now = Instant.now();
         TimerEvent timerEvent = createTimerEvent(TimerEventType.STATE_CHANGE, ENDED, now);
 
         TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
@@ -241,13 +243,13 @@ public class TimerService implements HasLogger {
 
         if (lastEvent.getCurrentTimerState() == PAUSED) {
             // Calculate extra duration in case the timer is paused before adding the event time
-            Duration d = Duration.between(lastEvent.getTimestamp(), nowUTC());
+            Duration d = Duration.between(lastEvent.getTimestamp(), Instant.now());
             seconds += d.getSeconds();
         }
 
         long secondsToAdd = (long) Math.ceil(seconds);
         // Add the seconds from the event
-        LocalDateTime newEnd = lastEvent.getCurrentEndTime().plusSeconds(secondsToAdd);
+        Instant newEnd = lastEvent.getCurrentEndTime().plusSeconds(secondsToAdd);
         TimerEvent timerEvent = createTimerEvent(TimerEventType.TIME_ADDITION, lastEvent.getCurrentTimerState(), newEnd);
 
         timerControl.setExecutionTime(timerEvent.getCurrentEndTime());
@@ -269,12 +271,12 @@ public class TimerService implements HasLogger {
         getLogger().debug("Removing time from the timer.");
         long seconds = 0;
         if(lastEvent.getCurrentTimerState() == PAUSED) {
-            Duration d = Duration.between(lastEvent.getTimestamp(), nowUTC());
+            Duration d = Duration.between(lastEvent.getTimestamp(), Instant.now());
             seconds += d.getSeconds();
         }
         seconds -= command.getSeconds();
-        LocalDateTime newEnd = lastEvent.getCurrentEndTime().plusSeconds(seconds);
-        if(newEnd.isBefore(nowUTC())) {
+        Instant newEnd = lastEvent.getCurrentEndTime().plusSeconds(seconds);
+        if(newEnd.isBefore(Instant.now())) {
             getLogger().info("Removing {} seconds from the timer would stop it, ignoring!", command.getSeconds());
             return;
         }
@@ -289,11 +291,11 @@ public class TimerService implements HasLogger {
         publishEvent();
     }
 
-    private TimerEvent createTimerEvent(TimerEventType type, TimerState newTimerState, LocalDateTime newEndTime) {
+    private TimerEvent createTimerEvent(TimerEventType type, TimerState newTimerState, Instant newEndTime) {
         TimerEvent timerEvent = new TimerEvent();
 
         timerEvent.setType(type);
-        timerEvent.setTimestamp(nowUTC());
+        timerEvent.setTimestamp(Instant.now());
         timerEvent.setStartTime(lastEvent.getStartTime());
 
         timerEvent.setOldTimerState(lastEvent.getCurrentTimerState());
@@ -307,10 +309,6 @@ public class TimerService implements HasLogger {
 
     private TimerEventEntity saveTimerEventToDatabase(TimerEventEntity timerEvent) {
         return timerEventRepository.save(timerEvent);
-    }
-
-    private LocalDateTime nowUTC() {
-        return LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ));
     }
 
     public TimerEvent getLastEvent() {

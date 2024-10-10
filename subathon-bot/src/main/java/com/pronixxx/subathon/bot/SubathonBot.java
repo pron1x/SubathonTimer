@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -143,7 +144,7 @@ public class SubathonBot implements HasLogger {
         event.setUsername(user);
         event.setCommand(command);
         event.setSeconds(seconds);
-        event.setTimestamp(LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)));
+        event.setTimestamp(Instant.now());
         return event;
     }
 

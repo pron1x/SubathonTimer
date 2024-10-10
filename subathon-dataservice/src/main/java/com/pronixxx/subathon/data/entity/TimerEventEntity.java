@@ -4,24 +4,24 @@ import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "timer_event")
 public class TimerEventEntity extends BaseEntity {
 
     @Column(name = "timestamp")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", columnDefinition = "ENUM('TIME_ADDITION', 'TIME_SUBTRACTION', 'STATE_CHANGE')")
     private TimerEventType type;
 
     @Column(name = "old_end_time")
-    private LocalDateTime oldEndTime;
+    private Instant oldEndTime;
 
     @Column(name = "current_end_time")
-    private LocalDateTime currentEndTime;
+    private Instant currentEndTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "old_timer_state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
@@ -32,17 +32,17 @@ public class TimerEventEntity extends BaseEntity {
     private TimerState currentTimerState;
 
     @Column(name = "start_time")
-    private LocalDateTime startTime;
+    private Instant startTime;
 
     @OneToOne(targetEntity = EventEntity.class, cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id", referencedColumnName = "id")
     private EventEntity subathonEvent;
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -54,19 +54,19 @@ public class TimerEventEntity extends BaseEntity {
         this.type = type;
     }
 
-    public LocalDateTime getOldEndTime() {
+    public Instant getOldEndTime() {
         return oldEndTime;
     }
 
-    public void setOldEndTime(LocalDateTime oldEndTime) {
+    public void setOldEndTime(Instant oldEndTime) {
         this.oldEndTime = oldEndTime;
     }
 
-    public LocalDateTime getCurrentEndTime() {
+    public Instant getCurrentEndTime() {
         return currentEndTime;
     }
 
-    public void setCurrentEndTime(LocalDateTime currentEndTime) {
+    public void setCurrentEndTime(Instant currentEndTime) {
         this.currentEndTime = currentEndTime;
     }
 
@@ -86,11 +86,11 @@ public class TimerEventEntity extends BaseEntity {
         this.currentTimerState = currentTimerState;
     }
 
-    public LocalDateTime getStartTime() {
+    public Instant getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setStartTime(Instant startTime) {
         this.startTime = startTime;
     }
 

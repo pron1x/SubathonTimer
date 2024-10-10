@@ -3,6 +3,7 @@ package com.pronixxx.subathon.executor;
 import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.concurrent.*;
@@ -16,16 +17,16 @@ public class AdjustableScheduledExecutorService implements HasLogger {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduledCommandHandle;
 
-    private volatile LocalDateTime executionTime;
+    private volatile Instant executionTime;
     private volatile boolean isTimerPaused;
 
     public AdjustableScheduledExecutorService() {}
 
-    public synchronized LocalDateTime getExecutionTime() {
+    public synchronized Instant getExecutionTime() {
         return executionTime;
     }
 
-    public synchronized void setExecutionTime(LocalDateTime executionTime) {
+    public synchronized void setExecutionTime(Instant executionTime) {
         this.executionTime = executionTime;
     }
 
@@ -45,7 +46,7 @@ public class AdjustableScheduledExecutorService implements HasLogger {
      * @param command The runnable to be executed
      * @param executionTime The time at which the command should be executed. Can be adjusted
      */
-    public void scheduleCommand(Runnable command, LocalDateTime executionTime) {
+    public void scheduleCommand(Runnable command, Instant executionTime) {
         this.executionTime = executionTime;
         final Runnable scheduledCommand = () -> {
             if (isExecutionTime()) {
@@ -69,6 +70,6 @@ public class AdjustableScheduledExecutorService implements HasLogger {
             return false;
         }
         return (executionTime != null
-                && LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)).isAfter(getExecutionTime()));
+                && Instant.now().isAfter(getExecutionTime()));
     }
 }
