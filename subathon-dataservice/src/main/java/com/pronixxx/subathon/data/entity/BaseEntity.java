@@ -7,7 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @MappedSuperclass
 @Cacheable(false)
@@ -19,7 +19,7 @@ public abstract class BaseEntity {
     protected Integer id;
 
     @Column(name = "insert_time")
-    protected LocalDateTime insertTime;
+    protected Instant insertTime;
 
     public Integer getId() {
         return id;
@@ -29,11 +29,11 @@ public abstract class BaseEntity {
         this.id = id;
     }
 
-    public LocalDateTime getInsertTime() {
+    public Instant getInsertTime() {
         return insertTime;
     }
 
-    public void setInsertTime(LocalDateTime insertTime) {
+    public void setInsertTime(Instant insertTime) {
         this.insertTime = insertTime;
     }
 }

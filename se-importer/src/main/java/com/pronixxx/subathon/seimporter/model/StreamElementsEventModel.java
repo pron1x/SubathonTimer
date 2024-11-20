@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
         @Type(value = StreamElementsBitEventModel.class, name = "cheer")
 })
 public class StreamElementsEventModel {
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private String activityId;
     private boolean isMock = false;
     private boolean flagged;
@@ -28,13 +28,13 @@ public class StreamElementsEventModel {
     private int sessionEventsCount;
     private String channel;
     private String type;
-    private LocalDateTime updateAt;
+    private Instant updateAt;
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -94,11 +94,11 @@ public class StreamElementsEventModel {
         this.type = type;
     }
 
-    public LocalDateTime getUpdateAt() {
+    public Instant getUpdateAt() {
         return updateAt;
     }
 
-    public void setUpdateAt(LocalDateTime updateAt) {
+    public void setUpdateAt(Instant updateAt) {
         this.updateAt = updateAt;
     }
 

@@ -1,11 +1,12 @@
 package com.pronixxx.subathon.executor;
 
-import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.concurrent.*;
+import java.time.Instant;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Allows the execution of a runnable at a given LocalDateTime (time in UTC). The execution time can be changed
@@ -16,16 +17,16 @@ public class AdjustableScheduledExecutorService implements HasLogger {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduledCommandHandle;
 
-    private volatile LocalDateTime executionTime;
+    private volatile Instant executionTime;
     private volatile boolean isTimerPaused;
 
     public AdjustableScheduledExecutorService() {}
 
-    public synchronized LocalDateTime getExecutionTime() {
+    public synchronized Instant getExecutionTime() {
         return executionTime;
     }
 
-    public synchronized void setExecutionTime(LocalDateTime executionTime) {
+    public synchronized void setExecutionTime(Instant executionTime) {
         this.executionTime = executionTime;
     }
 
@@ -45,16 +46,20 @@ public class AdjustableScheduledExecutorService implements HasLogger {
      * @param command The runnable to be executed
      * @param executionTime The time at which the command should be executed. Can be adjusted
      */
-    public void scheduleCommand(Runnable command, LocalDateTime executionTime) {
+    public void scheduleCommand(Runnable command, Instant executionTime) {
         this.executionTime = executionTime;
         final Runnable scheduledCommand = () -> {
             if (isExecutionTime()) {
                 command.run();
-                scheduledCommandHandle.cancel(true);
+                if(cancelCommand()) {
+                    getLogger().trace("Successfully executed command with execution time {} at {}.", executionTime, Instant.now());
+                } else {
+                    getLogger().warn("command executed at {} but cancelCommand returned '{}'. IsCancelled: {}.", Instant.now(), false, scheduledCommandHandle.isCancelled());
+                }
             } else if (isTimerPaused()) {
                 getLogger().trace("Execution is paused.");
             } else {
-                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)), getExecutionTime());
+                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", Instant.now(), getExecutionTime());
             }
         };
         scheduledCommandHandle = scheduler.scheduleAtFixedRate(scheduledCommand, 0, 1, TimeUnit.SECONDS);
@@ -69,6 +74,6 @@ public class AdjustableScheduledExecutorService implements HasLogger {
             return false;
         }
         return (executionTime != null
-                && LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)).isAfter(getExecutionTime()));
+                && Instant.now().isAfter(getExecutionTime()));
     }
 }
