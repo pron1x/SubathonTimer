@@ -51,7 +51,11 @@ public class AdjustableScheduledExecutorService implements HasLogger {
         final Runnable scheduledCommand = () -> {
             if (isExecutionTime()) {
                 command.run();
-                scheduledCommandHandle.cancel(true);
+                if(cancelCommand()) {
+                    getLogger().trace("Successfully executed command with execution time {} at {}.", executionTime, Instant.now());
+                } else {
+                    getLogger().warn("command executed at {} but cancelCommand returned '{}'. IsCancelled: {}.", Instant.now(), false, scheduledCommandHandle.isCancelled());
+                }
             } else if (isTimerPaused()) {
                 getLogger().trace("Execution is paused.");
             } else {
