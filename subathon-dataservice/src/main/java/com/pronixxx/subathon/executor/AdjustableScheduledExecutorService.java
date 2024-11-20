@@ -1,12 +1,12 @@
 package com.pronixxx.subathon.executor;
 
-import com.pronixxx.subathon.util.GlobalDefinition;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Allows the execution of a runnable at a given LocalDateTime (time in UTC). The execution time can be changed
@@ -55,7 +55,7 @@ public class AdjustableScheduledExecutorService implements HasLogger {
             } else if (isTimerPaused()) {
                 getLogger().trace("Execution is paused.");
             } else {
-                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", LocalDateTime.now(ZoneId.of(GlobalDefinition.TZ)), getExecutionTime());
+                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", Instant.now(), getExecutionTime());
             }
         };
         scheduledCommandHandle = scheduler.scheduleAtFixedRate(scheduledCommand, 0, 1, TimeUnit.SECONDS);
