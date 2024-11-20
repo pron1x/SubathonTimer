@@ -91,7 +91,7 @@ public class TimerService implements HasLogger {
         initialEvent.setStartTime(now);
         initialEvent.setCurrentEndTime(now.plusSeconds(INITIAL_TIMER_SECONDS));
 
-        initialEvent.setTimestamp(Instant.now());
+        initialEvent.setTimestamp(now);
 
         TimerEventEntity eventEntity = timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
         return mapper.map(eventEntity, TimerEvent.class);
