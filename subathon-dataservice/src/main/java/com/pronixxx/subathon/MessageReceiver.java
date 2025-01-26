@@ -43,9 +43,9 @@ public class MessageReceiver implements HasLogger {
         }
 
         if (event.getType() == EventType.COMMAND) { // We handle bot commands differently
-            timerService.executeBotCommand((SubathonCommandEvent) event);
+            timerService.executeBotCommand("TEST", (SubathonCommandEvent) event);
         } else { // Everything else gets handled normally
-            timerService.addSubathonEventTime(event);
+            timerService.addSubathonEventTime("TEST", event);
         }
     }
 }

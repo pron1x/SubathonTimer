@@ -3,10 +3,9 @@ package com.pronixxx.subathon.executor;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
 import java.time.Instant;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Allows the execution of a runnable at a given LocalDateTime (time in UTC). The execution time can be changed
@@ -14,30 +13,57 @@ import java.util.concurrent.TimeUnit;
  */
 public class AdjustableScheduledExecutorService implements HasLogger {
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> scheduledCommandHandle;
+    public static class TimerTaskConfig {
+        private volatile Instant executionTime;
+        private volatile boolean isPaused;
 
-    private volatile Instant executionTime;
-    private volatile boolean isTimerPaused;
+        public TimerTaskConfig(Instant executionTime, boolean isPaused) {
+            this.executionTime = executionTime;
+            this.isPaused = isPaused;
+        }
+
+        public Instant getExecutionTime() {
+            return executionTime;
+        }
+
+        public void setExecutionTime(Instant executionTime) {
+            this.executionTime = executionTime;
+        }
+
+        public boolean isPaused() {
+            return isPaused;
+        }
+
+        public void setPaused(boolean paused) {
+            isPaused = paused;
+        }
+    }
+
+    // TODO: Adjust this to include multiple different scheduled commands with adjustable execution times!
+    // Maybe a map/list of objects that hold all the info (execution time, paused, command) -> Needs ID to adjust execution time!
+
+    private final Map<String, TimerTaskConfig> timerConfigs = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> timerFutures = new ConcurrentHashMap<>();
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    public Instant getExecutionTime(String id) {
+        return timerConfigs.get(id).getExecutionTime();
+    }
+
+    public void setExecutionTime(String id, Instant executionTime) {
+        timerConfigs.get(id).setExecutionTime(executionTime);
+    }
+
+    public boolean isPaused(String id) {
+        return timerConfigs.get(id).isPaused();
+    }
+
+    public void setPaused(String id, boolean isPaused) {
+        timerConfigs.get(id).setPaused(isPaused);
+    }
 
     public AdjustableScheduledExecutorService() {}
-
-    public synchronized Instant getExecutionTime() {
-        return executionTime;
-    }
-
-    public synchronized void setExecutionTime(Instant executionTime) {
-        this.executionTime = executionTime;
-    }
-
-    public synchronized boolean isTimerPaused() {
-        return isTimerPaused;
-    }
-
-    public synchronized void setTimerPaused(boolean timerPaused) {
-        isTimerPaused = timerPaused;
-    }
-
 
     /**
      * Schedules a Runnable to be executed at the given execution time. The scheduled execution of the runnable can be paused
@@ -46,34 +72,39 @@ public class AdjustableScheduledExecutorService implements HasLogger {
      * @param command The runnable to be executed
      * @param executionTime The time at which the command should be executed. Can be adjusted
      */
-    public void scheduleCommand(Runnable command, Instant executionTime) {
-        this.executionTime = executionTime;
+    public void scheduleCommand(String id, Runnable command, Instant executionTime) {
+        timerConfigs.put(id, new TimerTaskConfig(executionTime, false));
         final Runnable scheduledCommand = () -> {
-            if (isExecutionTime()) {
+            TimerTaskConfig config = timerConfigs.get(id);
+            ScheduledFuture<?> future = timerFutures.get(id);
+            if (isExecutionTime(config.getExecutionTime(), config.isPaused())) {
                 command.run();
-                if(cancelCommand()) {
-                    getLogger().trace("Successfully executed command with execution time {} at {}.", executionTime, Instant.now());
+                if(cancelCommand(future)) {
+                    getLogger().trace("Successfully executed command with execution time {} at {}.", config.getExecutionTime(), Instant.now());
                 } else {
-                    getLogger().warn("command executed at {} but cancelCommand returned '{}'. IsCancelled: {}.", Instant.now(), false, scheduledCommandHandle.isCancelled());
+                    getLogger().warn("command executed at {} but cancelCommand returned '{}'. IsCancelled: {}.", Instant.now(), false, future.isCancelled());
                 }
-            } else if (isTimerPaused()) {
+            } else if (config.isPaused()) {
                 getLogger().trace("Execution is paused.");
             } else {
-                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", Instant.now(), getExecutionTime());
+                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", Instant.now(), config.getExecutionTime());
             }
         };
-        scheduledCommandHandle = scheduler.scheduleAtFixedRate(scheduledCommand, 0, 1, TimeUnit.SECONDS);
+        timerFutures.put(id, scheduler.scheduleAtFixedRate(scheduledCommand, 0, 1, TimeUnit.SECONDS));
     }
 
-    public boolean cancelCommand() {
-        return scheduledCommandHandle.cancel(true);
+    public boolean cancelCommand(ScheduledFuture<?> future) {
+        if(future != null) {
+            return future.cancel(true);
+        }
+        return false;
     }
 
-    private synchronized boolean isExecutionTime() {
-        if(isTimerPaused) {
+    private synchronized boolean isExecutionTime(Instant executionTime, boolean isPaused) {
+        if(isPaused) {
             return false;
         }
         return (executionTime != null
-                && Instant.now().isAfter(getExecutionTime()));
+                && Instant.now().isAfter(executionTime));
     }
 }
