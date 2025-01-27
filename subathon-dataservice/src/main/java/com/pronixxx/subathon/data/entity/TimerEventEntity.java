@@ -13,6 +13,9 @@ public class TimerEventEntity extends BaseEntity {
     @Column(name = "timestamp")
     private Instant timestamp;
 
+    @Column(name = "timer_id")
+    private Long timerId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", columnDefinition = "ENUM('TIME_ADDITION', 'TIME_SUBTRACTION', 'STATE_CHANGE')")
     private TimerEventType type;
@@ -44,6 +47,14 @@ public class TimerEventEntity extends BaseEntity {
 
     public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Long getTimerId() {
+        return timerId;
+    }
+
+    public void setTimerId(Long timerId) {
+        this.timerId = timerId;
     }
 
     public TimerEventType getType() {
