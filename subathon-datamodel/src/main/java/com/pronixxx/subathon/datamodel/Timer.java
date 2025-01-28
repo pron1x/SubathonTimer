@@ -12,6 +12,7 @@ public class Timer {
     private Instant startTime;
     private Instant endTime;
     private TimerState state;
+    private Instant updateTime;
 
     public long getId() {
         return id;
@@ -61,6 +62,14 @@ public class Timer {
         this.state = state;
     }
 
+    public Instant getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Instant updateTime) {
+        this.updateTime = updateTime;
+    }
+
     @Override
     public String toString() {
         return "Timer{" +
@@ -70,6 +79,7 @@ public class Timer {
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", state=" + state +
+                ", updateTime=" + updateTime +
                 '}';
     }
 }

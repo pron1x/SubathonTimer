@@ -13,6 +13,7 @@ public class TimerEntity extends BaseEntity {
     private Instant startTime;
     private Instant endTime;
     private TimerState state;
+    private Instant updateTime;
 
     public String getChannelName() {
         return channelName;
@@ -52,5 +53,13 @@ public class TimerEntity extends BaseEntity {
 
     public void setState(TimerState state) {
         this.state = state;
+    }
+
+    public Instant getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Instant updateTime) {
+        this.updateTime = updateTime;
     }
 }

@@ -133,6 +133,7 @@ public class TimerService implements HasLogger {
         // Set timer status, start and end time not needed yet
         Instant now = Instant.now();
         timer.setState(INITIALIZED);
+        timer.setUpdateTime(now);
 
         // Create initial event for the timer and set timer ID
         TimerEvent initialEvent = new TimerEvent();
@@ -166,6 +167,7 @@ public class TimerService implements HasLogger {
 
         // Adjust timer to started
         timer.setStartTime(now);
+        timer.setUpdateTime(now);
         timer.setState(TICKING);
         timer.setEndTime(now.plusSeconds(INITIAL_TIMER_SECONDS));
         timers.put(timer.getChannelName(), timer);
@@ -202,6 +204,7 @@ public class TimerService implements HasLogger {
 
         // Adjust timer status and save it
         timer.setState(TimerState.PAUSED);
+        timer.setUpdateTime(Instant.now());
         timers.put(timer.getChannelName(), timer);
 
         // Save and publish timer event
@@ -223,19 +226,13 @@ public class TimerService implements HasLogger {
             return;
         }
         getLogger().debug("Resuming timer!");
-        // TODO: Add 'lastUpdate' timestamp to timer object instead?
-        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
-        if(lastEventEntity == null) {
-            getLogger().warn("No last event for timer with id '{}' found, inconsistent state encountered!", timer.getId());
-            return;
-        }
-        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
 
         // Calculate the seconds the timer has been paused for to get new end time
-        Duration d = Duration.between(lastEvent.getTimestamp(), timer.getEndTime());
+        Duration d = Duration.between(timer.getUpdateTime(), timer.getEndTime());
 
         // Calculate new end
-        Instant newEnd = Instant.now().plusSeconds(d.getSeconds());
+        Instant now = Instant.now();
+        Instant newEnd = now.plusSeconds(d.getSeconds());
 
         // Create timer event
         TimerEvent timerEvent = createTimerEvent(timer, TimerEventType.STATE_CHANGE, TICKING, newEnd);
@@ -243,6 +240,7 @@ public class TimerService implements HasLogger {
         // Set new end in timer
         timer.setEndTime(newEnd);
         timer.setState(TICKING);
+        timer.setUpdateTime(now);
         timers.put(timer.getChannelName(), timer);
 
         // Resume execution with new end
@@ -271,6 +269,7 @@ public class TimerService implements HasLogger {
 
         timer.setState(ENDED);
         timer.setEndTime(end);
+        timer.setUpdateTime(end);
 
         // Remove timer from map, since it ended! New timer for channel can be initialized
         timers.remove(channelId);
@@ -310,12 +309,7 @@ public class TimerService implements HasLogger {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
             return;
         }
-        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
-        if(lastEventEntity == null) {
-            getLogger().warn("No last event found for timer with id '{}' found, inconsistent state!", timer.getId());
-            return;
-        }
-        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
+
         if(timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not adding time to timer because it is {}. Ignoring {}.", timer.getState(), event);
             return;
@@ -370,7 +364,7 @@ public class TimerService implements HasLogger {
 
         if (timer.getState() == PAUSED) {
             // Calculate extra duration in case the timer is paused before adding the event time
-            Duration d = Duration.between(lastEvent.getTimestamp(), Instant.now());
+            Duration d = Duration.between(timer.getUpdateTime(), Instant.now());
             seconds += d.getSeconds();
         }
 
@@ -384,6 +378,7 @@ public class TimerService implements HasLogger {
 
         // Add the seconds from the event and save timer
         timer.setEndTime(newEnd);
+        timer.setUpdateTime(Instant.now());
         timers.put(channelId, timer);
         // Change scheduled timer
         timerControl.setExecutionTime(channelId, timer.getEndTime());
@@ -403,12 +398,6 @@ public class TimerService implements HasLogger {
             getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, command);
             return;
         }
-        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
-        if(lastEventEntity == null) {
-            getLogger().warn("No last event for timer with id '{}' found, inconsistent state!", timer.getId());
-            return;
-        }
-        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
 
         if(timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not removing time from timer because it is {}. Ignoring {}.", timer.getState(), command);
@@ -417,7 +406,7 @@ public class TimerService implements HasLogger {
         getLogger().debug("Removing time from the timer.");
         long seconds = 0;
         if(timer.getState() == PAUSED) {
-            Duration d = Duration.between(lastEvent.getTimestamp(), Instant.now());
+            Duration d = Duration.between(timer.getUpdateTime(), Instant.now());
             seconds += d.getSeconds();
         }
         seconds -= command.getSeconds();
@@ -432,6 +421,7 @@ public class TimerService implements HasLogger {
 
         // Set new timer end and reschedule execution time
         timer.setEndTime(newEnd);
+        timer.setUpdateTime(Instant.now());
         timers.put(channelId, timer);
         timerControl.setExecutionTime(channelId, timer.getEndTime());
 
