@@ -149,6 +149,10 @@ public class TimerService implements HasLogger {
 
     public void startTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
+            return;
+        }
         if(timer.getState() != INITIALIZED) {
             getLogger().warn("Cannot start the timer if it is not initialized or has already started. A started timer has to be resumed!");
             return;
@@ -180,6 +184,10 @@ public class TimerService implements HasLogger {
 
     public void pauseTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to pause it!", channelId);
+            return;
+        }
         // Only pause a ticking timer
         if(timer.getState() != TICKING) {
             getLogger().info("Not pausing a not ticking timer. Ignoring!");
@@ -205,16 +213,25 @@ public class TimerService implements HasLogger {
 
     private void resumeTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to resume it!", channelId);
+            return;
+        }
         // Only resume timer if it is paused
         if(timer.getState() != PAUSED) {
             getLogger().info("Not resuming a not ticking timer. Ignoring!");
             return;
         }
         getLogger().debug("Resuming timer!");
-        // Calculate the seconds the timer has been paused for to get new end time
         // TODO: Add 'lastUpdate' timestamp to timer object instead?
-        TimerEvent lastEvent = mapper.map(timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId()), TimerEvent.class);
+        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
+        if(lastEventEntity == null) {
+            getLogger().warn("No last event for timer with id '{}' found, inconsistent state encountered!", timer.getId());
+            return;
+        }
+        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
 
+        // Calculate the seconds the timer has been paused for to get new end time
         Duration d = Duration.between(lastEvent.getTimestamp(), timer.getEndTime());
 
         // Calculate new end
@@ -241,6 +258,10 @@ public class TimerService implements HasLogger {
 
     public void stopTimer(String channelId) {
         Timer timer = timers.get(channelId);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to stop!", channelId);
+            return;
+        }
         getLogger().debug("Stopping timer!");
 
         // Set end time
@@ -263,6 +284,10 @@ public class TimerService implements HasLogger {
 
     public void executeBotCommand(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to execute command '{}'!", channelId, command);
+            return;
+        }
         getLogger().debug("Executing bot command: {}", command);
         switch (command.getCommand()) {
             case START -> {
@@ -281,7 +306,16 @@ public class TimerService implements HasLogger {
     
     public void addSubathonEventTime(String channelId, SubathonEvent event) {
         Timer timer = timers.get(channelId);
-        TimerEvent lastEvent = mapper.map(timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId()), TimerEvent.class);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
+            return;
+        }
+        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
+        if(lastEventEntity == null) {
+            getLogger().warn("No last event found for timer with id '{}' found, inconsistent state!", timer.getId());
+            return;
+        }
+        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
         if(timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not adding time to timer because it is {}. Ignoring {}.", timer.getState(), event);
             return;
@@ -365,7 +399,16 @@ public class TimerService implements HasLogger {
 
     private void subtractSubathonEventTime(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
-        TimerEvent lastEvent = mapper.map(timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId()), TimerEvent.class);
+        if(timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, command);
+            return;
+        }
+        TimerEventEntity lastEventEntity = timerEventRepository.findFirstByTimerIdOrderByInsertTimeDesc(timer.getId());
+        if(lastEventEntity == null) {
+            getLogger().warn("No last event for timer with id '{}' found, inconsistent state!", timer.getId());
+            return;
+        }
+        TimerEvent lastEvent = mapper.map(lastEventEntity, TimerEvent.class);
 
         if(timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not removing time from timer because it is {}. Ignoring {}.", timer.getState(), command);
