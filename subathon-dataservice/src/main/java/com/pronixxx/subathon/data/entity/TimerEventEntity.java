@@ -34,9 +34,6 @@ public class TimerEventEntity extends BaseEntity {
     @Column(name = "current_timer_state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
     private TimerState currentTimerState;
 
-    @Column(name = "start_time")
-    private Instant startTime;
-
     @OneToOne(targetEntity = EventEntity.class, cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id", referencedColumnName = "id")
     private EventEntity subathonEvent;
@@ -97,14 +94,6 @@ public class TimerEventEntity extends BaseEntity {
         this.currentTimerState = currentTimerState;
     }
 
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = startTime;
-    }
-
     public EventEntity getSubathonEvent() {
         return subathonEvent;
     }
@@ -117,15 +106,13 @@ public class TimerEventEntity extends BaseEntity {
     public String toString() {
         return "TimerEventEntity{" +
                 "timestamp=" + timestamp +
-                ", id=" + id +
+                ", timerId=" + timerId +
                 ", type=" + type +
                 ", oldEndTime=" + oldEndTime +
                 ", currentEndTime=" + currentEndTime +
                 ", oldTimerState=" + oldTimerState +
                 ", currentTimerState=" + currentTimerState +
-                ", startTime=" + startTime +
                 ", subathonEvent=" + subathonEvent +
-                ", insertTime=" + insertTime +
-                "} ";
+                "} " + super.toString();
     }
 }

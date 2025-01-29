@@ -24,7 +24,7 @@ public class SubathonTimer extends Component implements HasLogger {
     }
 
     private void pushNewTimerEvent(TimerEvent event) {
-        long start = event.getStartTime().toEpochMilli();
+        long start = 1L;//event.getStartTime().toEpochMilli(); TODO: Fix this to use correct start time from timer object?
         long end = event.getCurrentEndTime().toEpochMilli();
         long update = event.getTimestamp().toEpochMilli();
         String state = event.getCurrentTimerState().toString();

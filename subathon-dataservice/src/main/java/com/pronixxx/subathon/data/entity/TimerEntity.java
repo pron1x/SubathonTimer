@@ -1,18 +1,31 @@
 package com.pronixxx.subathon.data.entity;
 
 import com.pronixxx.subathon.datamodel.enums.TimerState;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 
 @Entity
+@Table(name = "timer")
 public class TimerEntity extends BaseEntity {
 
+    @Column(name = "channel_name")
     private String channelName;
+
+    @Column(name = "channel_id")
     private long channelId;
+
+    @Column(name = "start_time")
     private Instant startTime;
+
+    @Column(name = "end_time")
     private Instant endTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
     private TimerState state;
+
+    @Column(name = "update_time")
     private Instant updateTime;
 
     public String getChannelName() {

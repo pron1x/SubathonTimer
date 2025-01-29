@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.data.entity.*;
 import com.pronixxx.subathon.data.repository.TimerEventRepository;
+import com.pronixxx.subathon.data.repository.TimerRepository;
 import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
@@ -20,7 +21,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.random.RandomGenerator;
 
 import static com.pronixxx.subathon.datamodel.enums.TimerState.*;
 
@@ -32,6 +36,9 @@ public class TimerService implements HasLogger {
 
     @Autowired
     TimerEventRepository timerEventRepository;
+
+    @Autowired
+    TimerRepository timerRepository;
 
     @Autowired
     ModelMapper mapper;
@@ -77,32 +84,30 @@ public class TimerService implements HasLogger {
         If no timer -> Initialize new timer. Else use the timer
         On boot up, find all timers with status NOT ended -> Put in hashmap. ONLY ONE TIMER PER USER ID!!!
     */
-    // TODO: Check if timers.get returns `null`
-    // TODO: Change this to not include the last event but the general timer object
     private final Map<String, Timer> timers = new HashMap<>();
 
     @PostConstruct
     public void init() {
         getLogger().debug("Initializing timer.");
-        List<TimerEntity> timerList = new ArrayList<>();
+        List<TimerEntity> timerList = timerRepository.findByStateIsNot(ENDED);
+        getLogger().info("Found the following timers: {}", timerList);
 
         // This will check if a timer exists and schedule the end time for it
-        // TODO: Remove the if check and only use the loop, no  need to initialize a new timer here ever
+        for(TimerEntity timerEntity : timerList) {
+            Timer timer = mapper.map(timerEntity, Timer.class);
+            // TODO: Change this to use channel ID!
+            timers.put(timer.getChannelName(), timer);
+            if(timer.getState() == TICKING || timer.getState() == PAUSED) {
+                timerControl.scheduleCommand(timer.getChannelName(), () -> stopTimer(timer.getChannelName()), timer.getEndTime());
+                timerControl.setPaused(timer.getChannelName(), timer.getState() != TICKING);
+            }
+        }
+        // FIXME: Only for testing, initialize a new test timer here if list is empty!
         if(timerList.isEmpty()) {
             getLogger().info("Timer list is empty.");
             getLogger().info("Initializing timer for 'TEST'.");
             // Initialize new Timer for testing purposes
             initializeTimer("TEST");
-        } else {
-            for(TimerEntity timerEntity : timerList) {
-                Timer resultingTimer = mapper.map(timerEntity, Timer.class);
-                // TODO: Change this to use channel ID!
-                timers.put(resultingTimer.getChannelName(), resultingTimer);
-                if(resultingTimer.getState() == TICKING || resultingTimer.getState() == PAUSED) {
-                    timerControl.scheduleCommand(resultingTimer.getChannelName(), () -> stopTimer(resultingTimer.getChannelName()), resultingTimer.getEndTime());
-                    timerControl.setPaused(resultingTimer.getChannelName(), resultingTimer.getState() == PAUSED);
-                }
-            }
         }
 
         //TimerEventEntity event = timerEventRepository.findFirstByOrderByInsertTimeDescIdDesc();
@@ -129,7 +134,6 @@ public class TimerService implements HasLogger {
         // Create new timer and assign (currently random) ID (is ID filled by JPA on object creation?)
         Timer timer = new Timer();
         timer.setChannelName(channelId);
-        timer.setId(UUID.randomUUID().node());
         // Set timer status, start and end time not needed yet
         Instant now = Instant.now();
         timer.setState(INITIALIZED);
@@ -137,15 +141,16 @@ public class TimerService implements HasLogger {
 
         // Create initial event for the timer and set timer ID
         TimerEvent initialEvent = new TimerEvent();
-        initialEvent.setTimerId(timer.getId());
         initialEvent.setType(TimerEventType.STATE_CHANGE);
         initialEvent.setOldTimerState(UNINITIALIZED);
         initialEvent.setCurrentTimerState(INITIALIZED);
 
         initialEvent.setTimestamp(now);
 
-        timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
         timers.put(timer.getChannelName(), timer);
+        TimerEntity timerEntity = timerRepository.save(mapper.map(timer, TimerEntity.class));
+        initialEvent.setTimerId(timerEntity.getId());
+        timerEventRepository.save(mapper.map(initialEvent, TimerEventEntity.class));
     }
 
     public void startTimer(String channelId, SubathonCommandEvent command) {
@@ -176,6 +181,7 @@ public class TimerService implements HasLogger {
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), timer.getEndTime());
         timerControl.setPaused(channelId, false);
 
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
         // Save and publish timer event
         TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
         toSave.setSubathonEvent(mapper.map(command, CommandEntity.class)); // ObjectMapper gets confused with the nested object
@@ -206,6 +212,7 @@ public class TimerService implements HasLogger {
         timer.setState(TimerState.PAUSED);
         timer.setUpdateTime(Instant.now());
         timers.put(timer.getChannelName(), timer);
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timer event
         TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
@@ -242,6 +249,7 @@ public class TimerService implements HasLogger {
         timer.setState(TICKING);
         timer.setUpdateTime(now);
         timers.put(timer.getChannelName(), timer);
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Resume execution with new end
         timerControl.setExecutionTime(channelId, timer.getEndTime());
@@ -273,6 +281,7 @@ public class TimerService implements HasLogger {
 
         // Remove timer from map, since it ended! New timer for channel can be initialized
         timers.remove(channelId);
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timer event
         TimerEventEntity entity = saveTimerEventToDatabase(mapper.map(timerEvent, TimerEventEntity.class));
@@ -383,6 +392,7 @@ public class TimerService implements HasLogger {
         // Change scheduled timer
         timerControl.setExecutionTime(channelId, timer.getEndTime());
         getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Create, save and publish timerEvent
         TimerEventEntity timerEventEntity = mapper.map(timerEvent, TimerEventEntity.class);
@@ -424,6 +434,7 @@ public class TimerService implements HasLogger {
         timer.setUpdateTime(Instant.now());
         timers.put(channelId, timer);
         timerControl.setExecutionTime(channelId, timer.getEndTime());
+        timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timer event
         TimerEventEntity toSave = mapper.map(timerEvent, TimerEventEntity.class);
@@ -451,6 +462,9 @@ public class TimerService implements HasLogger {
         return timerEvent;
     }
 
+    /*
+    TODO: Create and move this into correct TimerEventService service!
+     */
     private TimerEventEntity saveTimerEventToDatabase(TimerEventEntity timerEvent) {
         return timerEventRepository.save(timerEvent);
     }

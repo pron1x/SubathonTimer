@@ -17,7 +17,7 @@ public class UptimeClock extends Component {
     }
 
     public void pushState(TimerEvent event) {
-        long start = event.getStartTime().toEpochMilli();
+        long start = 1L;//event.getStartTime().toEpochMilli(); TODO: Fix this to obtain correct start from Timer object?
         long end = event.getCurrentEndTime().toEpochMilli();
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
