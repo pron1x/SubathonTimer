@@ -85,7 +85,7 @@ CREATE TABLE `community_gift_event`
 CREATE TABLE `tip_event`
 (
     `event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Reference to the event',
-    `amount`   BIGINT NOT NULL COMMENT 'Amount of money tipped',
+    `amount`   DOUBLE NOT NULL COMMENT 'Amount of money tipped',
     `currency` VARCHAR(30) COMMENT 'Currency of the tip',
     PRIMARY KEY (`event_id`),
     CONSTRAINT `fk_tip_event_event`

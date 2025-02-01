@@ -22,18 +22,18 @@ import java.time.Instant;
 })
 public class SubathonEvent {
 
-    private Integer id;
+    private Long id;
     private Instant timestamp;
     private boolean isMock;
     private String source;
     private EventType type;
     private String username;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

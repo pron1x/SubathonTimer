@@ -9,16 +9,16 @@ import jakarta.persistence.*;
 public class TipEntity extends EventEntity {
 
     @Column(name = "amount")
-    private int amount;
+    private double amount;
 
     @Column(name = "currency")
     private String currency;
 
-    public int getAmount() {
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 
