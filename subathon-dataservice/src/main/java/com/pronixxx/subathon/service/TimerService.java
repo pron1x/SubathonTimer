@@ -29,20 +29,15 @@ import static com.pronixxx.subathon.datamodel.enums.TimerState.*;
 @Service
 public class TimerService implements HasLogger {
 
-    @Autowired
-    RabbitMessageService messageService;
+    private final RabbitMessageService messageService;
 
-    @Autowired
-    TimerRepository timerRepository;
+    private final TimerRepository timerRepository;
 
-    @Autowired
-    TimerEventService timerEventService;
+    private final TimerEventService timerEventService;
 
-    @Autowired
-    ModelMapper mapper;
+    private final ModelMapper mapper;
 
-    @Autowired
-    ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
@@ -81,6 +76,15 @@ public class TimerService implements HasLogger {
         On boot up, find all timers with status NOT ended -> Put in hashmap. ONLY ONE TIMER PER USER ID!!!
     */
     private final Map<String, Timer> timers = new HashMap<>();
+
+    @Autowired
+    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, ModelMapper mapper, ObjectMapper objectMapper) {
+        this.messageService = messageService;
+        this.timerRepository = timerRepository;
+        this.timerEventService = timerEventService;
+        this.mapper = mapper;
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void init() {

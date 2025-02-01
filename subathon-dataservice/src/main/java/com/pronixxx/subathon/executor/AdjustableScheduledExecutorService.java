@@ -3,7 +3,6 @@ package com.pronixxx.subathon.executor;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -39,9 +38,7 @@ public class AdjustableScheduledExecutorService implements HasLogger {
         }
     }
 
-    // TODO: Adjust this to include multiple different scheduled commands with adjustable execution times!
-    // Maybe a map/list of objects that hold all the info (execution time, paused, command) -> Needs ID to adjust execution time!
-
+    // TODO: Remove scheduled future map and have one scheduler iterate over all running timers!
     private final Map<String, TimerTaskConfig> timerConfigs = new ConcurrentHashMap<>();
     private final Map<String, ScheduledFuture<?>> timerFutures = new ConcurrentHashMap<>();
 

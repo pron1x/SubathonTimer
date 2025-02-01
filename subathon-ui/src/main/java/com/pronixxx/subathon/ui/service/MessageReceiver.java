@@ -9,11 +9,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MessageReceiver implements HasLogger {
-    @Autowired
-    ObjectMapper objectMapper;
+
+    private final ObjectMapper objectMapper;
+
+    private final TimerEventService timerEventService;
 
     @Autowired
-    TimerEventService timerEventService;
+    public MessageReceiver(ObjectMapper objectMapper, TimerEventService timerEventService) {
+        this.objectMapper = objectMapper;
+        this.timerEventService = timerEventService;
+    }
 
     public void receiveMessage(String message) {
         TimerEvent timerEvent = null;

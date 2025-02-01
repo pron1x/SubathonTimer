@@ -5,35 +5,41 @@ import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.seimporter.model.*;
 
 public class SubathonEventFactory {
+    private static final String SOURCE = "se-importer";
 
     public static SubathonEvent convertToSubathonEvent(StreamElementsEventModel event) {
         switch (event.getType()) {
-            case "follow":
+            case "follow" -> {
                 SubathonFollowerEvent followerEvent = new SubathonFollowerEvent();
                 followerEvent.setTimestamp(event.getCreatedAt());
-                followerEvent.setSource("se-importer");
+                followerEvent.setSource(SOURCE);
                 followerEvent.setMock(event.isMock());
                 followerEvent.setUsername(((StreamElementsFollowModel)event).getData().getDisplayName());
                 return followerEvent;
-            case "subscriber":
+            }
+            case "subscriber" -> {
                 return convertToSubathonSubEvent(event);
-            case "tip":
+            }
+            case "tip" -> {
                 return convertToSubathonTipEvent(event);
-            case "raid":
+            }
+            case "raid" -> {
                 return convertToSubathonRaidEvent(event);
-            case "communityGiftPurchase":
+            }
+            case "communityGiftPurchase" -> {
                 return convertToSubathonCommunityGiftEvent(event);
-            case "cheer":
+            }
+            case "cheer" -> {
                 return convertToSubathonBitEvent(event);
-            default:
-                throw new IllegalStateException("Converting for type '" + event.getType() + "' not yet implemented.");
+            }
+            default -> throw new IllegalStateException("Converting for type '" + event.getType() + "' not yet implemented.");
         }
     }
 
     private static SubathonSubEvent convertToSubathonSubEvent(StreamElementsEventModel event) {
         SubathonSubEvent subEvent = new SubathonSubEvent();
         subEvent.setTimestamp(event.getCreatedAt());
-        subEvent.setSource("se-importer");
+        subEvent.setSource(SOURCE);
         subEvent.setMock(event.isMock());
         subEvent.setUsername(((StreamElementsSubscribeModel) event).getData().getDisplayName());
         StreamElementsSubscribeModel s = (StreamElementsSubscribeModel) event;
@@ -47,7 +53,7 @@ public class SubathonEventFactory {
     private static SubathonTipEvent convertToSubathonTipEvent(StreamElementsEventModel event) {
         SubathonTipEvent tipEvent = new SubathonTipEvent();
         tipEvent.setTimestamp(event.getCreatedAt());
-        tipEvent.setSource("se-importer");
+        tipEvent.setSource(SOURCE);
         tipEvent.setMock(event.isMock());
         StreamElementsTipModel.TipEventData s = ((StreamElementsTipModel) event).getData();
 
@@ -60,7 +66,7 @@ public class SubathonEventFactory {
     private static SubathonRaidEvent convertToSubathonRaidEvent(StreamElementsEventModel event) {
         SubathonRaidEvent raidEvent = new SubathonRaidEvent();
         raidEvent.setTimestamp(event.getCreatedAt());
-        raidEvent.setSource("se-importer");
+        raidEvent.setSource(SOURCE);
         raidEvent.setMock(event.isMock());
         StreamElementsRaidModel.RaidDataModel s = ((StreamElementsRaidModel) event).getData();
 
@@ -72,7 +78,7 @@ public class SubathonEventFactory {
     private static SubathonCommunityGiftEvent convertToSubathonCommunityGiftEvent(StreamElementsEventModel event) {
         SubathonCommunityGiftEvent giftEvent = new SubathonCommunityGiftEvent();
         giftEvent.setTimestamp(event.getCreatedAt());
-        giftEvent.setSource("se-importer");
+        giftEvent.setSource(SOURCE);
         giftEvent.setMock(event.isMock());
         StreamElementsSubGiftModel.GiftSubEventData s = ((StreamElementsSubGiftModel) event).getData();
 
@@ -86,7 +92,7 @@ public class SubathonEventFactory {
     private static SubathonBitCheerEvent convertToSubathonBitEvent(StreamElementsEventModel event) {
         SubathonBitCheerEvent bitEvent = new SubathonBitCheerEvent();
         bitEvent.setTimestamp(event.getCreatedAt());
-        bitEvent.setSource("se-importer");
+        bitEvent.setSource(SOURCE);
         bitEvent.setMock(event.isMock());
         StreamElementsBitEventModel.BitEventData s = ((StreamElementsBitEventModel) event).getData();
 

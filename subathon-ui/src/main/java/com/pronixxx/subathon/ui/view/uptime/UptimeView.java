@@ -30,7 +30,8 @@ public class UptimeView extends Div implements TimerEventService.TimerEventListe
         timerEventService.removeEventListener(this);
     }
 
-    public UptimeView(@Autowired TimerEventService timerEventService) {
+    @Autowired
+    public UptimeView(TimerEventService timerEventService) {
         this.timerEventService = timerEventService;
         TimerEvent initial = timerEventService.getLatestTimerEvent();
         clock = new UptimeClock(initial);
@@ -44,9 +45,7 @@ public class UptimeView extends Div implements TimerEventService.TimerEventListe
         // or when the timer ends, as we freeze the uptime at that point!
         if(timerEvent.getCurrentTimerState() == TimerState.ENDED ||
                 (timerEvent.getCurrentTimerState() == TimerState.TICKING && timerEvent.getOldTimerState() == TimerState.INITIALIZED)) {
-            getUI().ifPresent(ui -> ui.access(() -> {
-                clock.pushState(timerEvent);
-            }));
+            getUI().ifPresent(ui -> ui.access(() -> clock.pushState(timerEvent)));
         }
     }
 }

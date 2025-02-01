@@ -19,17 +19,21 @@ import java.net.URI;
 @Service
 public class SocketService implements HasLogger {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private RabbitMessageService messageService;
+    private final RabbitMessageService messageService;
 
     @Value("${seimporter.socket.streamelements.baseurl}")
     private String url;
     @Value("${seimporter.socket.auth.jwt}")
     private String jwt;
     private Socket socket;
+
+    @Autowired
+    public SocketService(ObjectMapper objectMapper, RabbitMessageService messageService) {
+        this.objectMapper = objectMapper;
+        this.messageService = messageService;
+    }
 
 
     @PostConstruct

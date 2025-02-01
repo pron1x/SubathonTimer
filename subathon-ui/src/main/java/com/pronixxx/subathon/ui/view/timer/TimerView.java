@@ -38,7 +38,8 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
         timerEventService.removeEventListener(this);
     }
 
-    public TimerView(@Autowired TimerEventService timerEventService) {
+    @Autowired
+    public TimerView(TimerEventService timerEventService) {
         this.timerEventService = timerEventService;
         TimerEvent initial = timerEventService.getLatestTimerEvent();
         timer = new SubathonTimer(initial);

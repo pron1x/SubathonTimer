@@ -31,14 +31,18 @@ public class SubathonBot implements HasLogger {
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
-    @Autowired
-    ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+
+    private final RabbitMessageService messageService;
+
+    private final TwitchClient twitchClient;
 
     @Autowired
-    RabbitMessageService messageService;
-
-    @Autowired
-    TwitchClient twitchClient;
+    public SubathonBot(ObjectMapper objectMapper, RabbitMessageService messageService, TwitchClient twitchClient) {
+        this.objectMapper = objectMapper;
+        this.messageService = messageService;
+        this.twitchClient = twitchClient;
+    }
 
     @PostConstruct
     public void init() {

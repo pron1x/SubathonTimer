@@ -14,7 +14,6 @@ public class TimerEvent {
     private Instant currentEndTime;
     private TimerState oldTimerState;
     private TimerState currentTimerState;
-    //private Instant startTime;
     private SubathonEvent subathonEvent;
 
     public long getTimerId() {
@@ -72,14 +71,6 @@ public class TimerEvent {
     public void setCurrentTimerState(TimerState currentTimerState) {
         this.currentTimerState = currentTimerState;
     }
-
-//    public Instant getStartTime() {
-//        return startTime;
-//    }
-//
-//    public void setStartTime(Instant startTime) {
-//        this.startTime = startTime;
-//    }
 
     public SubathonEvent getSubathonEvent() {
         return subathonEvent;
