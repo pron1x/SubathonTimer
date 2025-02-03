@@ -95,11 +95,10 @@ public class TimerService implements HasLogger {
         // This will check if a timer exists and schedule the end time for it
         for(TimerEntity timerEntity : timerList) {
             Timer timer = mapper.map(timerEntity, Timer.class);
-            // TODO: Change this to use channel ID!
-            timers.put(timer.getChannelName(), timer);
+            timers.put(timer.getChannelId(), timer);
             if(timer.getState() == TICKING || timer.getState() == PAUSED) {
-                timerControl.scheduleCommand(timer.getChannelName(), () -> stopTimer(timer.getChannelName()), timer.getEndTime());
-                timerControl.setPaused(timer.getChannelName(), timer.getState() != TICKING);
+                timerControl.scheduleCommand(timer.getChannelId(), () -> stopTimer(timer.getChannelId()), timer.getEndTime());
+                timerControl.setPaused(timer.getChannelId(), timer.getState() != TICKING);
             }
         }
         // FIXME: Only for testing, initialize a new test timer here if list is empty!
@@ -120,7 +119,8 @@ public class TimerService implements HasLogger {
         }
         // Create new timer and assign (currently random) ID (is ID filled by JPA on object creation?)
         Timer timer = new Timer();
-        timer.setChannelName(channelId);
+        timer.setChannelName(""); // TODO: Put channelName when initializing new timer!
+        timer.setChannelId(channelId);
         // Set timer status, start and end time not needed yet
         Instant now = Instant.now();
         timer.setState(INITIALIZED);
@@ -136,7 +136,7 @@ public class TimerService implements HasLogger {
 
         TimerEntity timerEntity = timerRepository.save(mapper.map(timer, TimerEntity.class));
         initialEvent.setTimerId(timerEntity.getId());
-        timers.put(timerEntity.getChannelName(), mapper.map(timerEntity, Timer.class));
+        timers.put(channelId, mapper.map(timerEntity, Timer.class));
         timerEventService.save(initialEvent);
     }
 
@@ -162,7 +162,7 @@ public class TimerService implements HasLogger {
         timer.setUpdateTime(now);
         timer.setState(TICKING);
         timer.setEndTime(now.plusSeconds(INITIAL_TIMER_SECONDS));
-        timers.put(timer.getChannelName(), timer);
+        timers.put(channelId, timer);
 
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), timer.getEndTime());
@@ -198,7 +198,7 @@ public class TimerService implements HasLogger {
         // Adjust timer status and save it
         timer.setState(TimerState.PAUSED);
         timer.setUpdateTime(Instant.now());
-        timers.put(timer.getChannelName(), timer);
+        timers.put(channelId, timer);
         timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timer event
@@ -234,7 +234,7 @@ public class TimerService implements HasLogger {
         timer.setEndTime(newEnd);
         timer.setState(TICKING);
         timer.setUpdateTime(now);
-        timers.put(timer.getChannelName(), timer);
+        timers.put(channelId, timer);
         timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Resume execution with new end
@@ -271,7 +271,7 @@ public class TimerService implements HasLogger {
         // Save and publish timer event
         publishEvent(timerEventService.save(timerEvent));
 
-        getLogger().info("Stopped timer at {}. End timestamp: {}", timerEvent.getTimestamp(), timer.getEndTime());
+        getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", timer.getChannelId(), timerEvent.getTimestamp(), timer.getEndTime());
     }
 
     public void executeBotCommand(String channelId, SubathonCommandEvent command) {

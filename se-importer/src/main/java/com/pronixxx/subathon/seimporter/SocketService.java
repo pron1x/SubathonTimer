@@ -1,9 +1,14 @@
 package com.pronixxx.subathon.seimporter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
+import com.pronixxx.subathon.datamodel.SubathonEventMessage;
 import com.pronixxx.subathon.seimporter.factory.SubathonEventFactory;
 import com.pronixxx.subathon.seimporter.model.StreamElementsEventModel;
+import com.pronixxx.subathon.seimporter.service.RabbitMessageService;
+import com.pronixxx.subathon.seimporter.service.TwitchIdCacheService;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -23,6 +28,8 @@ public class SocketService implements HasLogger {
 
     private final RabbitMessageService messageService;
 
+    private final TwitchIdCacheService twitchIdCacheService;
+
     @Value("${seimporter.socket.streamelements.baseurl}")
     private String url;
     @Value("${seimporter.socket.auth.jwt}")
@@ -30,9 +37,10 @@ public class SocketService implements HasLogger {
     private Socket socket;
 
     @Autowired
-    public SocketService(ObjectMapper objectMapper, RabbitMessageService messageService) {
+    public SocketService(ObjectMapper objectMapper, RabbitMessageService messageService, TwitchIdCacheService twitchIdCacheService) {
         this.objectMapper = objectMapper;
         this.messageService = messageService;
+        this.twitchIdCacheService = twitchIdCacheService;
     }
 
 
@@ -53,7 +61,7 @@ public class SocketService implements HasLogger {
     private void init() {
         socket.on("connect", e -> onConnect());
         socket.on("disconnect", e -> onDisconnect());
-        socket.on("authenticated", e -> onAuthenticated());
+        socket.on("authenticated", this::onAuthenticated);
         socket.on("unauthorized", this::onUnauthorized);
         socket.on("event", this::onEvent);
     }
@@ -76,7 +84,17 @@ public class SocketService implements HasLogger {
         getLogger().info("Disconnected from socket.");
     }
 
-    private void onAuthenticated() {
+    private void onAuthenticated(Object ...e) {
+        if(e.length > 0) {
+            try {
+                JsonNode node = objectMapper.readTree(e[0].toString());
+                String streamElementsId = node.get("channelId").asText();
+                String twitchId = twitchIdCacheService.getTwitchId(streamElementsId);
+                getLogger().info("Authenticated on StreamElements for channel '{}' (Twitch: '{}')", streamElementsId, twitchId);
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
         getLogger().info("Authenticated.");
     }
 
@@ -95,7 +113,10 @@ public class SocketService implements HasLogger {
             event = objectMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
             getLogger().info(event.toString());
             SubathonEvent subathonEvent = SubathonEventFactory.convertToSubathonEvent(event);
-            messageService.produceMessage(objectMapper.writeValueAsString(subathonEvent));
+            SubathonEventMessage eventMessage = new SubathonEventMessage();
+            eventMessage.setChannelId(twitchIdCacheService.getTwitchId(event.getChannel()));
+            eventMessage.setSubathonEvent(subathonEvent);
+            messageService.produceMessage(objectMapper.writeValueAsString(eventMessage));
         } catch (Exception e) {
             getLogger().warn("Unable to map event to event model! Event= {}", events[0], e);
         }

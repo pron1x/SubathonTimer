@@ -16,7 +16,7 @@ CREATE TABLE `timer`
 (
     `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Internal id of the timer',
     `channel_name`      VARCHAR(30) NOT NULL COMMENT 'Name of the Twitch channel',
-    `channel_id`        BIGINT UNSIGNED NOT NULL COMMENT 'Twitch id of the channel',
+    `channel_id`        VARCHAR(30) NOT NULL COMMENT 'Twitch id of the channel',
     `start_time`        TIMESTAMP COMMENT 'Start timestamp of the timer',
     `end_time`          TIMESTAMP COMMENT 'End timestamp of the timer',
     `state`             ENUM ('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED') NOT NULL COMMENT 'Timer state',

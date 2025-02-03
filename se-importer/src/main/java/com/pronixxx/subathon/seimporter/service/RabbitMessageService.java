@@ -1,4 +1,4 @@
-package com.pronixxx.subathon.seimporter;
+package com.pronixxx.subathon.seimporter.service;
 
 import com.pronixxx.subathon.util.GlobalRabbitMQ;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

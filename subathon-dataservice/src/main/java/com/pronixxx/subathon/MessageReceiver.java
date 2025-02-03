@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pronixxx.subathon.datamodel.SubathonCommandEvent;
 import com.pronixxx.subathon.datamodel.SubathonEvent;
+import com.pronixxx.subathon.datamodel.SubathonEventMessage;
 import com.pronixxx.subathon.datamodel.enums.EventType;
 import com.pronixxx.subathon.service.TimerService;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
@@ -26,24 +27,26 @@ public class MessageReceiver implements HasLogger {
         this.timerService = timerService;
     }
 
+    // TODO: Add different listener methods for the bot and event queue!
     public void receiveMessage(String message) {
-        SubathonEvent event;
+        SubathonEventMessage eventMessage;
         try {
-            event = objectMapper.readValue(message, SubathonEvent.class);
-            getLogger().debug("Received Message: {}", event);
+            eventMessage = objectMapper.readValue(message, SubathonEventMessage.class);
+            getLogger().debug("Received Message: {}", eventMessage);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
+        // TODO: Add null/error handling!
+        SubathonEvent event = eventMessage.getSubathonEvent();
         if (event.isMock() && ignoreMock) {
             getLogger().debug("Event is mock: {}", event);
             return;
         }
 
         if (event.getType() == EventType.COMMAND) { // We handle bot commands differently
-            timerService.executeBotCommand("TEST", (SubathonCommandEvent) event);
+            timerService.executeBotCommand(eventMessage.getChannelId(), (SubathonCommandEvent) event);
         } else { // Everything else gets handled normally
-            timerService.addSubathonEventTime("TEST", event);
+            timerService.addSubathonEventTime(eventMessage.getChannelId(), event);
         }
     }
 }

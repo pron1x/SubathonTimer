@@ -13,7 +13,7 @@ public class TimerEntity extends BaseEntity {
     private String channelName;
 
     @Column(name = "channel_id")
-    private long channelId;
+    private String channelId;
 
     @Column(name = "start_time")
     private Instant startTime;
@@ -36,11 +36,11 @@ public class TimerEntity extends BaseEntity {
         this.channelName = channelName;
     }
 
-    public long getChannelId() {
+    public String getChannelId() {
         return channelId;
     }
 
-    public void setChannelId(long channelId) {
+    public void setChannelId(String channelId) {
         this.channelId = channelId;
     }
 

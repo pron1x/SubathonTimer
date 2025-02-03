@@ -8,7 +8,7 @@ public class Timer {
 
     private long id;
     private String channelName;
-    private long channelId;
+    private String channelId;
     private Instant startTime;
     private Instant endTime;
     private TimerState state;
@@ -30,11 +30,11 @@ public class Timer {
         this.channelName = channelName;
     }
 
-    public long getChannelId() {
+    public String getChannelId() {
         return channelId;
     }
 
-    public void setChannelId(long channelId) {
+    public void setChannelId(String channelId) {
         this.channelId = channelId;
     }
 
