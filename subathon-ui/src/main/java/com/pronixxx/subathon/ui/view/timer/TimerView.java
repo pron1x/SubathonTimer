@@ -1,27 +1,33 @@
 package com.pronixxx.subathon.ui.view.timer;
 
+import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.ui.component.SubathonTimer;
 import com.pronixxx.subathon.ui.service.TimerEventService;
 import com.pronixxx.subathon.ui.service.TimerEventService.TimerEventListener;
+import com.pronixxx.subathon.ui.service.TimerService;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
-@Route(value = "timer")
-public class TimerView extends HorizontalLayout implements TimerEventListener, HasLogger {
+@Route(value = "timer/")
+public class TimerView extends HorizontalLayout implements TimerEventListener, HasLogger, HasUrlParameter<String> {
 
     private final TimerEventService timerEventService;
 
-    private final SubathonTimer timer;
+    private final TimerService timerService;
+
+    private SubathonTimer timer;
 
     private CompletableFuture<Void> stage;
 
@@ -29,7 +35,6 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         timerEventService.addEventListener(this);
-        timer.updateWithNewEvent(timerEventService.getLatestTimerEvent());
     }
 
     @Override
@@ -39,9 +44,14 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
     }
 
     @Autowired
-    public TimerView(TimerEventService timerEventService) {
+    public TimerView(TimerEventService timerEventService, TimerService timerService) {
         this.timerEventService = timerEventService;
-        TimerEvent initial = timerEventService.getLatestTimerEvent();
+        this.timerService = timerService;
+    }
+
+    @Override
+    public void setParameter(BeforeEvent beforeEvent, String s) {
+        Timer initial = timerService.getTimerForChannel(s);
         timer = new SubathonTimer(initial);
         Div timerWrapper = new Div(timer);
         add(timerWrapper);

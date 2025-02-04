@@ -8,17 +8,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class TimerEventController {
+public class TimerController {
 
     private final TimerService timerService;
 
     @Autowired
-    public TimerEventController(TimerService timerService) {
+    public TimerController(TimerService timerService) {
         this.timerService = timerService;
     }
 
     @GetMapping("/timer/{channelId}")
-    public Timer newestTimerEvent(@PathVariable String channelId) {
+    public Timer timerForChannel(@PathVariable String channelId) {
         return timerService.getTimerForChannel(channelId);
     }
 }

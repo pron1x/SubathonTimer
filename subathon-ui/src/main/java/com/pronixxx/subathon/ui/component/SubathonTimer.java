@@ -1,5 +1,6 @@
 package com.pronixxx.subathon.ui.component;
 
+import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import com.vaadin.flow.component.ClientCallable;
@@ -13,8 +14,8 @@ import elemental.json.JsonNumber;
 @Tag("subathon-timer")
 public class SubathonTimer extends Component implements HasLogger {
 
-    public SubathonTimer(TimerEvent event) {
-        updateWithNewEvent(event);
+    public SubathonTimer(Timer timer) {
+        pushInitialState(timer);
     }
 
     public void updateWithNewEvent(TimerEvent event) {
@@ -23,12 +24,18 @@ public class SubathonTimer extends Component implements HasLogger {
         }
     }
 
+    private void pushInitialState(Timer timer) {
+        long end = timer.getEndTime().toEpochMilli();
+        long update = timer.getUpdateTime().toEpochMilli();
+        String state = timer.getState().toString();
+        getElement().callJsFunction("updateSubathonState", Json.create(end), Json.create(update), state);
+    }
+
     private void pushNewTimerEvent(TimerEvent event) {
-        long start = 1L;//event.getStartTime().toEpochMilli(); TODO: Fix this to use correct start time from timer object?
         long end = event.getCurrentEndTime().toEpochMilli();
         long update = event.getTimestamp().toEpochMilli();
         String state = event.getCurrentTimerState().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", Json.create(start), Json.create(end), Json.create(update), state);
+        getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
     }
 
     @SuppressWarnings("unused")

@@ -2,9 +2,7 @@ package com.pronixxx.subathon.ui.service;
 
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,14 +11,6 @@ import java.util.List;
 public class TimerEventService implements HasLogger {
 
     private final List<TimerEventListener> listeners = new ArrayList<>();
-
-    @Value("${ui.endpoints.dataservice}")
-    private String REQUEST_URI;
-    private final RestClient restClient = RestClient.create();
-
-    public TimerEvent getLatestTimerEvent() {
-        return restClient.get().uri(REQUEST_URI + "/timer").retrieve().toEntity(TimerEvent.class).getBody();
-    }
 
     public void handleIncomingTimerEvent(TimerEvent timerEvent) {
         for (TimerEventListener listener : listeners) {

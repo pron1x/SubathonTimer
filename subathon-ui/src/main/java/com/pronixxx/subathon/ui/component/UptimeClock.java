@@ -1,5 +1,6 @@
 package com.pronixxx.subathon.ui.component;
 
+import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.TimerEvent;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
@@ -12,12 +13,26 @@ import elemental.json.JsonNumber;
 @Tag("uptime-clock")
 public class UptimeClock extends Component {
 
-    public UptimeClock(TimerEvent event) {
-        pushState(event);
+    private Timer timer;
+
+    public UptimeClock(Timer timer) {
+        this.timer = timer;
+        pushInitialState(timer);
+    }
+
+    public void setTimer(Timer timer) {
+        this.timer = timer;
+    }
+
+    public void pushInitialState(Timer timer) {
+        long start = timer.getStartTime() != null ? timer.getStartTime().toEpochMilli() : -1;
+        long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : -1;
+        String state = timer.getState().toString();
+        getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
     }
 
     public void pushState(TimerEvent event) {
-        long start = 1L;//event.getStartTime().toEpochMilli(); TODO: Fix this to obtain correct start from Timer object?
+        long start = timer.getStartTime().toEpochMilli();
         long end = event.getCurrentEndTime().toEpochMilli();
         String state = event.getCurrentTimerState().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
