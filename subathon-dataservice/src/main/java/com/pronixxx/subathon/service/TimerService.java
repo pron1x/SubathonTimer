@@ -6,6 +6,7 @@ import com.pronixxx.subathon.data.entity.*;
 import com.pronixxx.subathon.data.repository.TimerRepository;
 import com.pronixxx.subathon.datamodel.*;
 import com.pronixxx.subathon.datamodel.Timer;
+import com.pronixxx.subathon.datamodel.enums.Command;
 import com.pronixxx.subathon.datamodel.enums.SubTier;
 import com.pronixxx.subathon.datamodel.enums.TimerEventType;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
@@ -143,8 +144,12 @@ public class TimerService implements HasLogger {
     public void startTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if(timer == null) {
+            // TODO: Early return in the future again!
             getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
-            return;
+            getLogger().warn("FOR TESTING, INITIALIZE A NEW TIMER!");
+            initializeTimer(channelId);
+            timer = timers.get(channelId);
+            // return
         }
         if(timer.getState() != INITIALIZED) {
             getLogger().warn("Cannot start the timer if it is not initialized or has already started. A started timer has to be resumed!");
@@ -276,14 +281,14 @@ public class TimerService implements HasLogger {
 
     public void executeBotCommand(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
-        if(timer == null) {
+        if(timer == null && command.getCommand() != Command.START) { // TODO: Remove != Command.START
             getLogger().info("Timer for channel id '{}' not found, not able to execute command '{}'!", channelId, command);
             return;
         }
         getLogger().debug("Executing bot command: {}", command);
         switch (command.getCommand()) {
             case START -> {
-                if(timer.getState() == INITIALIZED) {
+                if(timer == null || timer.getState() == INITIALIZED) { // TODO: Remove timer == null
                     startTimer(channelId, command);
                 } else {
                     resumeTimer(channelId, command);
@@ -401,6 +406,10 @@ public class TimerService implements HasLogger {
 
     public Timer getTimerForChannel(String channelId) {
         return timers.get(channelId);
+    }
+
+    public List<Timer> getAllActiveTimers() {
+        return timerRepository.findByStateIsNot(ENDED).stream().map(entity -> mapper.map(entity, Timer.class)).toList();
     }
 
     private void publishEvent(TimerEvent event) {

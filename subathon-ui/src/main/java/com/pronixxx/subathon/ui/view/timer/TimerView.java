@@ -27,7 +27,8 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
 
     private final TimerService timerService;
 
-    private SubathonTimer timer;
+    private Timer timer;
+    private SubathonTimer timerComponent;
 
     private CompletableFuture<Void> stage;
 
@@ -51,18 +52,22 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
 
     @Override
     public void setParameter(BeforeEvent beforeEvent, String s) {
-        Timer initial = timerService.getTimerForChannel(s);
-        timer = new SubathonTimer(initial);
-        Div timerWrapper = new Div(timer);
+        timer = timerService.getTimerForChannel(s);
+        timerComponent = new SubathonTimer(timer);
+        Div timerWrapper = new Div(timerComponent);
         add(timerWrapper);
     }
 
     @Override
     public void handleIncomingTimerEvent(TimerEvent timerEvent) {
+        // Filter for relevant timerEvents
+        if(timerEvent.getTimerId() != timer.getId()) {
+            return;
+        }
         getUI().ifPresent(
                 ui -> ui.access(() -> {
                     getLogger().info("Handling TimerEvent: {}", timerEvent);
-                    timer.updateWithNewEvent(timerEvent);
+                    timerComponent.updateWithNewEvent(timerEvent);
                     if(timerEvent.getType() == TimerEventType.TIME_ADDITION) {
                         addTimeAddedTheme();
                     }
@@ -81,11 +86,12 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
         }));
     }
 
+    // FIXME: With multiple timers the neon doesn't seem to disappear
     private void addTimeAddedTheme() {
         if(stage != null && !stage.isDone()) {
             stage.cancel(true);
         } else {
-            changeClassName(timer, "neon", false);
+            changeClassName(timerComponent, "neon", false);
         }
         stage = CompletableFuture.runAsync(() -> {
             try {
@@ -94,6 +100,6 @@ public class TimerView extends HorizontalLayout implements TimerEventListener, H
                 throw new RuntimeException(e);
             }
         });
-        stage.thenRun(() -> changeClassName(timer, "neon", true));
+        stage.thenRun(() -> changeClassName(timerComponent, "neon", true));
     }
 }

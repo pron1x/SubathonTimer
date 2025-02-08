@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class TimerController {
 
@@ -20,5 +22,10 @@ public class TimerController {
     @GetMapping("/timer/{channelId}")
     public Timer timerForChannel(@PathVariable String channelId) {
         return timerService.getTimerForChannel(channelId);
+    }
+
+    @GetMapping("/timer/all")
+    public List<Timer> getAllTimers() {
+        return timerService.getAllActiveTimers();
     }
 }

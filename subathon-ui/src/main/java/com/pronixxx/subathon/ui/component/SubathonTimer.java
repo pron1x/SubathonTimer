@@ -28,7 +28,7 @@ public class SubathonTimer extends Component implements HasLogger {
         long end = timer.getEndTime().toEpochMilli();
         long update = timer.getUpdateTime().toEpochMilli();
         String state = timer.getState().toString();
-        getElement().callJsFunction("updateSubathonState", Json.create(end), Json.create(update), state);
+        getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
     }
 
     private void pushNewTimerEvent(TimerEvent event) {
