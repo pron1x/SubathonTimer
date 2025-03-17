@@ -20,8 +20,8 @@ public class TimerController {
     }
 
     @GetMapping("/timer/{channelId}")
-    public Timer timerForChannel(@PathVariable String channelId) {
-        return timerService.getTimerForChannel(channelId);
+    public Timer getLatestTimerForChannel(@PathVariable String channelId) {
+        return timerService.getLatestTimerForChannel(channelId);
     }
 
     @GetMapping("/timer/all")

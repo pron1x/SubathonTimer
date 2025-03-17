@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.pronixxx.subathon.datamodel.enums.TimerState.*;
 
@@ -404,8 +405,9 @@ public class TimerService implements HasLogger {
         publishEvent(timerEventService.save(timerEvent));
     }
 
-    public Timer getTimerForChannel(String channelId) {
-        return timers.get(channelId);
+    public Timer getLatestTimerForChannel(String channelId) {
+        Optional<TimerEntity> entity = timerRepository.findLatestForChannelId(channelId);
+        return entity.map(timerEntity -> mapper.map(timerEntity, Timer.class)).orElse(null);
     }
 
     public List<Timer> getAllActiveTimers() {

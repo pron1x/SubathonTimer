@@ -25,6 +25,7 @@ public class UptimeClock extends Component {
     }
 
     public void pushInitialState(Timer timer) {
+        if(timer == null) return;
         long start = timer.getStartTime() != null ? timer.getStartTime().toEpochMilli() : -1;
         long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : -1;
         String state = timer.getState().toString();

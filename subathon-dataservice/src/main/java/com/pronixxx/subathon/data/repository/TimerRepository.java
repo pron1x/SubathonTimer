@@ -2,6 +2,7 @@ package com.pronixxx.subathon.data.repository;
 
 import com.pronixxx.subathon.data.entity.TimerEntity;
 import com.pronixxx.subathon.datamodel.enums.TimerState;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 
 import java.util.List;
@@ -16,5 +17,12 @@ public interface TimerRepository extends Repository<TimerEntity, Long> {
     Optional<TimerEntity> findById(long id);
     Optional<TimerEntity> findByChannelNameAndState(String channelName, TimerState timerState);
     List<TimerEntity> findByStateIsNot(TimerState timerState);
+
+    @Query("""
+            SELECT t FROM TimerEntity t
+                WHERE t.channelId = :channelId
+                ORDER BY t.insertTime DESC
+                LIMIT 1""")
+    Optional<TimerEntity> findLatestForChannelId(String channelId);
 
 }

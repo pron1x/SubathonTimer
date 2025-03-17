@@ -17,7 +17,7 @@ public class TimerService {
     }
 
     public Timer getTimerForChannel(String channelId) {
-        return dataserviceRestClient.getTimerForChannel(channelId);
+        return dataserviceRestClient.getLatestTimerForChannel(channelId);
     }
 
     public List<Timer> getAllActiveTimers() {

@@ -21,7 +21,7 @@ public class DataserviceRestClient {
         this.restClient = restClientBuilder.baseUrl(requestUri).build();
     }
 
-    public Timer getTimerForChannel(String twitchId) {
+    public Timer getLatestTimerForChannel(String twitchId) {
         ResponseEntity<Timer> result = restClient.get()
                 .uri(ENDPOINT_TIMER + "/{twitchId}", twitchId)
                 .retrieve().toEntity(Timer.class);
