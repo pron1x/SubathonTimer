@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.util.List;
 
 @Service
 public class SocketService implements HasLogger {
@@ -33,7 +34,7 @@ public class SocketService implements HasLogger {
     @Value("${seimporter.socket.streamelements.baseurl}")
     private String url;
     @Value("${seimporter.socket.auth.jwt}")
-    private String jwt;
+    private List<String> jwtList;
     private Socket socket;
 
     @Autowired
@@ -68,16 +69,19 @@ public class SocketService implements HasLogger {
 
     private void onConnect() {
         getLogger().info("Connected to socket.");
-        JSONObject authObject = new JSONObject();
-        try {
-            authObject.put("method", "jwt");
-            authObject.put("token", jwt);
-        } catch (JSONException e) {
-            getLogger().error("Unable to create authentication json object. {}", e.getMessage());
-            return;
+        getLogger().info("Trying to authenticate with {} tokens.", jwtList.size());
+        for(String token : jwtList) {
+            JSONObject authObject = new JSONObject();
+            try {
+                authObject.put("method", "jwt");
+                authObject.put("token", token);
+            } catch (JSONException e) {
+                getLogger().error("Unable to create authentication json object. {}", e.getMessage());
+                return;
+            }
+            socket.emit("authenticate", authObject);
         }
-        socket.emit("authenticate", authObject);
-        getLogger().info("sent authenticate.");
+        getLogger().info("sent all authenticate messages.");
     }
 
     private void onDisconnect() {
