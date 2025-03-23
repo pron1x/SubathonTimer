@@ -103,13 +103,6 @@ public class TimerService implements HasLogger {
                 timerControl.setPaused(timer.getChannelId(), timer.getState() != TICKING);
             }
         }
-        // FIXME: Only for testing, initialize a new test timer here if list is empty!
-        if(timerList.isEmpty()) {
-            getLogger().info("Timer list is empty.");
-            getLogger().info("Initializing timer for 'TEST'.");
-            // Initialize new Timer for testing purposes
-            initializeTimer("TEST");
-        }
     }
 
 
