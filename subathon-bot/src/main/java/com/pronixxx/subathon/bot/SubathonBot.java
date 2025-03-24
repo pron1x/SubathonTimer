@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 @Component
@@ -27,8 +28,8 @@ public class SubathonBot implements HasLogger {
 
     private static final String EVENT_SOURCE = "subathon-bot";
 
-    @Value("${bot.subathon.channel}")
-    private String CHANNEL_NAME;
+    @Value("${bot.subathon.channels}")
+    private List<String> channelNames;
 
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
@@ -48,7 +49,11 @@ public class SubathonBot implements HasLogger {
 
     @PostConstruct
     public void init() {
-        twitchClient.getChat().joinChannel(CHANNEL_NAME);
+        getLogger().info("Joining {} channels.", channelNames.size());
+        for(String channel : channelNames) {
+            twitchClient.getChat().joinChannel(channel);
+            getLogger().info("Joined channel '{}'.", channel);
+        }
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
             getLogger().trace("Received message. [{}: {}]", event.getUser().getName(), event.getMessage());
@@ -76,11 +81,11 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing add command due to invalid args.");
-                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
                     return;
                 }
                 handleTimeChangeCommand(eventChannel.getId(), user, seconds, false);
-                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued adding %d seconds to timer.", seconds));
+                twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Queued adding %d seconds to timer.", seconds));
             }
             case "del" -> {
                 long seconds;
@@ -88,11 +93,11 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing del command due to invalid args.");
-                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
                     return;
                 }
                 handleTimeChangeCommand(eventChannel.getId(), user, seconds, true);
-                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued removing %d seconds from timer.", seconds));
+                twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Queued removing %d seconds from timer.", seconds));
             }
         }
     }
