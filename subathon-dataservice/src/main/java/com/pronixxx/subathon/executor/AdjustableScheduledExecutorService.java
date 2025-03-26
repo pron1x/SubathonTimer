@@ -3,8 +3,14 @@ package com.pronixxx.subathon.executor;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Allows the execution of a runnable at a given LocalDateTime (time in UTC). The execution time can be changed
@@ -14,10 +20,12 @@ public class AdjustableScheduledExecutorService implements HasLogger {
 
     public static class TimerTaskConfig {
         private volatile Instant executionTime;
+        private Runnable command;
         private volatile boolean isPaused;
 
-        public TimerTaskConfig(Instant executionTime, boolean isPaused) {
+        public TimerTaskConfig(Instant executionTime, Runnable command, boolean isPaused) {
             this.executionTime = executionTime;
+            this.command = command;
             this.isPaused = isPaused;
         }
 
@@ -29,6 +37,14 @@ public class AdjustableScheduledExecutorService implements HasLogger {
             this.executionTime = executionTime;
         }
 
+        public Runnable getCommand() {
+            return command;
+        }
+
+        public void setCommand(Runnable command) {
+            this.command = command;
+        }
+
         public boolean isPaused() {
             return isPaused;
         }
@@ -38,29 +54,50 @@ public class AdjustableScheduledExecutorService implements HasLogger {
         }
     }
 
-    // TODO: Remove scheduled future map and have one scheduler iterate over all running timers!
-    private final Map<String, TimerTaskConfig> timerConfigs = new ConcurrentHashMap<>();
-    private final Map<String, ScheduledFuture<?>> timerFutures = new ConcurrentHashMap<>();
+    private final Map<String, TimerTaskConfig> timerConfigs;
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> interval;
+
+    private final ScheduledExecutorService scheduler;
+
+    public AdjustableScheduledExecutorService() {
+        timerConfigs = new ConcurrentHashMap<>();
+        scheduler = Executors.newScheduledThreadPool(1);
+    }
 
     public Instant getExecutionTime(String id) {
-        return timerConfigs.get(id).getExecutionTime();
+        synchronized (timerConfigs) {
+            if(timerConfigs.get(id) != null) {
+                return timerConfigs.get(id).getExecutionTime();
+            }
+            return null;
+        }
     }
 
     public void setExecutionTime(String id, Instant executionTime) {
-        timerConfigs.get(id).setExecutionTime(executionTime);
+        synchronized (timerConfigs) {
+            if(timerConfigs.get(id) != null) {
+                timerConfigs.get(id).setExecutionTime(executionTime);
+            }
+        }
     }
 
     public boolean isPaused(String id) {
-        return timerConfigs.get(id).isPaused();
+        synchronized (timerConfigs) {
+            if(timerConfigs.get(id) != null) {
+                return timerConfigs.get(id).isPaused();
+            }
+            return false;
+        }
     }
 
     public void setPaused(String id, boolean isPaused) {
-        timerConfigs.get(id).setPaused(isPaused);
+        synchronized (timerConfigs) {
+            if(timerConfigs.get(id) != null) {
+                timerConfigs.get(id).setPaused(isPaused);
+            }
+        }
     }
-
-    public AdjustableScheduledExecutorService() {}
 
     /**
      * Schedules a Runnable to be executed at the given execution time. The scheduled execution of the runnable can be paused
@@ -70,34 +107,55 @@ public class AdjustableScheduledExecutorService implements HasLogger {
      * @param executionTime The time at which the command should be executed. Can be adjusted
      */
     public void scheduleCommand(String id, Runnable command, Instant executionTime) {
-        timerConfigs.put(id, new TimerTaskConfig(executionTime, false));
-        final Runnable scheduledCommand = () -> {
-            TimerTaskConfig config = timerConfigs.get(id);
-            ScheduledFuture<?> future = timerFutures.get(id);
-            if (isExecutionTime(config.getExecutionTime(), config.isPaused())) {
-                command.run();
-                if(cancelCommand(future)) {
-                    getLogger().trace("Successfully executed command with execution time {} at {}.", config.getExecutionTime(), Instant.now());
-                } else {
-                    getLogger().warn("command executed at {} but cancelCommand returned '{}'. IsCancelled: {}.", Instant.now(), false, future.isCancelled());
-                }
-            } else if (config.isPaused()) {
-                getLogger().trace("Execution is paused.");
-            } else {
-                getLogger().trace("Not executing the command, yet. [Time={}, Execution={}]", Instant.now(), config.getExecutionTime());
+        synchronized (timerConfigs) {
+            if(timerConfigs.get(id) != null) {
+                // Perhaps throw an exception here instead of silent returning? Or reschedule the timer with the new runnable
+                return;
             }
-        };
-        timerFutures.put(id, scheduler.scheduleAtFixedRate(scheduledCommand, 0, 1, TimeUnit.SECONDS));
-    }
-
-    public boolean cancelCommand(ScheduledFuture<?> future) {
-        if(future != null) {
-            return future.cancel(true);
+            timerConfigs.put(id, new TimerTaskConfig(executionTime, command, false));
+            // Check if interval exists, create it otherwise!
         }
-        return false;
+        if(interval == null || interval.isDone()) {
+            interval = scheduler.scheduleAtFixedRate(this::tryExecuteScheduledCommands, 0, 1, TimeUnit.SECONDS);
+            getLogger().debug("Started new interval.");
+        }
     }
 
-    private synchronized boolean isExecutionTime(Instant executionTime, boolean isPaused) {
+    public boolean cancelCommand(String id) {
+        synchronized (timerConfigs) {
+            timerConfigs.remove(id);
+            return true;
+        }
+    }
+
+    private void tryExecuteScheduledCommands() {
+        List<String> finishedTimers = new ArrayList<>();
+        synchronized (timerConfigs) {
+            for(Map.Entry<String, TimerTaskConfig> timerEntry : timerConfigs.entrySet()) {
+                if(isExecutionTime(timerEntry.getValue().getExecutionTime(), timerEntry.getValue().isPaused())) {
+                    try {
+                        timerEntry.getValue().getCommand().run();
+                    } catch (Exception e) {
+                        getLogger().warn("Could not execute command for timer '{}' at {}!", timerEntry.getKey(), timerEntry.getValue().getExecutionTime(), e);
+                        continue;
+                    }
+                    finishedTimers.add(timerEntry.getKey());
+                    getLogger().trace("Successfully executed command with id '{}', execution time {} at {}.", timerEntry.getKey(), timerEntry.getValue().getExecutionTime(), Instant.now());
+                } else if (timerEntry.getValue().isPaused) {
+                    getLogger().trace("Execution is paused for timer with id '{}'.", timerEntry.getKey());
+                } else {
+                    getLogger().trace("Not executing timer with id '{}' yet.", timerEntry.getKey());
+                }
+            }
+            finishedTimers.forEach(timerConfigs::remove);
+            if(timerConfigs.isEmpty()) {
+                interval.cancel(true);
+                getLogger().debug("Canceled interval because no timers running.");
+            }
+        }
+    }
+
+    private boolean isExecutionTime(Instant executionTime, boolean isPaused) {
         if(isPaused) {
             return false;
         }
