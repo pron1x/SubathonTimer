@@ -1,52 +1,58 @@
 package com.pronixxx.subathon.ui.view.uptime;
 
+import com.pronixxx.subathon.datamodel.Timer;
 import com.pronixxx.subathon.datamodel.TimerEvent;
-import com.pronixxx.subathon.datamodel.enums.TimerState;
 import com.pronixxx.subathon.ui.component.UptimeClock;
-import com.pronixxx.subathon.ui.service.TimerEventService;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("uptime")
-public class UptimeView extends Div implements TimerEventService.TimerEventListener {
+public class UptimeView extends Div implements HasUrlParameter<String> {
 
-    private final TimerEventService timerEventService;
+    private final UptimePresenter uptimePresenter;
 
-    private final UptimeClock clock;
+    private UptimeClock clock;
+
+    @Autowired
+    public UptimeView(UptimePresenter uptimePresenter) {
+        this.uptimePresenter = uptimePresenter;
+    }
+
+    @PostConstruct
+    private void init() {
+        uptimePresenter.init(this);
+    }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        uptimePresenter.onAttach(attachEvent);
         super.onAttach(attachEvent);
-        timerEventService.addEventListener(this);
-        clock.pushState(timerEventService.getLatestTimerEvent());
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
+        uptimePresenter.onDetach(detachEvent);
         super.onDetach(detachEvent);
-        timerEventService.removeEventListener(this);
     }
 
-    public UptimeView(@Autowired TimerEventService timerEventService) {
-        this.timerEventService = timerEventService;
-        TimerEvent initial = timerEventService.getLatestTimerEvent();
-        clock = new UptimeClock(initial);
+    @Override
+    public void setParameter(BeforeEvent beforeEvent, String s) {
+        clock = new UptimeClock(uptimePresenter.getTimerForChannel(s));
         Div uptimeWrapper = new Div(clock);
         add(uptimeWrapper);
     }
 
-    @Override
-    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
-        // We only need to change something with the uptime if we switch from INITIALIZED to TICKING (starting the time first time)
-        // or when the timer ends, as we freeze the uptime at that point!
-        if(timerEvent.getCurrentTimerState() == TimerState.ENDED ||
-                (timerEvent.getCurrentTimerState() == TimerState.TICKING && timerEvent.getOldTimerState() == TimerState.INITIALIZED)) {
-            getUI().ifPresent(ui -> ui.access(() -> {
-                clock.pushState(timerEvent);
-            }));
-        }
+    public void updateTimerState(TimerEvent timerEvent) {
+        clock.pushState(timerEvent);
+    }
+
+    public void setTimer(Timer timer) {
+        clock.setTimer(timer);
     }
 }

@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
+import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
 import com.pronixxx.subathon.bot.service.RabbitMessageService;
 import com.pronixxx.subathon.datamodel.SubathonCommandEvent;
+import com.pronixxx.subathon.datamodel.SubathonEventMessage;
 import com.pronixxx.subathon.datamodel.enums.Command;
 import com.pronixxx.subathon.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 @Component
@@ -25,24 +28,32 @@ public class SubathonBot implements HasLogger {
 
     private static final String EVENT_SOURCE = "subathon-bot";
 
-    @Value("${bot.subathon.channel}")
-    private String CHANNEL_NAME;
+    @Value("${bot.subathon.channels}")
+    private List<String> channelNames;
 
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
-    @Autowired
-    ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+
+    private final RabbitMessageService messageService;
+
+    private final TwitchClient twitchClient;
 
     @Autowired
-    RabbitMessageService messageService;
-
-    @Autowired
-    TwitchClient twitchClient;
+    public SubathonBot(ObjectMapper objectMapper, RabbitMessageService messageService, TwitchClient twitchClient) {
+        this.objectMapper = objectMapper;
+        this.messageService = messageService;
+        this.twitchClient = twitchClient;
+    }
 
     @PostConstruct
     public void init() {
-        twitchClient.getChat().joinChannel(CHANNEL_NAME);
+        getLogger().info("Joining {} channels.", channelNames.size());
+        for(String channel : channelNames) {
+            twitchClient.getChat().joinChannel(channel);
+            getLogger().info("Joined channel '{}'.", channel);
+        }
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
             getLogger().trace("Received message. [{}: {}]", event.getUser().getName(), event.getMessage());
@@ -53,28 +64,28 @@ public class SubathonBot implements HasLogger {
                 // !timer command needs at least a subcommand, subcommand args will be checked for the command
                 if ("timer".equals(command) && split.length > 1 && hasPermission(event.getPermissions())) {
                     String[] args = Arrays.stream(split).skip(2).toArray(String[]::new);
-                    handleCommand(split[1], event.getUser(), args);
+                    handleCommand(split[1], event.getChannel(), event.getUser(), args);
                 }
             }
         });
     }
 
-    private void handleCommand(String command, EventUser user, String... args) {
-        getLogger().debug("Handling '!timer' command. Sub command: {}, args: {}", command, args);
+    private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {
+        getLogger().debug("Handling '!timer' command for channel '{} ({})'. Sub command: {}, args: {}", eventChannel.getName(), eventChannel.getId(), command, args);
         switch (command) {
-            case "start" -> handleStateChangeCommand(user, false);
-            case "pause" -> handleStateChangeCommand(user, true);
+            case "start" -> handleStateChangeCommand(eventChannel.getId(), user, false);
+            case "pause" -> handleStateChangeCommand(eventChannel.getId(), user, true);
             case "add" -> {
                 long seconds;
                 try {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing add command due to invalid args.");
-                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
                     return;
                 }
-                handleTimeChangeCommand(user, seconds, false);
-                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued adding %d seconds to timer.", seconds));
+                handleTimeChangeCommand(eventChannel.getId(), user, seconds, false);
+                twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Queued adding %d seconds to timer.", seconds));
             }
             case "del" -> {
                 long seconds;
@@ -82,32 +93,39 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing del command due to invalid args.");
-                    twitchClient.getChat().sendMessage(CHANNEL_NAME, "Invalid arguments!");
+                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
                     return;
                 }
-                handleTimeChangeCommand(user, seconds, true);
-                twitchClient.getChat().sendMessage(CHANNEL_NAME, String.format("Queued removing %d seconds from timer.", seconds));
+                handleTimeChangeCommand(eventChannel.getId(), user, seconds, true);
+                twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Queued removing %d seconds from timer.", seconds));
             }
         }
     }
 
-    private void handleStateChangeCommand(EventUser user, boolean isPause) {
+    private void handleStateChangeCommand(String channelId, EventUser user, boolean isPause) {
         getLogger().debug("Handling timer state change command [{}]", isPause ? "pause" : "start");
+
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
+        SubathonEventMessage message = new SubathonEventMessage();
+        message.setChannelId(channelId);
+        message.setSubathonEvent(event);
         try {
-            messageService.sendMessage(objectMapper.writeValueAsString(event));
+            messageService.sendMessage(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             getLogger().error("Failed to serialize subathon command event!", e);
         }
     }
 
-    private void handleTimeChangeCommand(EventUser user, long seconds, boolean isRemove) {
+    private void handleTimeChangeCommand(String channelId, EventUser user, long seconds, boolean isRemove) {
         getLogger().debug("Handling timer time change command [{}]", isRemove ? "del" : "add");
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
+        SubathonEventMessage message = new SubathonEventMessage();
+        message.setChannelId(channelId);
+        message.setSubathonEvent(event);
         try {
-            messageService.sendMessage(objectMapper.writeValueAsString(event));
+            messageService.sendMessage(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             getLogger().error("Failed to serialize subathon command event!", e);
         }

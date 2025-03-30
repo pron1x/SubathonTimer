@@ -7,14 +7,22 @@ import java.time.Instant;
 
 public class TimerEvent {
 
+    private long timerId;
     private Instant timestamp;
     private TimerEventType type;
     private Instant oldEndTime;
     private Instant currentEndTime;
     private TimerState oldTimerState;
     private TimerState currentTimerState;
-    private Instant startTime;
     private SubathonEvent subathonEvent;
+
+    public long getTimerId() {
+        return timerId;
+    }
+
+    public void setTimerId(long timerId) {
+        this.timerId = timerId;
+    }
 
     public Instant getTimestamp() {
         return timestamp;
@@ -64,14 +72,6 @@ public class TimerEvent {
         this.currentTimerState = currentTimerState;
     }
 
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = startTime;
-    }
-
     public SubathonEvent getSubathonEvent() {
         return subathonEvent;
     }
@@ -83,13 +83,13 @@ public class TimerEvent {
     @Override
     public String toString() {
         return "TimerEvent{" +
-                "timestamp=" + timestamp +
+                "timerId=" + timerId +
+                ", timestamp=" + timestamp +
                 ", type=" + type +
                 ", oldEndTime=" + oldEndTime +
                 ", currentEndTime=" + currentEndTime +
                 ", oldTimerState=" + oldTimerState +
                 ", currentTimerState=" + currentTimerState +
-                ", startTime=" + startTime +
                 ", subathonEvent=" + subathonEvent +
                 '}';
     }

@@ -7,8 +7,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RabbitMessageService {
+
+    private final RabbitTemplate rabbitTemplate;
+
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    public RabbitMessageService(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     public void sendMessage(String message) {
         rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.BOT_ROUTING_KEY, message);

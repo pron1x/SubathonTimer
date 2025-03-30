@@ -8,7 +8,8 @@ bot:
     oauth:
       token: ${TWITCH_OAUTH_TOKEN}
   subathon:
-    channel:
+    # Expects a comma separated list of channel names to join
+    channels: 
     command:
       prefix: '!'
 

@@ -2,6 +2,7 @@ seimporter.socket:
   streamelements:
     baseurl: 'https://realtime.streamelements.com'
   auth:
+    # Expects a comma seperated list of stream element jwt tokens.
     jwt: ${STREAMELEMENTS_JWT_TOKEN}
 
 spring:

@@ -5,7 +5,6 @@ import {millisToTimeString, STATE_INITIALIZED, STATE_TICKING, STATE_PAUSED, STAT
 @customElement('subathon-timer')
 class SubathonTimer extends LitElement {
 
-    _startTime: number;
     _endTime: number;
     _lastUpdateTime: number;
     _timerState: string;
@@ -37,11 +36,7 @@ class SubathonTimer extends LitElement {
         clearInterval(this._syncInterval);
     }
 
-    updateToNewTimerEvent(startDate: number, endDate: number, updateDate: number, timerState: string): void {
-        if(startDate) {
-            console.log("Start: " + startDate);
-            this._startTime = startDate;
-        }
+    updateToNewTimerEvent(endDate: number, updateDate: number, timerState: string): void {
         if(endDate) {
             console.log("End: " + endDate);
             this._endTime = endDate;
@@ -62,7 +57,9 @@ class SubathonTimer extends LitElement {
     }
 
     calculateTimeLeft(): number {
-        if(this._timerState === STATE_ENDED) {
+        if(!this._endTime) {
+            return 0;
+        } else if(this._timerState === STATE_ENDED) {
             return -1;
         } else if (this._timerState === STATE_INITIALIZED) {
             return (this._endTime - this._lastUpdateTime);
