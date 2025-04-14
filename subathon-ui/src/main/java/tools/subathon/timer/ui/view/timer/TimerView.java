@@ -1,5 +1,6 @@
 package tools.subathon.timer.ui.view.timer;
 
+import jakarta.annotation.security.PermitAll;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.ui.component.SubathonTimer;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -14,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(value = "timer/")
+@PermitAll
 public class TimerView extends HorizontalLayout implements HasLogger, HasUrlParameter<String> {
 
     private final TimerPresenter timerPresenter;
