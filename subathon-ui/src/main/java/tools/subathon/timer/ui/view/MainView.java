@@ -1,69 +1,46 @@
 package tools.subathon.timer.ui.view;
 
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import tools.subathon.timer.datamodel.Timer;
-import tools.subathon.timer.ui.service.TimerService;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-import java.util.List;
-
-@Route(layout = MainLayout.class)
+@Route(value = "/")
 @AnonymousAllowed
 public class MainView extends VerticalLayout implements HasLogger {
 
-    private ComboBox<Timer> timerComboBox;
-
     @Autowired
-    public MainView(TimerService timerService) {
+    public MainView(AuthenticationContext authContext) {
         setSizeFull();
         VerticalLayout content = new VerticalLayout();
         content.setSizeFull();
+        content.setAlignItems(Alignment.CENTER);
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        getLogger().info("Authenticated user: {}. Principal: {}", auth.getName(), auth.getPrincipal());
-        if (auth instanceof OAuth2AuthenticationToken) {
-            List<Timer> timers = timerService.getAllActiveTimers();
-            Button uptime = new Button("Go to Uptime");
-            uptime.addClickListener(event -> {
-                getUI().ifPresent(ui -> {
-                        ui.navigate("uptime/" + timerComboBox.getValue().getChannelId());
-                });
-            });
-            uptime.setEnabled(false);
+        SvgIcon twitchLogo = new SvgIcon("/themes/subathon/icons/glitch_flat_black-ops.svg");
+        twitchLogo.setSize("var(--lumo-icon-size-l)");
 
-            Button timer = new Button("Go to Timer");
-            timer.addClickListener(event -> {
-                getUI().ifPresent(ui -> {
-                        ui.navigate("timer/" + timerComboBox.getValue().getChannelId());
-                });
-            });
-            timer.setEnabled(false);
+        Anchor login = new Anchor("/oauth2/authorization/twitch", "Login with Twitch");
+        login.setRouterIgnore(true);
+        login.addComponentAsFirst(twitchLogo);
 
-            timerComboBox = new ComboBox<>();
-            timerComboBox.setItems(timers);
-            timerComboBox.setItemLabelGenerator(t -> t.getChannelName() + "(" + t.getChannelId() + ")");
-            timerComboBox.addValueChangeListener(e -> {
-            if(e.getValue() != null) {
-                uptime.setEnabled(true);
-                timer.setEnabled(true);
-            } else {
-                uptime.setEnabled(false);
-                timer.setEnabled(false);
-            }
-            });
+        Button dashboardLink = new Button("Dashboard");
+        dashboardLink.addClickListener(e -> {
+            getUI().ifPresent(ui -> ui.navigate("dashboard"));
+        });
 
-            content.add(new HorizontalLayout(timerComboBox, uptime, timer));
-        }
+        authContext.getAuthenticatedUser(OAuth2AuthenticatedPrincipal.class)
+                .ifPresentOrElse(user -> {
+                            content.add(dashboardLink);},
+                        () -> content.add(login));
+
         Paragraph footerText = new Paragraph();
         footerText.setText("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
         HorizontalLayout footer = new HorizontalLayout();
