@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_QUEUE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_ROUTING_KEY_RPC;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 
 @Configuration
@@ -28,7 +28,7 @@ public class RabbitMQConfig {
 
     @Bean
     Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(BOT_ROUTING_KEY);
+        return BindingBuilder.bind(queue).to(exchange).with(BOT_ROUTING_KEY_RPC);
     }
 
     @Bean

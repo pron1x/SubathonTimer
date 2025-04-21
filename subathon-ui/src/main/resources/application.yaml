@@ -2,6 +2,26 @@ spring:
   rabbitmq:
     password: 'secret'
     username: 'myuser'
+  security:
+    oauth2:
+      client:
+        registration:
+          twitch:
+            provider: 'twitch'
+            client-id: ${TWITCH_CLIENT_ID}
+            client-secret: ${TWITCH_CLIENT_SECRET}
+            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            authorization-grant-type: 'authorization_code'
+            client-authentication-method: 'client_secret_post'
+            #scope:
+            #  -
+        provider:
+          twitch:
+            authorization-uri: 'https://id.twitch.tv/oauth2/authorize'
+            token-uri: 'https://id.twitch.tv/oauth2/token'
+            jwk-set-uri: 'https://id.twitch.tv/oauth2/keys'
+            user-info-uri: 'https://id.twitch.tv/oauth2/userinfo'
+            user-name-attribute: 'preferred_username'
 
 ui:
   endpoints:
