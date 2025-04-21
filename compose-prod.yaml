@@ -3,7 +3,7 @@ name: subathon-timer
 services:
   rabbitmq:
     container_name: 'rabbit-mq-prod'
-    image: 'rabbitmq:3'
+    image: 'rabbitmq:4'
     restart: always
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq
