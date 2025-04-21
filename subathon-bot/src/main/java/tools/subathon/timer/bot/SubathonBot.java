@@ -51,8 +51,9 @@ public class SubathonBot implements HasLogger {
     public void init() {
         getLogger().info("Joining {} channels.", channelNames.size());
         for(String channel : channelNames) {
-            twitchClient.getChat().joinChannel(channel);
-            getLogger().info("Joined channel '{}'.", channel);
+            joinChannel(channel);
+//            twitchClient.getChat().joinChannel(channel);
+//            getLogger().info("Joined channel '{}'.", channel);
         }
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
@@ -68,6 +69,12 @@ public class SubathonBot implements HasLogger {
                 }
             }
         });
+    }
+
+    public boolean joinChannel(String channelName) {
+        twitchClient.getChat().joinChannel(channelName);
+        getLogger().info("Joined channel '{}'.", channelName);
+        return twitchClient.getChat().isChannelJoined(channelName);
     }
 
     private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {

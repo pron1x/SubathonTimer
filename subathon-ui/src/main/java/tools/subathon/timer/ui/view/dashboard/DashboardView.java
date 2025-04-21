@@ -24,6 +24,8 @@ public class DashboardView extends VerticalLayout {
 
     private ComboBox<Timer> timerComboBox;
 
+    private Button joinChannelButton;
+
     @Autowired
     public DashboardView(DashboardPresenter presenter) {
         this.presenter = presenter;
@@ -41,7 +43,7 @@ public class DashboardView extends VerticalLayout {
         content.setSizeFull();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth instanceof OAuth2AuthenticationToken) {
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
             List<Timer> timers = presenter.getAllActiveTimers();
             Button uptime = new Button("Go to Uptime");
             uptime.addClickListener(event -> {
@@ -72,7 +74,10 @@ public class DashboardView extends VerticalLayout {
                 }
             });
 
+            joinChannelButton = new Button("Join channel", event -> presenter.joinChannel(oauth.getName()));
+
             content.add(timerComboBox, uptime, timer);
+            content.add(joinChannelButton);
         }
         add(content);
     }
