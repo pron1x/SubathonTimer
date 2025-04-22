@@ -2,6 +2,7 @@ package tools.subathon.timer.dataservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
@@ -11,6 +12,8 @@ import tools.subathon.timer.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import static tools.subathon.timer.util.GlobalRabbitMQ.EVENT_QUEUE_NAME;
 
 @Component
 public class MessageReceiver implements HasLogger {
@@ -27,19 +30,20 @@ public class MessageReceiver implements HasLogger {
         this.timerService = timerService;
     }
 
-    // TODO: Add different listener methods for the bot and event queue!
+    // TODO: Split queue bindings to be different for bot and importer events to make use of message converters!
+    @RabbitListener(queues = {EVENT_QUEUE_NAME})
     public void receiveMessage(String message) {
         SubathonEventMessage eventMessage;
         try {
             eventMessage = objectMapper.readValue(message, SubathonEventMessage.class);
-            getLogger().debug("Received Message: {}", eventMessage);
+            getLogger().info("Received Message: {}", eventMessage);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
         // TODO: Add null/error handling!
         SubathonEvent event = eventMessage.getSubathonEvent();
         if (event.isMock() && ignoreMock) {
-            getLogger().debug("Event is mock: {}", event);
+            getLogger().info("Event is mock: {}", event);
             return;
         }
 

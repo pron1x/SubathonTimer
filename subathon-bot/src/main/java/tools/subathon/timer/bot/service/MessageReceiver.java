@@ -8,16 +8,16 @@ import tools.subathon.timer.util.GlobalRabbitMQ;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 @Service
-public class RabbitListenerService implements HasLogger {
+public class MessageReceiver implements HasLogger {
 
     private final SubathonBot twitchBot;
 
     @Autowired
-    public RabbitListenerService(SubathonBot twitchBot) {
+    public MessageReceiver(SubathonBot twitchBot) {
         this.twitchBot = twitchBot;
     }
 
-    @RabbitListener(queues = GlobalRabbitMQ.BOT_QUEUE_NAME)
+    @RabbitListener(queues = GlobalRabbitMQ.BOT_RPC_QUEUE_NAME)
     public void joinChannel(String channel) {
         getLogger().info("Received message: {}", channel);
         twitchBot.joinChannel(channel);

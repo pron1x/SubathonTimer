@@ -14,6 +14,6 @@ public class RabbitMessageService {
     }
 
     public void sendRpcToBot(Object message) {
-        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.BOT_ROUTING_KEY_RPC, message);
+        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.BOT_RPC_ROUTING_KEY, message);
     }
 }

@@ -16,6 +16,6 @@ public class RabbitMessageService {
     }
 
     public void sendMessage(String message) {
-        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.BOT_ROUTING_KEY, message);
+        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.DATASERVICE_EVENT_ROUTING_KEY, message);
     }
 }

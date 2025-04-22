@@ -4,21 +4,23 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_QUEUE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_ROUTING_KEY_RPC;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_RPC_QUEUE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_RPC_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 
+@EnableRabbit
 @Configuration
 public class RabbitMQConfig {
 
     @Bean
     Queue queue() {
-        return new Queue(BOT_QUEUE_NAME, true);
+        return new Queue(BOT_RPC_QUEUE_NAME, true);
     }
 
     @Bean
@@ -28,7 +30,7 @@ public class RabbitMQConfig {
 
     @Bean
     Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(BOT_ROUTING_KEY_RPC);
+        return BindingBuilder.bind(queue).to(exchange).with(BOT_RPC_ROUTING_KEY);
     }
 
     @Bean

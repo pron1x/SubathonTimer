@@ -17,6 +17,6 @@ public class RabbitMessageService {
     }
 
     public void sendMessage(String message) throws AmqpException {
-        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.TIMER_EVENT_ROUTING_KEY, message);
+        rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.UI_EVENT_ROUTING_KEY, message);
     }
 }
