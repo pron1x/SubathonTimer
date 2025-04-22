@@ -2,9 +2,11 @@ package tools.subathon.timer.ui.view.dashboard;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoIcon;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,10 +76,30 @@ public class DashboardView extends VerticalLayout {
                 }
             });
 
-            joinChannelButton = new Button("Join channel", event -> presenter.joinChannel(oauth.getName()));
+            Icon channelJoinedIcon = LumoIcon.CHECKMARK.create();
+            channelJoinedIcon.setColor("green");
+            channelJoinedIcon.setVisible(false);
+            Icon channelFailedIcon = LumoIcon.CROSS.create();
+            channelFailedIcon.setColor("red");
+            channelFailedIcon.setVisible(false);
 
+
+            joinChannelButton = new Button("Join channel", event -> {
+                if (presenter.joinChannel(oauth.getName())) {
+                    channelJoinedIcon.setVisible(true);
+                    channelFailedIcon.setVisible(false);
+                    joinChannelButton.setEnabled(false);
+                } else {
+                    channelJoinedIcon.setVisible(false);
+                    channelFailedIcon.setVisible(true);
+                    joinChannelButton.setEnabled(true);
+                }
+            });
+
+            HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
+            joinChannelBox.setAlignItems(Alignment.BASELINE);
             content.add(timerComboBox, uptime, timer);
-            content.add(joinChannelButton);
+            content.add(joinChannelBox);
         }
         add(content);
     }

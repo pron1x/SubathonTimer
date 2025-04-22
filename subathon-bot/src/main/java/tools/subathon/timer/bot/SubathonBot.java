@@ -52,8 +52,6 @@ public class SubathonBot implements HasLogger {
         getLogger().info("Joining {} channels.", channelNames.size());
         for(String channel : channelNames) {
             joinChannel(channel);
-//            twitchClient.getChat().joinChannel(channel);
-//            getLogger().info("Joined channel '{}'.", channel);
         }
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {

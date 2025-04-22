@@ -18,8 +18,8 @@ public class MessageReceiver implements HasLogger {
     }
 
     @RabbitListener(queues = GlobalRabbitMQ.BOT_RPC_QUEUE_NAME)
-    public void joinChannel(String channel) {
+    public boolean joinChannel(String channel) {
         getLogger().info("Received message: {}", channel);
-        twitchBot.joinChannel(channel);
+        return twitchBot.joinChannel(channel);
     }
 }
