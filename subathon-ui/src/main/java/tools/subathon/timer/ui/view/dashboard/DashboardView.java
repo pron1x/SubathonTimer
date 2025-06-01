@@ -2,6 +2,9 @@ package tools.subathon.timer.ui.view.dashboard;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.AnchorTarget;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -101,7 +104,17 @@ public class DashboardView extends VerticalLayout {
             content.add(timerComboBox, uptime, timer);
             content.add(joinChannelBox);
         }
-        add(content);
+        Paragraph footerText = new Paragraph();
+        footerText.setText("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
+        VerticalLayout footer = new VerticalLayout();
+        footer.setWidthFull();
+        footer.setAlignSelf(Alignment.END);
+        footer.setAlignItems(Alignment.CENTER);
+        footer.setMargin(false);
+        footer.setSpacing(false);
+
+        footer.add(new Anchor("https://github.com/pron1x/SubathonTimer", "Source on Github!", AnchorTarget.BLANK), footerText);
+        add(content, footer);
     }
 
 
