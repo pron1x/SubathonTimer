@@ -1,7 +1,5 @@
 package tools.subathon.timer.dataservice.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
 import tools.subathon.timer.dataservice.data.repository.TimerRepository;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
@@ -48,8 +46,6 @@ public class TimerService implements HasLogger {
 
     private final ModelMapper mapper;
 
-    private final ObjectMapper objectMapper;
-
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
     @Value("${timer.seconds.follow}")
@@ -89,12 +85,11 @@ public class TimerService implements HasLogger {
     private final Map<String, Timer> timers = new HashMap<>();
 
     @Autowired
-    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, ModelMapper mapper, ObjectMapper objectMapper) {
+    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, ModelMapper mapper) {
         this.messageService = messageService;
         this.timerRepository = timerRepository;
         this.timerEventService = timerEventService;
         this.mapper = mapper;
-        this.objectMapper = objectMapper;
     }
 
     @PostConstruct
@@ -418,10 +413,7 @@ public class TimerService implements HasLogger {
 
     private void publishEvent(TimerEvent event) {
         try {
-            String message = objectMapper.writeValueAsString(event);
-            messageService.sendMessage(message);
-        } catch (JsonProcessingException e) {
-            getLogger().warn("Could not convert event to string! {}", event, e);
+            messageService.sendMessage(event);
         } catch (AmqpException e) {
             getLogger().warn("Could not send message! {}", event, e);
         }

@@ -10,18 +10,15 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_EVENT_ROUTING_KEY;
-import static tools.subathon.timer.util.GlobalRabbitMQ.EVENT_QUEUE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_RPC_QUEUE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_RPC_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_ROUTING_KEY;
 
 @EnableRabbit
 @Configuration
 public class RabbitMQConfig {
-
-    @Bean
-    Queue eventQueue() {
-        return new Queue(EVENT_QUEUE_NAME, true);
-    }
 
     @Bean
     TopicExchange exchange() {
@@ -29,8 +26,23 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Binding eventBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(eventQueue()).to(exchange).with(DATASERVICE_EVENT_ROUTING_KEY);
+    Queue twitchEventQueue() {
+        return new Queue(TWITCH_EVENT_QUEUE, true);
+    }
+
+    @Bean
+    Queue rpcQueue() {
+        return new Queue(DATASERVICE_RPC_QUEUE_NAME, true);
+    }
+
+    @Bean
+    Binding twitchEventBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(twitchEventQueue()).to(exchange).with(TWITCH_EVENT_ROUTING_KEY);
+    }
+
+    @Bean
+    Binding rpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(rpcQueue()).to(exchange).with(DATASERVICE_RPC_ROUTING_KEY);
     }
 
     @Bean
