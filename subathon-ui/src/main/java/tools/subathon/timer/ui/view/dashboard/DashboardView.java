@@ -51,19 +51,13 @@ public class DashboardView extends VerticalLayout {
         if (auth instanceof OAuth2AuthenticationToken oauth) {
             List<Timer> timers = presenter.getAllActiveTimers();
             Button uptime = new Button("Go to Uptime");
-            uptime.addClickListener(event -> {
-                getUI().ifPresent(ui -> {
-                    ui.navigate("uptime/" + timerComboBox.getValue().getChannelId());
-                });
-            });
+            uptime.addClickListener(event ->
+                    getUI().ifPresent(ui -> ui.navigate("uptime/" + timerComboBox.getValue().getChannelId())));
             uptime.setEnabled(false);
 
             Button timer = new Button("Go to Timer");
-            timer.addClickListener(event -> {
-                getUI().ifPresent(ui -> {
-                    ui.navigate("timer/" + timerComboBox.getValue().getChannelId());
-                });
-            });
+            timer.addClickListener(event ->
+                    getUI().ifPresent(ui -> ui.navigate("timer/" + timerComboBox.getValue().getChannelId())));
             timer.setEnabled(false);
 
             timerComboBox = new ComboBox<>();

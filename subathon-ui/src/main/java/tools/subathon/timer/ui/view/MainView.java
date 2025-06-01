@@ -32,14 +32,11 @@ public class MainView extends VerticalLayout implements HasLogger {
         login.addComponentAsFirst(twitchLogo);
 
         Button dashboardLink = new Button("Dashboard");
-        dashboardLink.addClickListener(e -> {
-            getUI().ifPresent(ui -> ui.navigate("dashboard"));
-        });
+        dashboardLink.addClickListener(e ->
+                getUI().ifPresent(ui -> ui.navigate("dashboard")));
 
         authContext.getAuthenticatedUser(OAuth2AuthenticatedPrincipal.class)
-                .ifPresentOrElse(user -> {
-                            content.add(dashboardLink);},
-                        () -> content.add(login));
+                .ifPresentOrElse(user -> content.add(dashboardLink), () -> content.add(login));
 
         Paragraph footerText = new Paragraph();
         footerText.setText("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");

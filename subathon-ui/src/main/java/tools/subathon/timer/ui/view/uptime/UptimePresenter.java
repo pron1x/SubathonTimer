@@ -63,7 +63,7 @@ public class UptimePresenter implements TimerEventListener {
                 timer = timerService.getTimerForChannel(timer.getChannelId()); // Refetch timer with correct start time!
                 uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.setTimer(timer)));
             }
-            uptimeView.getUI().ifPresent(ui -> ui.access(() -> {uptimeView.updateTimerState(timerEvent);}));
+            uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.updateTimerState(timerEvent)));
         }
     }
 }
