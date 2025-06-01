@@ -1,7 +1,9 @@
 services:
   rabbitmq:
     container_name: 'rabbit-mq'
-    image: 'rabbitmq:3-management'
+    image: 'rabbitmq:4-management'
+    volumes:
+      - rabbit-data-dev:/var/lib/rabbitmq
     environment:
       - 'RABBITMQ_DEFAULT_PASS=secret'
       - 'RABBITMQ_DEFAULT_USER=myuser'
@@ -11,7 +13,13 @@ services:
   mariadb:
     container_name: 'maria-db-11.4'
     image: 'mariadb:11.4'
+    volumes:
+      - mariadb-data-dev:/var/lib/mysql
     environment:
       - 'MARIADB_ROOT_PASSWORD=password'
     ports:
       - '3306:3306'
+
+volumes:
+  rabbit-data-dev:
+  mariadb-data-dev:

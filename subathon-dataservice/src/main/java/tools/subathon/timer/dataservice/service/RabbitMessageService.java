@@ -16,7 +16,7 @@ public class RabbitMessageService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void sendMessage(String message) throws AmqpException {
+    public void sendMessage(Object message) throws AmqpException {
         rabbitTemplate.convertAndSend(GlobalRabbitMQ.EXCHANGE_NAME, GlobalRabbitMQ.TIMER_EVENT_ROUTING_KEY, message);
     }
 }
