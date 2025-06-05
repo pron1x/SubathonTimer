@@ -14,7 +14,8 @@ public class BotRpcService {
     }
 
     public boolean requestChannelJoin(String channelName) {
-        return (Boolean) sendRpcToBot(channelName);
+        Boolean result = (Boolean) sendRpcToBot(channelName);
+        return result != null && result;
     }
 
     private Object sendRpcToBot(Object message) {
