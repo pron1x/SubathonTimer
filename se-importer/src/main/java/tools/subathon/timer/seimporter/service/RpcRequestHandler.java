@@ -2,6 +2,7 @@ package tools.subathon.timer.seimporter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import tools.subathon.timer.datamodel.rpc.RpcRequestEntity;
@@ -22,6 +23,7 @@ public class RpcRequestHandler implements HasLogger {
         this.socketService = socketService;
     }
 
+    @RabbitHandler
     public RpcResponseEntity<Void> handleJwtTokenRequest(RpcRequestEntity<String> request) {
         getLogger().info("Handling jwt token request.");
         if(request == null) {

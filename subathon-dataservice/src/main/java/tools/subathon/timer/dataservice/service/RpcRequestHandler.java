@@ -1,6 +1,7 @@
 package tools.subathon.timer.dataservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.common.util.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,31 @@ public class RpcRequestHandler implements HasLogger {
             }
             case DELETE -> {
                 return RpcResponseEntity.of(userConfigurationService.deleteForChannel(userId));
+            }
+            default -> {
+                return RpcResponseEntity.error("Unknown request action");
+            }
+        }
+    }
+
+    @RabbitHandler
+    public RpcResponseEntity<Boolean> handleInitTimerRequest(RpcRequestEntity<String> request) {
+        getLogger().info("Handling initialize timer request '{}'", request);
+        if(request == null) {
+            return RpcResponseEntity.error("Request is null");
+        }
+        String userId = (String) request.getParams().get("userId");
+        switch (request.getAction()) {
+            case GET, DELETE -> {
+                return RpcResponseEntity.of();
+            }
+            case CREATE_OR_UPDATE -> {
+                String channelName = mapper.convertValue(request.getBody(), String.class);
+                if(StringUtils.isBlank(channelName)) {
+                    return RpcResponseEntity.error("Missing channel name!");
+                }
+                boolean initialized = timerService.initializeTimer(userId, channelName);
+                return RpcResponseEntity.of(initialized);
             }
             default -> {
                 return RpcResponseEntity.error("Unknown request action");
