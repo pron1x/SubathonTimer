@@ -14,16 +14,20 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoIcon;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.view.MainLayout;
+import tools.subathon.timer.ui.view.dashboard.userconfig.UserConfigurationForm;
 
 import java.util.List;
 
@@ -32,14 +36,18 @@ import java.util.List;
 public class DashboardView extends VerticalLayout {
 
     private final DashboardPresenter presenter;
+    private final AuthenticationContext authContext;
 
-    private ComboBox<Timer> timerComboBox;
+    private final Binder<UserConfigurationModel> binder;
+    private UserConfigurationModel userConfigurationModel;
 
     private Button joinChannelButton;
 
     @Autowired
-    public DashboardView(DashboardPresenter presenter) {
+    public DashboardView(DashboardPresenter presenter, AuthenticationContext authContext) {
         this.presenter = presenter;
+        this.authContext = authContext;
+        binder = new BeanValidationBinder<>(UserConfigurationModel.class);
     }
 
     @PostConstruct
@@ -53,57 +61,43 @@ public class DashboardView extends VerticalLayout {
         VerticalLayout content = new VerticalLayout();
         content.setSizeFull();
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth instanceof OAuth2AuthenticationToken oauth) {
-            List<Timer> timers = presenter.getAllActiveTimers();
-            Button uptime = new Button("Go to Uptime");
-            uptime.addClickListener(event ->
-                    getUI().ifPresent(ui -> ui.navigate("uptime/" + timerComboBox.getValue().getChannelId())));
-            uptime.setEnabled(false);
-
-            Button timer = new Button("Go to Timer");
-            timer.addClickListener(event ->
-                    getUI().ifPresent(ui -> ui.navigate("timer/" + timerComboBox.getValue().getChannelId())));
-            timer.setEnabled(false);
-
-            timerComboBox = new ComboBox<>();
-            timerComboBox.setItems(timers);
-            timerComboBox.setItemLabelGenerator(t -> t.getChannelName() + "(" + t.getChannelId() + ")");
-            timerComboBox.addValueChangeListener(e -> {
-                if (e.getValue() != null) {
-                    uptime.setEnabled(true);
-                    timer.setEnabled(true);
-                } else {
-                    uptime.setEnabled(false);
-                    timer.setEnabled(false);
-                }
-            });
-
-            Icon channelJoinedIcon = LumoIcon.CHECKMARK.create();
-            channelJoinedIcon.setColor("green");
-            channelJoinedIcon.setVisible(false);
-            Icon channelFailedIcon = LumoIcon.CROSS.create();
-            channelFailedIcon.setColor("red");
-            channelFailedIcon.setVisible(false);
-
-
-            joinChannelButton = new Button("Join channel", event -> {
-                if (presenter.joinChannel(oauth.getName())) {
-                    channelJoinedIcon.setVisible(true);
-                    channelFailedIcon.setVisible(false);
-                    joinChannelButton.setEnabled(false);
-                } else {
-                    channelJoinedIcon.setVisible(false);
-                    channelFailedIcon.setVisible(true);
-                    joinChannelButton.setEnabled(true);
-                }
-            });
-
-            HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
-            joinChannelBox.setAlignItems(Alignment.BASELINE);
-            content.add(new HorizontalLayout(timerComboBox, uptime, timer, joinChannelBox));
-            content.add(createConfigForm());
+        OAuth2User auth = authContext.getAuthenticatedUser(DefaultOAuth2User.class).orElse(null);
+        if (auth == null) {
+            // If not OAuth User (for some reason) we logout and redirect to home.
+            // TODO: This should work, but need to test it.
+            authContext.logout();
+            return;
         }
+
+        userConfigurationModel = presenter.getUserConfig(auth.getAttribute("sub"));
+        if(userConfigurationModel == null) {
+            userConfigurationModel = new UserConfigurationModel();
+        }
+
+        Icon channelJoinedIcon = LumoIcon.CHECKMARK.create();
+        channelJoinedIcon.setColor("green");
+        channelJoinedIcon.setVisible(false);
+        Icon channelFailedIcon = LumoIcon.CROSS.create();
+        channelFailedIcon.setColor("red");
+        channelFailedIcon.setVisible(false);
+
+        joinChannelButton = new Button("Join channel", event -> {
+            if (presenter.joinChannel(auth.getName())) {
+                channelJoinedIcon.setVisible(true);
+                channelFailedIcon.setVisible(false);
+                joinChannelButton.setEnabled(false);
+            } else {
+                channelJoinedIcon.setVisible(false);
+                channelFailedIcon.setVisible(true);
+                joinChannelButton.setEnabled(true);
+            }
+        });
+
+        HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
+        joinChannelBox.setAlignItems(Alignment.BASELINE);
+        content.add(new HorizontalLayout(createDebugDropdown(), joinChannelBox));
+        content.add(createConfigForm(auth.getAttribute("sub")));
+
         Paragraph footerText = new Paragraph();
         footerText.setText("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
         VerticalLayout footer = new VerticalLayout();
@@ -117,42 +111,46 @@ public class DashboardView extends VerticalLayout {
         add(content, footer);
     }
 
-    private Component createConfigForm() {
-        PasswordField seJwt = new PasswordField("StreamElements JWT Token");
-        IntegerField followerSeconds = new IntegerField("Follower");
-        IntegerField raiderSeconds = new IntegerField("Raider");
-        IntegerField tier1Seconds = new IntegerField("Tier 1");
-        IntegerField tier2Seconds = new IntegerField("Tier 2");
-        IntegerField tier3Seconds = new IntegerField("Tier 3");
-        IntegerField tier1GiftSeconds = new IntegerField("Tier 1 Gift");
-        IntegerField tier2GiftSeconds = new IntegerField("Tier 2 Gift");
-        IntegerField tier3GiftSeconds = new IntegerField("Tier 3 Gift");
-        IntegerField bitsSeconds = new IntegerField("100 bits");
-        IntegerField currencySeconds = new IntegerField("1 currency Donation");
-        IntegerField initialSeconds = new IntegerField("Initial Timer seconds");
-        Button saveButton = new Button("Save");
+    private Component createDebugDropdown() {
+        List<Timer> timers = presenter.getAllActiveTimers();
 
-        tier1Seconds.addValueChangeListener(createValueCopier(tier1GiftSeconds));
-        tier2Seconds.addValueChangeListener(createValueCopier(tier2GiftSeconds));
-        tier3Seconds.addValueChangeListener(createValueCopier(tier3GiftSeconds));
-        bitsSeconds.addValueChangeListener(createValueCopier(currencySeconds));
+        Button uptime = new Button("Go to Uptime");
+        Button timer = new Button("Go to Timer");
+        ComboBox<Timer> timerComboBox = new ComboBox<>();
 
-        FormLayout configForm = new FormLayout();
-        configForm.add(seJwt, followerSeconds, raiderSeconds, tier1Seconds, tier1GiftSeconds, tier2Seconds, tier2GiftSeconds,
-                tier3Seconds, tier3GiftSeconds, bitsSeconds, currencySeconds, initialSeconds);
-        configForm.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                new FormLayout.ResponsiveStep("350px", 2));
-        configForm.setWidth("400px");
+        timerComboBox.setItems(timers);
+        timerComboBox.setItemLabelGenerator(t -> t.getChannelName() + "(" + t.getChannelId() + ")");
+        timerComboBox.addValueChangeListener(e -> {
+            if (e.getValue() != null) {
+                uptime.setEnabled(true);
+                timer.setEnabled(true);
+            } else {
+                uptime.setEnabled(false);
+                timer.setEnabled(false);
+            }
+        });
 
-        configForm.setColspan(seJwt, 2);
-        configForm.setColspan(initialSeconds, 2);
+        uptime.addClickListener(event ->
+                getUI().ifPresent(ui -> ui.navigate("uptime/" + timerComboBox.getValue().getChannelId())));
+        uptime.setEnabled(false);
 
-        return new VerticalLayout(new H3("Seconds to add for events"), configForm, saveButton);
+        timer.addClickListener(event ->
+                getUI().ifPresent(ui -> ui.navigate("timer/" + timerComboBox.getValue().getChannelId())));
+        timer.setEnabled(false);
+
+        return new HorizontalLayout(timerComboBox, uptime, timer);
+    }
+
+    private Component createConfigForm(String userId) {
+        UserConfigurationForm form = new UserConfigurationForm();
+        form.setModel(userConfigurationModel);
+        form.setSaveHandler(() -> presenter.saveUserConfig(userId, userConfigurationModel));
+        return form;
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {
         return e -> {
-            if(e.getValue() != null && other.isEmpty()) {
+            if (e.getValue() != null && other.isEmpty()) {
                 other.setValue(e.getValue());
             }
         };

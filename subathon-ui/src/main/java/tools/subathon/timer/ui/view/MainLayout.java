@@ -62,6 +62,8 @@ public class MainLayout extends AppLayout {
                                     getUI().ifPresent(ui -> ui.navigate("timer/" + user.getAttribute("sub"))));
                             userMenu.addItem("Uptime", e ->
                                     getUI().ifPresent(ui -> ui.navigate("uptime/" + user.getAttribute("sub"))));
+                            userMenu.addItem("Logout", e ->
+                                    getUI().ifPresent(ui -> authContext.logout()));
                         },
                         () -> userBar.addItem("Login", e -> loginDialog.open()));
         return userBar;
