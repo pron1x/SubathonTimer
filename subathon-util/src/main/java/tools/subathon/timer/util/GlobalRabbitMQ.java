@@ -23,4 +23,7 @@ public class GlobalRabbitMQ {
 
     public static final String BOT_RPC_QUEUE_NAME = "bot-rpc-queue"; // Bound to rpc.bot
     public static final String BOT_RPC_ROUTING_KEY = "rpc.bot"; // Routes to bot-rpc-queue
+
+    public static final String SEIMPORTER_RPC_QUEUE_NAME = "seimporter-rpc-queue";
+    public static final String SEIMPORTER_RPC_ROUTING_KEY = "rpc.seimporter";
 }

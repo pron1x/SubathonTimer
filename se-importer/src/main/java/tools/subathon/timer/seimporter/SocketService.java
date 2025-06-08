@@ -44,7 +44,6 @@ public class SocketService implements HasLogger {
         this.twitchIdCacheService = twitchIdCacheService;
     }
 
-
     @PostConstruct
     public void postConstruct() {
         IO.Options options = IO.Options.builder()
@@ -53,6 +52,22 @@ public class SocketService implements HasLogger {
         socket = IO.socket(URI.create(url), options);
         init();
         start();
+    }
+
+    public void connectWithJwt(String jwt) {
+        JSONObject authObject = new JSONObject();
+        try {
+            authObject.put("method", "jwt");
+            authObject.put("token", jwt);
+        } catch (JSONException e) {
+            getLogger().error("Unable to create authentication json object. {}", e.getMessage());
+            return;
+        }
+        if (socket.connected()) {
+            socket.emit("authenticate", authObject);
+        } else {
+            getLogger().warn("Trying to authenticate but socket is not connected!");
+        }
     }
 
     public void start() {
@@ -70,16 +85,17 @@ public class SocketService implements HasLogger {
     private void onConnect() {
         getLogger().info("Connected to socket.");
         getLogger().info("Trying to authenticate with {} tokens.", jwtList.size());
-        for(String token : jwtList) {
-            JSONObject authObject = new JSONObject();
-            try {
-                authObject.put("method", "jwt");
-                authObject.put("token", token);
-            } catch (JSONException e) {
-                getLogger().error("Unable to create authentication json object. {}", e.getMessage());
-                return;
-            }
-            socket.emit("authenticate", authObject);
+        for (String token : jwtList) {
+            connectWithJwt(token);
+//            JSONObject authObject = new JSONObject();
+//            try {
+//                authObject.put("method", "jwt");
+//                authObject.put("token", token);
+//            } catch (JSONException e) {
+//                getLogger().error("Unable to create authentication json object. {}", e.getMessage());
+//                return;
+//            }
+//            socket.emit("authenticate", authObject);
         }
         getLogger().info("sent all authenticate messages.");
     }
@@ -88,8 +104,8 @@ public class SocketService implements HasLogger {
         getLogger().info("Disconnected from socket.");
     }
 
-    private void onAuthenticated(Object ...e) {
-        if(e.length > 0) {
+    private void onAuthenticated(Object... e) {
+        if (e.length > 0) {
             try {
                 JsonNode node = objectMapper.readTree(e[0].toString());
                 String streamElementsId = node.get("channelId").asText();
@@ -104,13 +120,13 @@ public class SocketService implements HasLogger {
 
     private void onUnauthorized(Object... e) {
         getLogger().error("Could not authorize with socket!");
-        for(Object o : e) {
+        for (Object o : e) {
             getLogger().info(o.toString());
         }
     }
 
     private void onEvent(Object... events) {
-        if(events.length == 0) return;
+        if (events.length == 0) return;
         getLogger().info("Received StreamElements event: {}.", events[0].toString());
         StreamElementsEventModel event;
         try {
