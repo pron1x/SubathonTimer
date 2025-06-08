@@ -1,5 +1,6 @@
 package tools.subathon.timer.dataservice.service;
 
+import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
 import tools.subathon.timer.dataservice.data.repository.TimerRepository;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
@@ -44,32 +45,34 @@ public class TimerService implements HasLogger {
 
     private final TimerEventService timerEventService;
 
+    private final UserConfigurationService userConfigurationService;
+
     private final ModelMapper mapper;
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
     @Value("${timer.seconds.follow}")
-    private long FOLLOWER_SECONDS = 10;
+    private int FOLLOWER_SECONDS = 10;
     @Value("${timer.seconds.raid}")
-    private long RAIDER_SECONDS = 1;
+    private int RAIDER_SECONDS = 1;
     @Value("${timer.seconds.tier1}")
-    private long TIER_1_SECONDS = 300;
+    private int TIER_1_SECONDS = 300;
     @Value("${timer.seconds.tier2}")
-    private long TIER_2_SECONDS = 600;
+    private int TIER_2_SECONDS = 600;
     @Value("${timer.seconds.tier3}")
-    private long TIER_3_SECONDS = 1500;
+    private int TIER_3_SECONDS = 1500;
     @Value("${timer.seconds.tier1-gift}")
-    private long TIER_1_GIFT_SECONDS = 300;
+    private int TIER_1_GIFT_SECONDS = 300;
     @Value("${timer.seconds.tier2-gift}")
-    private long TIER_2_GIFT_SECONDS = 600;
+    private int TIER_2_GIFT_SECONDS = 600;
     @Value("${timer.seconds.tier3-gift}")
-    private long TIER_3_GIFT_SECONDS = 1500;
+    private int TIER_3_GIFT_SECONDS = 1500;
     @Value("${timer.seconds.euro}")
-    private long EURO_SECONDS = 60; // Seconds added per 100 Euro cents
+    private int EURO_SECONDS = 60; // Seconds added per 100 Euro cents
     @Value("${timer.seconds.bits}")
-    private long BITS_SECONDS = 60; // Seconds added per 100 bits
+    private int BITS_SECONDS = 60; // Seconds added per 100 bits
     @Value("${timer.seconds.initial}")
-    private long INITIAL_TIMER_SECONDS = 100;
+    private int INITIAL_TIMER_SECONDS = 100;
 
     /*  Instead of lastEvent we use the correct timer instance -> Keeps track of state, start and end time
         Update the timer instance on change -> State change, end change etc.
@@ -85,10 +88,11 @@ public class TimerService implements HasLogger {
     private final Map<String, Timer> timers = new HashMap<>();
 
     @Autowired
-    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, ModelMapper mapper) {
+    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper) {
         this.messageService = messageService;
         this.timerRepository = timerRepository;
         this.timerEventService = timerEventService;
+        this.userConfigurationService = userConfigurationService;
         this.mapper = mapper;
     }
 
@@ -305,6 +309,21 @@ public class TimerService implements HasLogger {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
             return;
         }
+        UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
+        if(config == null) {
+            getLogger().warn("Config for channel id '{}' not found, using fallback values!", channelId);
+            config = new UserConfigurationModel();
+            config.setFollowerSeconds(FOLLOWER_SECONDS);
+            config.setRaiderSeconds(RAIDER_SECONDS);
+            config.setBitsSeconds(BITS_SECONDS);
+            config.setCurrencySeconds(EURO_SECONDS);
+            config.setTier1GiftSeconds(TIER_1_GIFT_SECONDS);
+            config.setTier2GiftSeconds(TIER_2_GIFT_SECONDS);
+            config.setTier3GiftSeconds(TIER_3_GIFT_SECONDS);
+            config.setTier1Seconds(TIER_1_SECONDS);
+            config.setTier2Seconds(TIER_2_SECONDS);
+            config.setTier3Seconds(TIER_3_SECONDS);
+        }
 
         if(timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not adding time to timer because it is {}. Ignoring {}.", timer.getState(), event);
@@ -313,23 +332,23 @@ public class TimerService implements HasLogger {
         getLogger().debug("Adding time for event: {}", event);
 
         double seconds = switch (event.getType()) {
-            case FOLLOW -> FOLLOWER_SECONDS;
-            case RAID -> ((SubathonRaidEvent)event).getAmount() * RAIDER_SECONDS;
+            case FOLLOW -> config.getFollowerSeconds();
+            case RAID -> ((SubathonRaidEvent)event).getAmount() * config.getRaiderSeconds();
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 if(subEvent.isGifted()) {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_GIFT_SECONDS :
-                            subEvent.getTier() == SubTier.TIER_2 ? TIER_2_GIFT_SECONDS : TIER_1_GIFT_SECONDS;
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.getTier3GiftSeconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.getTier2GiftSeconds() : config.getTier1GiftSeconds();
                 } else {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? TIER_3_SECONDS :
-                            subEvent.getTier() == SubTier.TIER_2 ? TIER_2_SECONDS : TIER_1_SECONDS;
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.getTier3Seconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.getTier2Seconds() : config.getTier1Seconds();
                 }
             }
             /* Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
             Time is added for the individual gifted subscriptions */
             case GIFT -> 0;
-            case TIP -> EURO_SECONDS * ((SubathonTipEvent)event).getAmount();
-            case CHEER -> BITS_SECONDS * (((SubathonBitCheerEvent)event).getAmount() / 100.0);
+            case TIP -> config.getCurrencySeconds() * ((SubathonTipEvent)event).getAmount();
+            case CHEER -> config.getBitsSeconds() * (((SubathonBitCheerEvent)event).getAmount() / 100.0);
             case COMMAND -> ((SubathonCommandEvent) event).getSeconds();
         };
 
