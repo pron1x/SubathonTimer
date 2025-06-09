@@ -7,7 +7,6 @@ import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
 import tools.subathon.timer.bot.service.DataServiceRpcClient;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
@@ -125,11 +124,8 @@ public class SubathonBot implements HasLogger {
 
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
-        SubathonEventMessage message = new SubathonEventMessage();
-        message.setChannelId(channelId);
-        message.setSubathonEvent(event);
         try {
-            return dataServiceRpcClient.requestTimeChange(message);
+            return dataServiceRpcClient.executeBotCommand(channelId, event);
         } catch (Exception e) {
             getLogger().error("Failed to send and receive state change command!", e);
             return false;
@@ -140,11 +136,8 @@ public class SubathonBot implements HasLogger {
         getLogger().debug("Handling timer time change command [{}]", isRemove ? "del" : "add");
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
-        SubathonEventMessage message = new SubathonEventMessage();
-        message.setChannelId(channelId);
-        message.setSubathonEvent(event);
         try {
-            return dataServiceRpcClient.requestTimeChange(message);
+            return dataServiceRpcClient.executeBotCommand(channelId, event);
         } catch (Exception e) {
             getLogger().error("Failed to send and receive time change command!", e);
             return false;

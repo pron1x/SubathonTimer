@@ -10,11 +10,15 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_RPC_QUEUE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_RPC_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 
 @EnableRabbit
 @Configuration
@@ -31,8 +35,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue rpcQueue() {
-        return new Queue(DATASERVICE_RPC_QUEUE_NAME, true);
+    Queue botCommandRpcQueue() {
+        return new Queue(BOT_COMMAND_RPC_QUEUE, true);
+    }
+
+    @Bean
+    Queue userConfigRpcQueue() {
+        return new Queue(USER_CONFIG_RPC_QUEUE, true);
+    }
+
+    @Bean
+    Queue timerRpcQueue() {
+        return new Queue(TIMER_RPC_QUEUE, true);
     }
 
     @Bean
@@ -41,8 +55,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Binding rpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(rpcQueue()).to(exchange).with(DATASERVICE_RPC_ROUTING_KEY);
+    Binding botCommandRpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(botCommandRpcQueue()).to(exchange).with(BOT_COMMAND_ROUTING_KEY);
+    }
+
+    @Bean
+    Binding userConfigRpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(userConfigRpcQueue()).to(exchange).with(USER_CONFIG_ROUTING_KEY);
+    }
+
+    @Bean
+    Binding timerRpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(timerRpcQueue()).to(exchange).with(TIMER_ROUTING_KEY);
     }
 
     @Bean

@@ -6,24 +6,34 @@ public class GlobalRabbitMQ {
         // hide constructor
     }
 
+    // Topic exchange
     public static final String EXCHANGE_NAME = "subathon-exchange";
 
+    // Fire-and-forget internal timer events
     public static final String TIMER_EVENT_QUEUE = "timer-event-queue"; // Bound to 'event.timer' in  ui
     public static final String TIMER_EVENT_ROUTING_KEY = "event.timer"; // Routes to timer-event-queue
 
+    // Fire-and-forget twitch imported events
     public static final String TWITCH_EVENT_QUEUE = "twitch-event-queue"; // Bound to 'event.twitch' in dataservice
     public static final String TWITCH_EVENT_ROUTING_KEY = "event.twitch"; // Routes to twitch-event-queue
 
-    public static final String DATASERVICE_RPC_QUEUE_NAME = "dataservice-rpc-queue"; // Bound to rpc.dataservice
-    public static final String DATASERVICE_RPC_ROUTING_KEY = "rpc.dataservice"; // Routes to dataservice-rpc-queue
+    // User-Configuration RPC queue
+    public static final String USER_CONFIG_RPC_QUEUE =  "dataservice-user-config-rpc-queue";
+    public static final String USER_CONFIG_ROUTING_KEY = "rpc.dataservice.user-config";
 
+    // Timer init RPC queue
+    public static final String TIMER_RPC_QUEUE = "dataservice-timer-init-rpc-queue";
+    public static final String TIMER_ROUTING_KEY = "rpc.dataservice.timer-init";
 
-    public static final String UI_RPC_QUEUE_NAME = "ui-rpc-queue"; // Bound to rpc.ui
-    public static final String UI_RPC_ROUTING_KEY = "rpc.ui"; // Routes to ui-rpc-queue
+    // Bot-Command RPC queue
+    public static final String BOT_COMMAND_RPC_QUEUE = "dataservice-bot-command-rpc-queue";
+    public static final String BOT_COMMAND_ROUTING_KEY = "rpc.dataservice.bot-command";
 
-    public static final String BOT_RPC_QUEUE_NAME = "bot-rpc-queue"; // Bound to rpc.bot
-    public static final String BOT_RPC_ROUTING_KEY = "rpc.bot"; // Routes to bot-rpc-queue
+    // Bot Channel Management RPC queue
+    public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
+    public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "rpc.bot.channel-management";
 
-    public static final String SEIMPORTER_RPC_QUEUE_NAME = "seimporter-rpc-queue";
-    public static final String SEIMPORTER_RPC_ROUTING_KEY = "rpc.seimporter";
+    // Importer Token Management RPC queue
+    public static final String IMPORTER_MANAGEMENT_QUEUE = "importer-management-rpc-queue";
+    public static final String IMPORTER_MANAGEMENT_ROUTING_KEY = "rpc.importer.management";
 }

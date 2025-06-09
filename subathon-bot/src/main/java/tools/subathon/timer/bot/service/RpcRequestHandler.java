@@ -1,29 +1,32 @@
-package tools.subathon.timer.seimporter.service;
+package tools.subathon.timer.bot.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.subathon.timer.bot.SubathonBot;
 import tools.subathon.timer.datamodel.rpc.RpcRequestEntity;
 import tools.subathon.timer.datamodel.rpc.RpcResponseEntity;
-import tools.subathon.timer.seimporter.SocketService;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.IMPORTER_MANAGEMENT_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_QUEUE;
 
 @Component
 public class RpcRequestHandler implements HasLogger {
-    private final ObjectMapper mapper;
-    private final SocketService socketService;
 
-    public RpcRequestHandler(ObjectMapper mapper, SocketService socketService) {
+    private final SubathonBot twitchBot;
+    private final ObjectMapper mapper;
+
+    @Autowired
+    public RpcRequestHandler(SubathonBot twitchBot, ObjectMapper mapper) {
+        this.twitchBot = twitchBot;
         this.mapper = mapper;
-        this.socketService = socketService;
     }
 
-    @RabbitListener(queues = IMPORTER_MANAGEMENT_QUEUE)
-    public RpcResponseEntity<Void> handleJwtTokenRequest(RpcRequestEntity<String> request) {
-        getLogger().info("Handling jwt token request.");
+    @RabbitListener(queues = CHANNEL_MANAGEMENT_QUEUE)
+    public RpcResponseEntity<Boolean> joinChannel(RpcRequestEntity<String> request) {
+        getLogger().info("Handling channel management request.");
         if(request == null) {
             return RpcResponseEntity.error("Request is null");
         }
@@ -32,12 +35,11 @@ public class RpcRequestHandler implements HasLogger {
                 return RpcResponseEntity.of(); // Do nothing for now
             }
             case CREATE_OR_UPDATE -> {
-                String jwt = mapper.convertValue(request.getBody(), String.class);
-                if(StringUtils.isBlank(jwt)) {
-                    return RpcResponseEntity.error("JWT is empty!");
+                String channel = mapper.convertValue(request.getBody(), String.class);
+                if(StringUtils.isBlank(channel)) {
+                    return RpcResponseEntity.error("Channel name is empty!");
                 }
-                socketService.connectWithJwt(jwt);
-                return RpcResponseEntity.of();
+                return RpcResponseEntity.of(twitchBot.joinChannel(channel));
             }
             default -> {
                 return RpcResponseEntity.error("Unknown request action");

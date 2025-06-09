@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.SEIMPORTER_RPC_QUEUE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.SEIMPORTER_RPC_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.IMPORTER_MANAGEMENT_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.IMPORTER_MANAGEMENT_ROUTING_KEY;
 
 @Configuration
 public class RabbitMQConfig {
@@ -22,13 +22,13 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue rpcQueue() {
-        return new Queue(SEIMPORTER_RPC_QUEUE_NAME, true);
+    Queue importerManagementRpcQueue() {
+        return new Queue(IMPORTER_MANAGEMENT_QUEUE, true);
     }
 
     @Bean
-    Binding rpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(rpcQueue()).to(exchange).with(SEIMPORTER_RPC_ROUTING_KEY);
+    Binding importerManagementRpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(importerManagementRpcQueue()).to(exchange).with(IMPORTER_MANAGEMENT_ROUTING_KEY);
     }
 
     @Bean

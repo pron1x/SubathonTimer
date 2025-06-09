@@ -1,24 +1,21 @@
 package tools.subathon.timer.dataservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.common.util.StringUtils;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.SubathonEvent;
-import tools.subathon.timer.datamodel.SubathonEventMessage;
-import tools.subathon.timer.datamodel.enums.EventType;
 import tools.subathon.timer.datamodel.rpc.RpcRequestEntity;
 import tools.subathon.timer.datamodel.rpc.RpcResponseEntity;
+import tools.subathon.timer.datamodel.user.TwitchAccount;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.DATASERVICE_RPC_QUEUE_NAME;
+import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_RPC_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 
 @Component
-@RabbitListener(queues = DATASERVICE_RPC_QUEUE_NAME)
 public class RpcRequestHandler implements HasLogger {
 
     private final ObjectMapper mapper;
@@ -32,7 +29,7 @@ public class RpcRequestHandler implements HasLogger {
         this.timerService = timerService;
     }
 
-    @RabbitHandler
+    @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
     public RpcResponseEntity<UserConfigurationModel> handleUserConfigurationRequest(RpcRequestEntity<UserConfigurationModel> request) {
         getLogger().debug("Handling user configuration request '{}'", request);
         if(request == null) {
@@ -62,23 +59,22 @@ public class RpcRequestHandler implements HasLogger {
         }
     }
 
-    @RabbitHandler
-    public RpcResponseEntity<Boolean> handleInitTimerRequest(RpcRequestEntity<String> request) {
+    @RabbitListener(queues = TIMER_RPC_QUEUE)
+    public RpcResponseEntity<Boolean> handleTimerRequest(RpcRequestEntity<TwitchAccount> request) {
         getLogger().info("Handling initialize timer request '{}'", request);
         if(request == null) {
             return RpcResponseEntity.error("Request is null");
         }
-        String userId = (String) request.getParams().get("userId");
         switch (request.getAction()) {
             case GET, DELETE -> {
                 return RpcResponseEntity.of();
             }
             case CREATE_OR_UPDATE -> {
-                String channelName = mapper.convertValue(request.getBody(), String.class);
-                if(StringUtils.isBlank(channelName)) {
+                TwitchAccount account = mapper.convertValue(request.getBody(), TwitchAccount.class);
+                if(account == null) {
                     return RpcResponseEntity.error("Missing channel name!");
                 }
-                boolean initialized = timerService.initializeTimer(userId, channelName);
+                boolean initialized = timerService.initializeTimer(account.getUserId(), account.getChannelName());
                 return RpcResponseEntity.of(initialized);
             }
             default -> {
@@ -87,14 +83,30 @@ public class RpcRequestHandler implements HasLogger {
         }
     }
 
-    @RabbitHandler
-    public Boolean handleBotCommand(SubathonEventMessage eventMessage) {
-        SubathonEvent command = eventMessage.getSubathonEvent();
-        if (command.getType() != EventType.COMMAND) {
-            return false;
+    @RabbitListener(queues = BOT_COMMAND_RPC_QUEUE)
+    public RpcResponseEntity<Boolean> handleBotCommand(RpcRequestEntity<SubathonCommandEvent> request) {
+        getLogger().info("Handling bot command request '{}'", request);
+        if(request == null) {
+            return RpcResponseEntity.error("Request is null");
         }
-        timerService.executeBotCommand(eventMessage.getChannelId(), (SubathonCommandEvent) command);
-        return true;
+
+        switch (request.getAction()) {
+            case GET, DELETE -> {
+                return RpcResponseEntity.of();
+            }
+            case CREATE_OR_UPDATE -> {
+                String channelId = mapper.convertValue(request.getParams().get("channelId"), String.class);
+                SubathonCommandEvent command = mapper.convertValue(request.getBody(), SubathonCommandEvent.class);
+                if(command == null) {
+                    return RpcResponseEntity.error("Missing command!");
+                }
+                timerService.executeBotCommand(channelId, command);
+                return RpcResponseEntity.of(true);
+            }
+            default -> {
+                return RpcResponseEntity.error("Unknown request action");
+            }
+        }
     }
 
 }
