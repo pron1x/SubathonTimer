@@ -16,19 +16,19 @@ public class UserConfigurationForm extends VerticalLayout {
     private final Binder<UserConfigurationModel> binder;
     private SaveHandler saveHandler;
 
-    private final PasswordField seJwt = new PasswordField("StreamElements JWT Token");
-    private final IntegerField followerSeconds = new IntegerField("Follower");
-    private final IntegerField raiderSeconds = new IntegerField("Raider");
-    private final IntegerField tier1Seconds = new IntegerField("Tier 1");
-    private final IntegerField tier2Seconds = new IntegerField("Tier 2");
-    private final IntegerField tier3Seconds = new IntegerField("Tier 3");
-    private final IntegerField tier1GiftSeconds = new IntegerField("Tier 1 Gift");
-    private final IntegerField tier2GiftSeconds = new IntegerField("Tier 2 Gift");
-    private final IntegerField tier3GiftSeconds = new IntegerField("Tier 3 Gift");
-    private final IntegerField bitsSeconds = new IntegerField("per 100 bits");
-    private final IntegerField currencySeconds = new IntegerField("per EUR/USD");
-    private final IntegerField initialSeconds = new IntegerField("Starting Timer (seconds)");
-    private final Button saveButton = new Button("Save");
+    private PasswordField seJwt;
+    private IntegerField followerSeconds;
+    private IntegerField raiderSeconds;
+    private IntegerField tier1Seconds;
+    private IntegerField tier2Seconds;
+    private IntegerField tier3Seconds;
+    private IntegerField tier1GiftSeconds;
+    private IntegerField tier2GiftSeconds;
+    private IntegerField tier3GiftSeconds;
+    private IntegerField bitsSeconds;
+    private IntegerField currencySeconds;
+    private IntegerField initialSeconds;
+    private Button saveButton;
 
     public UserConfigurationForm() {
         binder = new BeanValidationBinder<>(UserConfigurationModel.class);
@@ -44,6 +44,33 @@ public class UserConfigurationForm extends VerticalLayout {
     }
 
     private void initInternal() {
+        seJwt = new PasswordField("StreamElements JWT Token");
+        followerSeconds = new IntegerField("Follower");
+        raiderSeconds = new IntegerField("Raider");
+        tier1Seconds = new IntegerField("Tier 1");
+        tier2Seconds = new IntegerField("Tier 2");
+        tier3Seconds = new IntegerField("Tier 3");
+        tier1GiftSeconds = new IntegerField("Tier 1 Gift");
+        tier2GiftSeconds = new IntegerField("Tier 2 Gift");
+        tier3GiftSeconds = new IntegerField("Tier 3 Gift");
+        bitsSeconds = new IntegerField("per 100 bits");
+        currencySeconds = new IntegerField("per EUR/USD");
+        initialSeconds = new IntegerField("Starting Timer (seconds)");
+        saveButton = new Button("Save");
+
+        seJwt.setRequired(true);
+        followerSeconds.setRequired(true);
+        raiderSeconds.setRequired(true);
+        tier1Seconds.setRequired(true);
+        tier2Seconds.setRequired(true);
+        tier3Seconds.setRequired(true);
+        tier1GiftSeconds.setRequired(true);
+        tier2GiftSeconds.setRequired(true);
+        tier3GiftSeconds.setRequired(true);
+        bitsSeconds.setRequired(true);
+        currencySeconds.setRequired(true);
+        initialSeconds.setRequired(true);
+
         tier1Seconds.addValueChangeListener(createValueCopier(tier1GiftSeconds));
         tier2Seconds.addValueChangeListener(createValueCopier(tier2GiftSeconds));
         tier3Seconds.addValueChangeListener(createValueCopier(tier3GiftSeconds));
@@ -60,7 +87,7 @@ public class UserConfigurationForm extends VerticalLayout {
         configForm.setColspan(initialSeconds, 2);
 
         saveButton.addClickListener(event -> {
-            if(binder.validate().isOk()) {
+            if (binder.validate().isOk()) {
                 saveHandler.save();
             }
         });
