@@ -7,43 +7,35 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class UserConfigurationForm extends VerticalLayout {
 
     private final Binder<UserConfigurationModel> binder;
     private SaveHandler saveHandler;
 
-    private PasswordField seJwt;
-    private IntegerField followerSeconds;
-    private IntegerField raiderSeconds;
-    private IntegerField tier1Seconds;
-    private IntegerField tier2Seconds;
-    private IntegerField tier3Seconds;
-    private IntegerField tier1GiftSeconds;
-    private IntegerField tier2GiftSeconds;
-    private IntegerField tier3GiftSeconds;
-    private IntegerField bitsSeconds;
-    private IntegerField currencySeconds;
-    private IntegerField initialSeconds;
-    private Button saveButton;
+    private final TextField id;
+    private final PasswordField seJwt;
+    private final IntegerField followerSeconds;
+    private final IntegerField raiderSeconds;
+    private final IntegerField tier1Seconds;
+    private final IntegerField tier2Seconds;
+    private final IntegerField tier3Seconds;
+    private final IntegerField tier1GiftSeconds;
+    private final IntegerField tier2GiftSeconds;
+    private final IntegerField tier3GiftSeconds;
+    private final IntegerField bitsSeconds;
+    private final IntegerField currencySeconds;
+    private final IntegerField initialSeconds;
+    private final Button saveButton;
 
     public UserConfigurationForm() {
         binder = new BeanValidationBinder<>(UserConfigurationModel.class);
-        initInternal();
-    }
-
-    public void setModel(UserConfigurationModel model) {
-        binder.setBean(model);
-    }
-
-    public void setSaveHandler(SaveHandler saveHandler) {
-        this.saveHandler = saveHandler;
-    }
-
-    private void initInternal() {
+        id = new TextField();
         seJwt = new PasswordField("StreamElements JWT Token");
         followerSeconds = new IntegerField("Follower");
         raiderSeconds = new IntegerField("Raider");
@@ -57,6 +49,20 @@ public class UserConfigurationForm extends VerticalLayout {
         currencySeconds = new IntegerField("per EUR/USD");
         initialSeconds = new IntegerField("Starting Timer (seconds)");
         saveButton = new Button("Save");
+        initInternal();
+    }
+
+    public void setModel(UserConfigurationModel model) {
+        binder.setBean(model);
+    }
+
+    public void setSaveHandler(SaveHandler saveHandler) {
+        this.saveHandler = saveHandler;
+    }
+
+    private void initInternal() {
+        id.setVisible(false);
+        id.setEnabled(false);
 
         seJwt.setRequired(true);
         followerSeconds.setRequired(true);
@@ -77,7 +83,7 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds.addValueChangeListener(createValueCopier(currencySeconds));
 
         FormLayout configForm = new FormLayout();
-        configForm.add(seJwt, followerSeconds, raiderSeconds, tier1Seconds, tier1GiftSeconds, tier2Seconds, tier2GiftSeconds,
+        configForm.add(id, seJwt, followerSeconds, raiderSeconds, tier1Seconds, tier1GiftSeconds, tier2Seconds, tier2GiftSeconds,
                 tier3Seconds, tier3GiftSeconds, bitsSeconds, currencySeconds, initialSeconds);
         configForm.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
                 new FormLayout.ResponsiveStep("350px", 2));
