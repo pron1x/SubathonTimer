@@ -18,11 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.view.MainLayout;
 import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
 import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
 
+import java.time.Instant;
 import java.util.List;
 
 @PermitAll
@@ -87,7 +89,19 @@ public class DashboardView extends VerticalLayout {
 
         HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
         joinChannelBox.setAlignItems(Alignment.BASELINE);
-        content.add(new HorizontalLayout(createDebugDropdown(), joinChannelBox));
+        //content.add(new HorizontalLayout(createDebugDropdown(), joinChannelBox));
+
+        Timer testTimer = new Timer();
+        testTimer.setChannelId(auth.getAttribute("sub"));
+        testTimer.setChannelName(auth.getName());
+        testTimer.setId(1);
+        testTimer.setState(TimerState.INITIALIZED);
+        Instant now = Instant.now();
+        testTimer.setStartTime(now.minusSeconds(600));
+        testTimer.setUpdateTime(now);
+        testTimer.setEndTime(now.plusSeconds(600));
+
+        content.add(new HorizontalLayout(initTimerButton, new TimerInfo(testTimer)));
         content.add(createConfigForm(auth.getAttribute("sub")));
 
         Paragraph footerText = new Paragraph();
