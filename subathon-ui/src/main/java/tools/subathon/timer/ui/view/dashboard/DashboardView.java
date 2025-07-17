@@ -1,21 +1,14 @@
 package tools.subathon.timer.ui.view.dashboard;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.AnchorTarget;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoIcon;
@@ -27,7 +20,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.view.MainLayout;
-import tools.subathon.timer.ui.view.dashboard.userconfig.UserConfigurationForm;
+import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
+import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
 
 import java.util.List;
 
@@ -38,7 +32,6 @@ public class DashboardView extends VerticalLayout {
     private final DashboardPresenter presenter;
     private final AuthenticationContext authContext;
 
-    private final Binder<UserConfigurationModel> binder;
     private UserConfigurationModel userConfigurationModel;
 
     private Button joinChannelButton;
@@ -47,7 +40,6 @@ public class DashboardView extends VerticalLayout {
     public DashboardView(DashboardPresenter presenter, AuthenticationContext authContext) {
         this.presenter = presenter;
         this.authContext = authContext;
-        binder = new BeanValidationBinder<>(UserConfigurationModel.class);
     }
 
     @PostConstruct
@@ -147,14 +139,5 @@ public class DashboardView extends VerticalLayout {
         form.setSaveHandler(() -> presenter.saveUserConfig(userId, userConfigurationModel));
         return form;
     }
-
-    private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {
-        return e -> {
-            if (e.getValue() != null && other.isEmpty()) {
-                other.setValue(e.getValue());
-            }
-        };
-    }
-
 
 }

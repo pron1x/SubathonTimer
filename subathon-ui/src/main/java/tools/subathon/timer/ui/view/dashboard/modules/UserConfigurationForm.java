@@ -1,4 +1,4 @@
-package tools.subathon.timer.ui.view.dashboard.userconfig;
+package tools.subathon.timer.ui.view.dashboard.modules;
 
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
