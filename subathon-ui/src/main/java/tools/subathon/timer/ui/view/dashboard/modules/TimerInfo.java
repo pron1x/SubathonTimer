@@ -34,10 +34,13 @@ public class TimerInfo extends Card {
     private void createContent() {
         Span startDescription = new Span("Start time");
         startDescription.getStyle().setFontSize("small");
+
         Span updateDescription = new Span("Last update");
         updateDescription.getStyle().setFontSize("small");
+
         Span endDescription = new Span("End time");
         endDescription.getStyle().setFontSize("small");
+
         if(timer != null) {
             startTime = new Text(formatInstant(timer.getStartTime()));
             updateTime = new Text(formatInstant(timer.getUpdateTime()));
@@ -47,10 +50,18 @@ public class TimerInfo extends Card {
         setSubtitle(new Div(timer != null ? timer.getChannelId() : "-"));
         state = createTimerStateBadge(timer);
         setHeaderSuffix(state);
-        add(new VerticalLayout(
-                new VerticalLayout(startDescription, startTime),
-                new VerticalLayout(updateDescription, updateTime),
-                new VerticalLayout(endDescription, endTime)));
+
+        VerticalLayout startLayout = new VerticalLayout(startDescription, startTime);
+        startLayout.setPadding(false);
+        startLayout.setSpacing(false);
+        VerticalLayout updateLayout = new VerticalLayout(updateDescription, updateTime);
+        updateLayout.setPadding(false);
+        updateLayout.setSpacing(false);
+        VerticalLayout endLayout = new VerticalLayout(endDescription, endTime);
+        endLayout.setPadding(false);
+        endLayout.setSpacing(false);
+
+        add(new VerticalLayout(startLayout, updateLayout, endLayout));
     }
 
     private Span createTimerStateBadge(Timer timer) {
