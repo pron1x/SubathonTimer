@@ -98,7 +98,7 @@ public class DashboardView extends VerticalLayout {
         testTimer.setUpdateTime(now);
         testTimer.setEndTime(now.plusSeconds(600));
 
-        add(new HorizontalLayout(initTimerButton, new TimerInfo(testTimer)));
+        add(new VerticalLayout(new TimerInfo(testTimer), initTimerButton));
         add(createConfigForm(auth.getAttribute("sub")));
 
         Paragraph footerText = new Paragraph("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
