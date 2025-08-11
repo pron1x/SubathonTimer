@@ -83,14 +83,15 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds.addValueChangeListener(createValueCopier(currencySeconds));
 
         FormLayout configForm = new FormLayout();
-        configForm.add(id, seJwt, followerSeconds, raiderSeconds, tier1Seconds, tier1GiftSeconds, tier2Seconds, tier2GiftSeconds,
-                tier3Seconds, tier3GiftSeconds, bitsSeconds, currencySeconds, initialSeconds);
-        configForm.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                new FormLayout.ResponsiveStep("350px", 2));
+        configForm.addFormRow(id, seJwt);
+        configForm.addFormRow(followerSeconds, raiderSeconds);
+        configForm.addFormRow(tier1Seconds, tier1GiftSeconds);
+        configForm.addFormRow(tier2Seconds, tier2GiftSeconds);
+        configForm.addFormRow(tier3Seconds, tier3GiftSeconds);
+        configForm.addFormRow(bitsSeconds, currencySeconds);
+        configForm.addFormRow(initialSeconds);
         configForm.setWidth("400px");
-
-        configForm.setColspan(seJwt, 2);
-        configForm.setColspan(initialSeconds, 2);
+        configForm.setHeightFull();
 
         saveButton.addClickListener(event -> {
             if (binder.validate().isOk()) {
