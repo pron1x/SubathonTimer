@@ -52,9 +52,6 @@ public class DashboardView extends VerticalLayout {
     protected void initViewInternal() {
         setSizeFull();
 
-        VerticalLayout content = new VerticalLayout();
-        content.setSizeFull();
-
         OAuth2User auth = authContext.getAuthenticatedUser(DefaultOAuth2User.class).orElse(null);
         if (auth == null) {
             // If not OAuth User (for some reason) we logout and redirect to home.
@@ -101,20 +98,18 @@ public class DashboardView extends VerticalLayout {
         testTimer.setUpdateTime(now);
         testTimer.setEndTime(now.plusSeconds(600));
 
-        content.add(new HorizontalLayout(initTimerButton, new TimerInfo(testTimer)));
-        content.add(createConfigForm(auth.getAttribute("sub")));
+        add(new HorizontalLayout(initTimerButton, new TimerInfo(testTimer)));
+        add(createConfigForm(auth.getAttribute("sub")));
 
-        Paragraph footerText = new Paragraph();
-        footerText.setText("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
+        Paragraph footerText = new Paragraph("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
         VerticalLayout footer = new VerticalLayout();
-        footer.setWidthFull();
         footer.setAlignSelf(Alignment.END);
         footer.setAlignItems(Alignment.CENTER);
         footer.setMargin(false);
         footer.setSpacing(false);
 
         footer.add(new Anchor("https://github.com/pron1x/SubathonTimer", "Source on Github!", AnchorTarget.BLANK), footerText);
-        add(content, footer);
+        add(footer);
     }
 
     private Component createDebugDropdown() {
