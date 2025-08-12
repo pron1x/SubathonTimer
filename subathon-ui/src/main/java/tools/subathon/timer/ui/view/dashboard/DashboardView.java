@@ -84,6 +84,11 @@ public class DashboardView extends VerticalLayout {
             }
         });
 
+        Button initTimerButton = new Button("Initialize a new timer");
+        initTimerButton.addClickListener(event -> {
+            presenter.initializeTimer(auth.getAttribute("sub"), auth.getName());
+        });
+
         HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
         joinChannelBox.setAlignItems(Alignment.BASELINE);
         //content.add(new HorizontalLayout(createDebugDropdown(), joinChannelBox));
@@ -91,7 +96,7 @@ public class DashboardView extends VerticalLayout {
         Timer testTimer = new Timer();
         testTimer.setChannelId(auth.getAttribute("sub"));
         testTimer.setChannelName(auth.getName());
-        testTimer.setId(1);
+        testTimer.setId(1L);
         testTimer.setState(TimerState.INITIALIZED);
         Instant now = Instant.now();
         testTimer.setStartTime(now.minusSeconds(600));

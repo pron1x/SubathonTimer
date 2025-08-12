@@ -41,6 +41,10 @@ public class DashboardPresenter implements HasLogger {
         return botRpcService.requestChannelJoin(channelName);
     }
 
+    protected boolean initializeTimer(String channelId, String channelName) {
+        return dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
+    }
+
     protected UserConfigurationModel getUserConfig(String userId) {
         return dataserviceRpcService.getUserConfiguration(userId);
     }
