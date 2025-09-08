@@ -36,8 +36,6 @@ public class DashboardView extends VerticalLayout {
 
     private UserConfigurationModel userConfigurationModel;
 
-    private Button joinChannelButton;
-
     @Autowired
     public DashboardView(DashboardPresenter presenter, AuthenticationContext authContext) {
         this.presenter = presenter;
@@ -51,9 +49,7 @@ public class DashboardView extends VerticalLayout {
 
     protected void initViewInternal() {
         setWidthFull();
-        setPadding(false);
         setSpacing(false);
-        setDefaultHorizontalComponentAlignment(Alignment.STRETCH);
 
         VerticalLayout content = new VerticalLayout();
         content.setWidthFull();
@@ -79,26 +75,10 @@ public class DashboardView extends VerticalLayout {
         channelFailedIcon.setColor("red");
         channelFailedIcon.setVisible(false);
 
-        joinChannelButton = new Button("Join channel", event -> {
-            if (presenter.joinChannel(auth.getName())) {
-                channelJoinedIcon.setVisible(true);
-                channelFailedIcon.setVisible(false);
-                joinChannelButton.setEnabled(false);
-            } else {
-                channelJoinedIcon.setVisible(false);
-                channelFailedIcon.setVisible(true);
-                joinChannelButton.setEnabled(true);
-            }
-        });
-
         Button initTimerButton = new Button("Initialize a new timer");
         initTimerButton.addClickListener(event -> {
             presenter.initializeTimer(auth.getAttribute("sub"), auth.getName());
         });
-
-        HorizontalLayout joinChannelBox = new HorizontalLayout(joinChannelButton, channelJoinedIcon, channelFailedIcon);
-        joinChannelBox.setAlignItems(Alignment.BASELINE);
-        //content.add(new HorizontalLayout(createDebugDropdown(), joinChannelBox));
 
         Timer testTimer = new Timer();
         testTimer.setChannelId(auth.getAttribute("sub"));
@@ -110,7 +90,25 @@ public class DashboardView extends VerticalLayout {
         testTimer.setUpdateTime(now);
         testTimer.setEndTime(now.plusSeconds(600));
 
-        content.add(new TimerInfo(testTimer), initTimerButton, createConfigForm(auth.getAttribute("sub")));
+        TimerInfo timerInfoCard = new TimerInfo(testTimer);
+        timerInfoCard.addToFooter(initTimerButton);
+        initTimerButton.setWidthFull();
+
+        VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);
+        timerColumn.setSpacing(false);
+        timerColumn.setPadding(false);
+        timerColumn.setAlignItems(Alignment.END);
+
+        Component configForm = createConfigForm(auth.getAttribute("sub"));
+        HorizontalLayout timerDashboard = new HorizontalLayout(
+                configForm,
+                timerColumn
+        );
+        timerDashboard.setAlignItems(Alignment.STRETCH);
+        timerDashboard.setWidthFull();
+        timerDashboard.setFlexGrow(1, configForm);
+        timerDashboard.setFlexGrow(0, timerColumn);
+        content.add(timerDashboard);
 
         Paragraph footerText = new Paragraph("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
         VerticalLayout footer = new VerticalLayout();

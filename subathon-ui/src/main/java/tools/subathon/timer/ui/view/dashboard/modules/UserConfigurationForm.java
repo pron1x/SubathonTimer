@@ -3,6 +3,7 @@ package tools.subathon.timer.ui.view.dashboard.modules;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -61,6 +62,7 @@ public class UserConfigurationForm extends VerticalLayout {
     }
 
     private void initInternal() {
+        setAlignItems(Alignment.CENTER);
         id.setVisible(false);
         id.setEnabled(false);
 
@@ -83,15 +85,37 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds.addValueChangeListener(createValueCopier(currencySeconds));
 
         FormLayout configForm = new FormLayout();
-        configForm.addFormRow(id, seJwt);
-        configForm.addFormRow(followerSeconds, raiderSeconds);
-        configForm.addFormRow(tier1Seconds, tier1GiftSeconds);
-        configForm.addFormRow(tier2Seconds, tier2GiftSeconds);
-        configForm.addFormRow(tier3Seconds, tier3GiftSeconds);
-        configForm.addFormRow(bitsSeconds, currencySeconds);
-        configForm.addFormRow(initialSeconds);
-        configForm.setWidth("400px");
-        configForm.setHeightFull();
+        configForm.setAutoResponsive(true);
+        configForm.setExpandFields(true);
+        configForm.setColumnWidth("12em");
+
+        configForm.addFormRow(id);
+        FormLayout.FormRow row1 = new FormLayout.FormRow();
+        row1.add(seJwt, 2);
+
+        FormLayout.FormRow row2 = new FormLayout.FormRow();
+        row2.add(followerSeconds, raiderSeconds);
+
+        FormLayout.FormRow row3 = new FormLayout.FormRow();
+        row3.add(tier1Seconds, tier1GiftSeconds);
+
+        FormLayout.FormRow row4 = new FormLayout.FormRow();
+        row4.add(tier2Seconds, tier2GiftSeconds);
+
+        FormLayout.FormRow row5 = new FormLayout.FormRow();
+        row5.add(tier3Seconds, tier3GiftSeconds);
+
+        FormLayout.FormRow row6 = new FormLayout.FormRow();
+        row6.add(bitsSeconds, currencySeconds);
+
+        FormLayout.FormRow row7 = new FormLayout.FormRow();
+        row7.add(initialSeconds, 2);
+        configForm.add(row1, row2, row3, row4, row5, row6, row7);
+        Div wrapper = new Div(configForm);
+        wrapper.setSizeFull();
+        wrapper.getStyle()
+                .set("display", "flex")
+                .set("justify-content", "center");
 
         saveButton.addClickListener(event -> {
             if (binder.validate().isOk()) {
@@ -100,7 +124,7 @@ public class UserConfigurationForm extends VerticalLayout {
         });
         binder.bindInstanceFields(this);
 
-        add(new H3("Configure seconds to add for events"), configForm, saveButton);
+        add(new H3("Timer Configuration"), wrapper, saveButton);
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {

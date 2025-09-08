@@ -62,6 +62,7 @@ public class TimerInfo extends Card {
         endLayout.setSpacing(false);
 
         add(new VerticalLayout(startLayout, updateLayout, endLayout));
+        setWidth("20em");
     }
 
     private Span createTimerStateBadge(Timer timer) {
