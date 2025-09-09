@@ -90,7 +90,8 @@ public class DashboardView extends VerticalLayout {
         testTimer.setUpdateTime(now);
         testTimer.setEndTime(now.plusSeconds(600));
 
-        TimerInfo timerInfoCard = new TimerInfo(testTimer);
+        Timer timer = presenter.getTimerFor(auth.getAttribute("sub"));
+        TimerInfo timerInfoCard = new TimerInfo(timer);
         timerInfoCard.addToFooter(initTimerButton);
         initTimerButton.setWidthFull();
 
