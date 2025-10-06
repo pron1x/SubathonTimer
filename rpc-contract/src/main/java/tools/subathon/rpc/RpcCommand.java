@@ -1,0 +1,15 @@
+package tools.subathon.rpc;
+
+public enum RpcCommand {
+    GET_TIMER,
+    INIT_TIMER,
+    START_TIMER,
+    PAUSE_TIMER,
+    ADD_TIME,
+    SUBTRACT_TIME,
+    GET_CHANNEL_CONFIG,
+    UPDATE_CHANNEL_CONFIG,
+    JOIN_CHANNEL,
+    GET_JOINED_CHANNELS,
+    AUTHENTICATE_SE
+}
