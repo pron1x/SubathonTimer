@@ -5,7 +5,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
-import tools.subathon.timer.bot.service.DataServiceRpcClient;
+import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -23,7 +23,7 @@ import java.util.Set;
 @Component
 public class SubathonBot implements HasLogger {
 
-    private static final String EVENT_SOURCE = "subathon-bot";
+    private static final String EVENT_SOURCE = "TwitchChat";
 
     @Value("${bot.subathon.channels}")
     private List<String> channelNames;
@@ -31,13 +31,13 @@ public class SubathonBot implements HasLogger {
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
-    private final DataServiceRpcClient dataServiceRpcClient;
+    private final DataserviceRpcService dataserviceRpcService;
 
     private final TwitchClient twitchClient;
 
     @Autowired
-    public SubathonBot(DataServiceRpcClient dataServiceRpcClient, TwitchClient twitchClient) {
-        this.dataServiceRpcClient = dataServiceRpcClient;
+    public SubathonBot(DataserviceRpcService dataserviceRpcService, TwitchClient twitchClient) {
+        this.dataserviceRpcService = dataserviceRpcService;
         this.twitchClient = twitchClient;
     }
 
@@ -69,6 +69,11 @@ public class SubathonBot implements HasLogger {
         return twitchClient.getChat().isChannelJoined(channelName);
     }
 
+    public List<String> getJoinedChannels() {
+        return twitchClient.getChat().getChannels().stream().toList();
+    }
+
+    // TODO: Add init command?
     private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {
         getLogger().debug("Handling '!timer' command for channel '{} ({})'. Sub command: {}, args: {}", eventChannel.getName(), eventChannel.getId(), command, args);
         switch (command) {
@@ -125,7 +130,7 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
         try {
-            return dataServiceRpcClient.executeBotCommand(channelId, event);
+            return dataserviceRpcService.executeBotCommand(channelId, event) != null;
         } catch (Exception e) {
             getLogger().error("Failed to send and receive state change command!", e);
             return false;
@@ -137,7 +142,7 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
         try {
-            return dataServiceRpcClient.executeBotCommand(channelId, event);
+            return dataserviceRpcService.executeBotCommand(channelId, event) != null;
         } catch (Exception e) {
             getLogger().error("Failed to send and receive time change command!", e);
             return false;

@@ -19,21 +19,18 @@ public class GlobalRabbitMQ {
 
     // User-Configuration RPC queue
     public static final String USER_CONFIG_RPC_QUEUE =  "dataservice-user-config-rpc-queue";
-    public static final String USER_CONFIG_ROUTING_KEY = "rpc.dataservice.user-config";
+    public static final String USER_CONFIG_ROUTING_KEY = "ui.dataservice.user-config";
 
-    // Timer init RPC queue
-    public static final String TIMER_RPC_QUEUE = "dataservice-timer-init-rpc-queue";
-    public static final String TIMER_ROUTING_KEY = "rpc.dataservice.timer-init";
-
-    // Bot-Command RPC queue
-    public static final String BOT_COMMAND_RPC_QUEUE = "dataservice-bot-command-rpc-queue";
-    public static final String BOT_COMMAND_ROUTING_KEY = "rpc.dataservice.bot-command";
+    // Timer RPC queue [<src>.<dest>.<type>]
+    public static final String TIMER_RPC_QUEUE = "dataservice-timer-rpc-queue";
+    public static final String TIMER_ROUTING_KEY = "ui.dataservice.timer";
+    public static final String BOT_COMMAND_ROUTING_KEY = "bot.dataservice.timer";
 
     // Bot Channel Management RPC queue
     public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
-    public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "rpc.bot.channel-management";
+    public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "dataservice.bot.channel-management";
 
     // Importer Token Management RPC queue
     public static final String IMPORTER_MANAGEMENT_QUEUE = "importer-management-rpc-queue";
-    public static final String IMPORTER_MANAGEMENT_ROUTING_KEY = "rpc.importer.management";
+    public static final String IMPORTER_MANAGEMENT_ROUTING_KEY = "dataservice.importer.management";
 }

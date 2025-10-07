@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_ROUTING_KEY;
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
@@ -35,11 +34,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue botCommandRpcQueue() {
-        return new Queue(BOT_COMMAND_RPC_QUEUE, true);
-    }
-
-    @Bean
     Queue userConfigRpcQueue() {
         return new Queue(USER_CONFIG_RPC_QUEUE, true);
     }
@@ -56,7 +50,7 @@ public class RabbitMQConfig {
 
     @Bean
     Binding botCommandRpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(botCommandRpcQueue()).to(exchange).with(BOT_COMMAND_ROUTING_KEY);
+        return BindingBuilder.bind(timerRpcQueue()).to(exchange).with(BOT_COMMAND_ROUTING_KEY);
     }
 
     @Bean

@@ -1,14 +1,16 @@
 package tools.subathon.timer.dataservice.service;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import tools.subathon.timer.datamodel.rpc.RpcAction;
-import tools.subathon.timer.datamodel.rpc.RpcRequestEntity;
-import tools.subathon.timer.datamodel.rpc.RpcResponseEntity;
-import tools.subathon.timer.datamodel.rpc.RpcStatus;
+import tools.subathon.rpc.RpcCommand;
+import tools.subathon.rpc.RpcRequest;
+import tools.subathon.rpc.RpcResponse;
+import tools.subathon.rpc.RpcStatus;
+import tools.subathon.rpc.payload.channel.ChannelPayload;
+import tools.subathon.rpc.payload.channel.JoinChannelPayload;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
@@ -22,28 +24,21 @@ public class BotRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public boolean requestChannelJoin(String channelName) {
-        RpcResponseEntity<?> response = sendManagementRpcCreateRequest(new HashMap<>(), channelName);
-        if (response.getStatusCode() == RpcStatus.OK) {
-            return (Boolean) response.getBody();
+    public String requestChannelJoin(String channelName) {
+        RpcRequest<JoinChannelPayload> request = new RpcRequest<>();
+        JoinChannelPayload payload = new JoinChannelPayload(channelName);
+        request.setPayload(payload);
+        request.setCommand(RpcCommand.JOIN_CHANNEL);
+        RpcResponse<List<String>> response = sendChannelRpcRequest(request);
+        if (response.getStatusCode() == RpcStatus.OK && response.getBody() != null && !response.getBody().isEmpty()) {
+            return response.getBody().getFirst();
         } else {
-            return false;
+            return null;
         }
     }
 
-    private RpcResponseEntity<?> sendManagementRpcCreateRequest(Map<String, Object> params, Object body) {
-        return sendRpcRequest(params, body, RpcAction.CREATE_OR_UPDATE, CHANNEL_MANAGEMENT_ROUTING_KEY);
-    }
-
-    private RpcResponseEntity<?> sendRpcRequest(Map<String, Object> params, Object body, RpcAction action, String routing) {
-        RpcRequestEntity<Object> request = new RpcRequestEntity<>();
-        request.setAction(action);
-        request.setParams(params);
-        request.setBody(body);
-        return sendRpcToBot(request, routing);
-    }
-
-    private RpcResponseEntity<?> sendRpcToBot(RpcRequestEntity<?> request, String route) {
-        return (RpcResponseEntity<?>) rabbitTemplate.convertSendAndReceive(EXCHANGE_NAME, route, request);
+    private RpcResponse<List<String>> sendChannelRpcRequest(RpcRequest<? extends ChannelPayload> request) {
+        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, CHANNEL_MANAGEMENT_ROUTING_KEY, request,
+                new ParameterizedTypeReference<>() {});
     }
 }

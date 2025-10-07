@@ -11,7 +11,6 @@ import tools.subathon.timer.datamodel.SubathonSubEvent;
 import tools.subathon.timer.datamodel.SubathonTipEvent;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.TimerEvent;
-import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.enums.SubTier;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorService;
@@ -115,11 +114,12 @@ public class TimerService implements HasLogger {
     }
 
 
-    public boolean initializeTimer(String channelId, String channelName) {
+    // TODO: Throw exception instead of null if errors occur
+    public Timer initializeTimer(String channelId, String channelName) {
         // Create new timer object only if it doesn't exist yet
         if (timers.containsKey(channelId)) {
             getLogger().info("Timer for channel id '{}'already exists.", channelId);
-            return false;
+            return null;
         }
         // Make sure bot joined the channel
         botRpcService.requestChannelJoin(channelName);
@@ -127,7 +127,7 @@ public class TimerService implements HasLogger {
         // Make sure SEImporter is authenticated with jwt
         UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
         if (config == null) {
-            return false;
+            return null;
         }
         if (!seImporterRpcService.authenticateWithJwt(config.getSeJwt())) {
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
@@ -154,21 +154,22 @@ public class TimerService implements HasLogger {
         initialEvent.setTimerId(timerEntity.getId());
         timers.put(channelId, mapper.map(timerEntity, Timer.class));
         timerEventService.save(initialEvent);
-        return true;
+        return mapper.map(timerEntity, Timer.class);
     }
 
-    public void startTimer(String channelId, SubathonCommandEvent command) {
+    // TODO: Throw exception instead of null on errors
+    public Timer startTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
 //            getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
 //            getLogger().warn("FOR TESTING, INITIALIZE A NEW TIMER!");
 //            initializeTimer(channelId);
 //            timer = timers.get(channelId);
-            return;
+            return null;
         }
         if (timer.getState() != INITIALIZED) {
             getLogger().warn("Cannot start the timer if it is not initialized or has already started. A started timer has to be resumed!");
-            return;
+            return null;
         }
         getLogger().debug("Starting timer");
         Instant now = Instant.now();
@@ -188,22 +189,24 @@ public class TimerService implements HasLogger {
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), timer.getEndTime());
         timerControl.setPaused(channelId, false);
 
-        timerRepository.save(mapper.map(timer, TimerEntity.class));
+        Timer returnTimer = mapper.map(timerRepository.save(mapper.map(timer, TimerEntity.class)), Timer.class);
         // Save and publish timer event
         publishEvent(timerEventService.save(timerEvent));
         getLogger().info("Timer started. [Start: {}, End: {}]", timer.getStartTime(), timer.getEndTime());
+        return returnTimer;
     }
 
-    public void pauseTimer(String channelId, SubathonCommandEvent command) {
+    //TODO: Throw exception instead of void on errors
+    public Timer pauseTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to pause it!", channelId);
-            return;
+            return null;
         }
         // Only pause a ticking timer
         if (timer.getState() != TICKING) {
             getLogger().info("Not pausing a not ticking timer. Ignoring!");
-            return;
+            return null;
         }
         getLogger().debug("Pausing timer");
         // Pause scheduled execution
@@ -219,10 +222,11 @@ public class TimerService implements HasLogger {
         timer.setState(PAUSED);
         timer.setUpdateTime(Instant.now());
         timers.put(channelId, timer);
-        timerRepository.save(mapper.map(timer, TimerEntity.class));
+        Timer returnTimer = mapper.map(timerRepository.save(mapper.map(timer, TimerEntity.class)), Timer.class);
 
         // Save and publish timer event
         publishEvent(timerEventService.save(timerEvent));
+        return returnTimer;
     }
 
     private void resumeTimer(String channelId, SubathonCommandEvent command) {
@@ -316,11 +320,11 @@ public class TimerService implements HasLogger {
         }
     }
 
-    public void addSubathonEventTime(String channelId, SubathonEvent event) {
+    public Timer addSubathonEventTime(String channelId, SubathonEvent event) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
-            return;
+            return null;
         }
         UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
         if (config == null) {
@@ -340,7 +344,7 @@ public class TimerService implements HasLogger {
 
         if (timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not adding time to timer because it is {}. Ignoring {}.", timer.getState(), event);
-            return;
+            return null;
         }
         getLogger().debug("Adding time for event: {}", event);
 
@@ -388,22 +392,23 @@ public class TimerService implements HasLogger {
         // Change scheduled timer
         timerControl.setExecutionTime(channelId, timer.getEndTime());
         getLogger().info("Added {} seconds for event {}", secondsToAdd, event);
-        timerRepository.save(mapper.map(timer, TimerEntity.class));
+        TimerEntity returnTimer = timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timerEvent
         publishEvent(timerEventService.save(timerEvent));
+        return mapper.map(returnTimer, Timer.class);
     }
 
-    private void subtractSubathonEventTime(String channelId, SubathonCommandEvent command) {
+    public Timer subtractSubathonEventTime(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, command);
-            return;
+            return null;
         }
 
         if (timer.getState() != TICKING && timer.getState() != PAUSED) {
             getLogger().info("Not removing time from timer because it is {}. Ignoring {}.", timer.getState(), command);
-            return;
+            return null;
         }
         getLogger().debug("Removing time from the timer.");
         long seconds = 0;
@@ -415,7 +420,7 @@ public class TimerService implements HasLogger {
         Instant newEnd = timer.getEndTime().plusSeconds(seconds);
         if (newEnd.isBefore(Instant.now())) {
             getLogger().info("Removing {} seconds from the timer would stop it, ignoring!", command.getSeconds());
-            return;
+            return null;
         }
 
         // Create timer event
@@ -428,10 +433,11 @@ public class TimerService implements HasLogger {
         timer.setUpdateTime(Instant.now());
         timers.put(channelId, timer);
         timerControl.setExecutionTime(channelId, timer.getEndTime());
-        timerRepository.save(mapper.map(timer, TimerEntity.class));
+        TimerEntity returnTimer = timerRepository.save(mapper.map(timer, TimerEntity.class));
 
         // Save and publish timer event
         publishEvent(timerEventService.save(timerEvent));
+        return mapper.map(returnTimer, Timer.class);
     }
 
     public Timer getLatestTimerForChannel(String channelId) {

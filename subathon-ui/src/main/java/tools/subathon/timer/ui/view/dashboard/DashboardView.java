@@ -153,7 +153,7 @@ public class DashboardView extends VerticalLayout {
     private Component createConfigForm(String userId) {
         UserConfigurationForm form = new UserConfigurationForm();
         form.setModel(userConfigurationModel);
-        form.setSaveHandler(() -> presenter.saveUserConfig(userId, userConfigurationModel));
+        form.setSaveHandler(() -> form.setModel(presenter.saveUserConfig(userId, userConfigurationModel)));
         return form;
     }
 

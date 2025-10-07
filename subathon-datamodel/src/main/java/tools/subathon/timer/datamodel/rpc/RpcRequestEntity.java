@@ -4,15 +4,15 @@ import java.util.Map;
 
 public class RpcRequestEntity<T> {
 
-    private RpcAction action;
+    private RpcCommand action;
     private Map<String, Object> params;
     T body;
 
-    public RpcAction getAction() {
+    public RpcCommand getAction() {
         return action;
     }
 
-    public void setAction(RpcAction action) {
+    public void setAction(RpcCommand action) {
         this.action = action;
     }
 

@@ -2,13 +2,11 @@ package tools.subathon.timer.dataservice.service;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-import tools.subathon.timer.datamodel.rpc.RpcAction;
-import tools.subathon.timer.datamodel.rpc.RpcRequestEntity;
-import tools.subathon.timer.datamodel.rpc.RpcResponseEntity;
-import tools.subathon.timer.datamodel.rpc.RpcStatus;
-
-import java.util.HashMap;
-import java.util.Map;
+import tools.subathon.rpc.RpcCommand;
+import tools.subathon.rpc.RpcRequest;
+import tools.subathon.rpc.RpcResponse;
+import tools.subathon.rpc.payload.streamelements.AuthenticateStreamelementsPayload;
+import tools.subathon.rpc.payload.streamelements.StreamelementsPayload;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 import static tools.subathon.timer.util.GlobalRabbitMQ.IMPORTER_MANAGEMENT_ROUTING_KEY;
@@ -23,22 +21,15 @@ public class SeImporterRpcService {
     }
 
     public boolean authenticateWithJwt(String jwt) {
-        return sendManagementRpcCreateRequest(new HashMap<>(), jwt).getStatusCode() == RpcStatus.OK;
+        RpcRequest<AuthenticateStreamelementsPayload> request = new RpcRequest<>();
+        AuthenticateStreamelementsPayload payload = new AuthenticateStreamelementsPayload(jwt);
+        request.setPayload(payload);
+        request.setCommand(RpcCommand.AUTHENTICATE_SE);
+        return sendStreamElementsRpcRequest(request).getBody();
     }
 
-    private RpcResponseEntity<?> sendManagementRpcCreateRequest(Map<String, Object> params, Object body) {
-        return sendRpcRequest(params, body, RpcAction.CREATE_OR_UPDATE, IMPORTER_MANAGEMENT_ROUTING_KEY);
-    }
-
-    private RpcResponseEntity<?> sendRpcRequest(Map<String, Object> params, Object body, RpcAction action, String routing) {
-        RpcRequestEntity<Object> request = new RpcRequestEntity<>();
-        request.setAction(action);
-        request.setParams(params);
-        request.setBody(body);
-        return sendRpcToDataservice(request, routing);
-    }
-
-    private RpcResponseEntity<?> sendRpcToDataservice(RpcRequestEntity<?> request, String routing) {
-        return (RpcResponseEntity<?>) rabbitTemplate.convertSendAndReceive(EXCHANGE_NAME, routing, request);
+    private RpcResponse<Boolean> sendStreamElementsRpcRequest(RpcRequest<? extends StreamelementsPayload> request) {
+        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, IMPORTER_MANAGEMENT_ROUTING_KEY, request,
+                new org.springframework.core.ParameterizedTypeReference<>() {});
     }
 }

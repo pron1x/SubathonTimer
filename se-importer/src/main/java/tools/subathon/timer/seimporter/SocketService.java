@@ -54,19 +54,21 @@ public class SocketService implements HasLogger {
         start();
     }
 
-    public void connectWithJwt(String jwt) {
+    public boolean connectWithJwt(String jwt) {
         JSONObject authObject = new JSONObject();
         try {
             authObject.put("method", "jwt");
             authObject.put("token", jwt);
         } catch (JSONException e) {
             getLogger().error("Unable to create authentication json object. {}", e.getMessage());
-            return;
+            return false;
         }
         if (socket.connected()) {
             socket.emit("authenticate", authObject);
+            return true; // Assume emit is successful, actual success will be confirmed by onAuthenticated or onUnauthorized
         } else {
             getLogger().warn("Trying to authenticate but socket is not connected!");
+            return false;
         }
     }
 
