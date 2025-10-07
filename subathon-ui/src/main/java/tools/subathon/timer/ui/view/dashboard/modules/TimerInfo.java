@@ -75,7 +75,10 @@ public class TimerInfo extends Card {
         this.timer = timer;
         startTime.setText(formatInstant(timer.getStartTime()));
         endTime.setText(formatInstant(timer.getEndTime()));
+        updateTime.setText(formatInstant(timer.getUpdateTime()));
         state.setText(timer.getState().toString());
+        state.getElement().getThemeList().clear();
+        state.getElement().getThemeList().add(getTimerStateBadgeTheme(timer.getState()));
     }
 
     private String getTimerStateBadgeTheme(TimerState state) {

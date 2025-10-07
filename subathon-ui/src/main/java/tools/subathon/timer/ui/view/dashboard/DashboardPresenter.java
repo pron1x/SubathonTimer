@@ -38,16 +38,19 @@ public class DashboardPresenter implements HasLogger {
         return timerService.getTimerForChannel(channelId);
     }
 
-    protected Timer initializeTimer(String channelId, String channelName) {
-        return dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
+    protected void initializeTimer(String channelId, String channelName) {
+        Timer timer = dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
+        view.updateTimerInfo(timer);
     }
 
-    protected Timer startTimer(String channelId, String channelName) {
-        return dataserviceRpcService.startTimerForChannel(channelId, channelName);
+    protected void startTimer(String channelId, String channelName) {
+        Timer timer = dataserviceRpcService.startTimerForChannel(channelId, channelName);
+        view.updateTimerInfo(timer);
     }
 
-    protected Timer pauseTimer(String channelId, String channelName) {
-        return dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
+    protected void pauseTimer(String channelId, String channelName) {
+        Timer timer = dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
+        view.updateTimerInfo(timer);
     }
 
     protected UserConfigurationModel getUserConfig(String userId) {

@@ -158,6 +158,7 @@ public class TimerService implements HasLogger {
     }
 
     // TODO: Throw exception instead of null on errors
+    // TODO: More gracefully handle difference between start and resume
     public Timer startTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
@@ -168,8 +169,8 @@ public class TimerService implements HasLogger {
             return null;
         }
         if (timer.getState() != INITIALIZED) {
-            getLogger().warn("Cannot start the timer if it is not initialized or has already started. A started timer has to be resumed!");
-            return null;
+            getLogger().warn("Cannot start the timer if it is not initialized or has already started. A started timer has to be resumed! Delegating to resumeTimer...");
+            return resumeTimer(channelId, command);
         }
         getLogger().debug("Starting timer");
         Instant now = Instant.now();
@@ -229,16 +230,16 @@ public class TimerService implements HasLogger {
         return returnTimer;
     }
 
-    private void resumeTimer(String channelId, SubathonCommandEvent command) {
+    private Timer resumeTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to resume it!", channelId);
-            return;
+            return null;
         }
         // Only resume timer if it is paused
         if (timer.getState() != PAUSED) {
             getLogger().info("Not resuming a not ticking timer. Ignoring!");
-            return;
+            return null;
         }
         getLogger().debug("Resuming timer!");
 
@@ -259,7 +260,7 @@ public class TimerService implements HasLogger {
         timer.setState(TICKING);
         timer.setUpdateTime(now);
         timers.put(channelId, timer);
-        timerRepository.save(mapper.map(timer, TimerEntity.class));
+        Timer returnTimer = mapper.map(timerRepository.save(mapper.map(timer, TimerEntity.class)), Timer.class);
 
         // Resume execution with new end
         timerControl.setExecutionTime(channelId, timer.getEndTime());
@@ -267,6 +268,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         publishEvent(timerEventService.save(timerEvent));
+        return returnTimer;
     }
 
     public void stopTimer(String channelId) {

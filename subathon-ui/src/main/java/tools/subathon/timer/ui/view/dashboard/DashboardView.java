@@ -24,7 +24,6 @@ import tools.subathon.timer.ui.view.MainLayout;
 import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
 import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
 
-import java.time.Instant;
 import java.util.List;
 
 @PermitAll
@@ -35,6 +34,10 @@ public class DashboardView extends VerticalLayout {
     private final AuthenticationContext authContext;
 
     private UserConfigurationModel userConfigurationModel;
+    private TimerInfo timerInfoCard;
+    private Button initTimerButton;
+    private Button pauseTimerButton;
+    private Button startTimerButton;
 
     @Autowired
     public DashboardView(DashboardPresenter presenter, AuthenticationContext authContext) {
@@ -75,25 +78,37 @@ public class DashboardView extends VerticalLayout {
         channelFailedIcon.setColor("red");
         channelFailedIcon.setVisible(false);
 
-        Button initTimerButton = new Button("Initialize a new timer");
+        initTimerButton = new Button("Initialize a new timer");
         initTimerButton.addClickListener(event -> {
             presenter.initializeTimer(auth.getAttribute("sub"), auth.getName());
         });
+        startTimerButton = new Button("Start");
+        startTimerButton.addClickListener(event -> {
+            presenter.startTimer(auth.getAttribute("sub"), auth.getName());
+        });
 
-        Timer testTimer = new Timer();
-        testTimer.setChannelId(auth.getAttribute("sub"));
-        testTimer.setChannelName(auth.getName());
-        testTimer.setId(1L);
-        testTimer.setState(TimerState.INITIALIZED);
-        Instant now = Instant.now();
-        testTimer.setStartTime(now.minusSeconds(600));
-        testTimer.setUpdateTime(now);
-        testTimer.setEndTime(now.plusSeconds(600));
+        pauseTimerButton = new Button("Pause");
+        pauseTimerButton.addClickListener(event -> {
+            presenter.pauseTimer(auth.getAttribute("sub"), auth.getName());
+        });
 
         Timer timer = presenter.getTimerFor(auth.getAttribute("sub"));
-        TimerInfo timerInfoCard = new TimerInfo(timer);
-        timerInfoCard.addToFooter(initTimerButton);
+        timerInfoCard = new TimerInfo(timer);
+
+        VerticalLayout timerControls = new VerticalLayout();
+        HorizontalLayout timerStateControls = new HorizontalLayout();
+        timerStateControls.setFlexGrow(0.5, startTimerButton);
+        timerStateControls.setFlexGrow(0.5, pauseTimerButton);
+        timerStateControls.setWidthFull();
+        timerStateControls.addToStart(startTimerButton);
+        timerStateControls.addToEnd(pauseTimerButton);
+
+        timerControls.add(timerStateControls);
+        timerControls.add(initTimerButton);
         initTimerButton.setWidthFull();
+        timerInfoCard.addToFooter(timerControls);
+
+        setTimerControlButtonStates(timer);
 
         VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);
         timerColumn.setSpacing(false);
@@ -155,6 +170,30 @@ public class DashboardView extends VerticalLayout {
         form.setModel(userConfigurationModel);
         form.setSaveHandler(() -> form.setModel(presenter.saveUserConfig(userId, userConfigurationModel)));
         return form;
+    }
+
+    protected void updateTimerInfo(Timer updatedTimer) {
+        timerInfoCard.setTimer(updatedTimer);
+        setTimerControlButtonStates(updatedTimer);
+    }
+
+    private void setTimerControlButtonStates(Timer timer) {
+        if(timer.getState() == TimerState.INITIALIZED) {
+            startTimerButton.setEnabled(true);
+            pauseTimerButton.setEnabled(false);
+            initTimerButton.setEnabled(false);
+            initTimerButton.setVisible(false);
+        } else if(timer.getState() == TimerState.ENDED || timer.getState() == TimerState.UNINITIALIZED) {
+            startTimerButton.setEnabled(false);
+            pauseTimerButton.setEnabled(false);
+            initTimerButton.setEnabled(true);
+            initTimerButton.setVisible(true);
+        } else {
+            startTimerButton.setEnabled(true);
+            pauseTimerButton.setEnabled(true);
+            initTimerButton.setEnabled(false);
+            initTimerButton.setVisible(false);
+        }
     }
 
 }
