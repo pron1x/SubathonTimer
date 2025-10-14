@@ -1,28 +1,49 @@
 package tools.subathon.timer.ui.view.dashboard;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.stereotype.Component;
 import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.service.DataserviceRpcService;
+import tools.subathon.timer.ui.service.TimerEventService;
+import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
 import tools.subathon.timer.ui.service.TimerService;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.util.List;
 
 @UIScope
-@Controller
-public class DashboardPresenter implements HasLogger {
+@Component
+public class DashboardPresenter implements TimerEventListener, HasLogger {
 
+    private final String channelId;
+    private final String channelName;
     private final DataserviceRpcService dataserviceRpcService;
+    private final TimerEventService timerEventService;
     private final TimerService timerService;
     private DashboardView view;
 
     @Autowired
-    public DashboardPresenter(TimerService timerService, DataserviceRpcService dataserviceRpcService) {
+    public DashboardPresenter(TimerService timerService, DataserviceRpcService dataserviceRpcService, TimerEventService timerEventService) {
         this.timerService = timerService;
         this.dataserviceRpcService = dataserviceRpcService;
+        this.timerEventService = timerEventService;
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof DefaultOAuth2User oauth2User) {
+            this.channelId = oauth2User.getAttribute("sub");
+            this.channelName = oauth2User.getName();
+        } else {
+            throw new AccessDeniedException("User is not authenticated!");
+        }
     }
 
     protected void init(DashboardView dashboardView) {
@@ -34,31 +55,47 @@ public class DashboardPresenter implements HasLogger {
         return timerService.getAllActiveTimers();
     }
 
-    protected Timer getTimerFor(String channelId) {
+    protected Timer getTimer() {
         return timerService.getTimerForChannel(channelId);
     }
 
-    protected void initializeTimer(String channelId, String channelName) {
+    protected void initializeTimer() {
         Timer timer = dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
-        view.updateTimerInfo(timer);
+        //view.updateTimerInfo(timer);
     }
 
-    protected void startTimer(String channelId, String channelName) {
+    protected void startTimer() {
         Timer timer = dataserviceRpcService.startTimerForChannel(channelId, channelName);
-        view.updateTimerInfo(timer);
+        //view.updateTimerInfo(timer);
     }
 
-    protected void pauseTimer(String channelId, String channelName) {
+    protected void pauseTimer() {
         Timer timer = dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
-        view.updateTimerInfo(timer);
+        //view.updateTimerInfo(timer);
     }
 
-    protected UserConfigurationModel getUserConfig(String userId) {
-        return dataserviceRpcService.getUserConfiguration(userId);
+    protected UserConfigurationModel getUserConfig() {
+        return dataserviceRpcService.getUserConfiguration(channelId);
     }
 
-    protected UserConfigurationModel saveUserConfig(String userId, UserConfigurationModel userConfigurationModel) {
-        userConfigurationModel.setChannelId(userId);
-        return dataserviceRpcService.saveUserConfiguration(userId, userConfigurationModel);
+    protected UserConfigurationModel saveUserConfig(UserConfigurationModel userConfigurationModel) {
+        userConfigurationModel.setChannelId(channelId);
+        return dataserviceRpcService.saveUserConfiguration(channelId, userConfigurationModel);
+    }
+
+    @Override
+    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
+        if(channelId.equals(timerEvent.getChannelId())) {
+            view.getUI().ifPresent(ui -> ui.access(
+                    () -> view.updateTimerInfo(timerEvent.getCurrentEndTime(), timerEvent.getTimestamp(), timerEvent.getCurrentTimerState())));
+        }
+    }
+
+    public void onAttach(AttachEvent event) {
+        timerEventService.addEventListener(this);
+    }
+
+    public void onDetach(DetachEvent event) {
+        timerEventService.removeEventListener(this);
     }
 }

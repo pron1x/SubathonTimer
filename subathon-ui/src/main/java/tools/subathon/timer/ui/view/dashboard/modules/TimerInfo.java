@@ -15,23 +15,20 @@ import java.time.format.DateTimeFormatter;
 
 public class TimerInfo extends Card {
 
-    private Timer timer;
-
     private Span state;
     private Text startTime;
     private Text updateTime;
     private Text endTime;
 
     public TimerInfo(Timer timer) {
-        this.timer = timer;
-        createContent();
+        createContent(timer);
     }
 
     public TimerInfo() {
         this(null);
     }
 
-    private void createContent() {
+    private void createContent(Timer timer) {
         Span startDescription = new Span("Start time");
         startDescription.getStyle().setFontSize("small");
 
@@ -41,13 +38,12 @@ public class TimerInfo extends Card {
         Span endDescription = new Span("End time");
         endDescription.getStyle().setFontSize("small");
 
-        if(timer != null) {
-            startTime = new Text(formatInstant(timer.getStartTime()));
-            updateTime = new Text(formatInstant(timer.getUpdateTime()));
-            endTime = new Text(formatInstant(timer.getEndTime()));
-        }
         setTitle(new Div(timer != null ? timer.getChannelName() : "-"));
         setSubtitle(new Div(timer != null ? timer.getChannelId() : "-"));
+
+        startTime = new Text(timer != null ? formatInstant(timer.getStartTime()) : "-");
+        updateTime = new Text(timer != null ? formatInstant(timer.getUpdateTime()) : "-");
+        endTime = new Text(timer != null ? formatInstant(timer.getEndTime()) : "-");
         state = createTimerStateBadge(timer);
         setHeaderSuffix(state);
 
@@ -71,14 +67,29 @@ public class TimerInfo extends Card {
         return badge;
     }
 
-    public void setTimer(Timer timer) {
-        this.timer = timer;
-        startTime.setText(formatInstant(timer.getStartTime()));
-        endTime.setText(formatInstant(timer.getEndTime()));
-        updateTime.setText(formatInstant(timer.getUpdateTime()));
-        state.setText(timer.getState().toString());
+    public void updateTimerInfo(Timer timer) {
+        updateStartTime(timer.getStartTime());
+        updateEndTime(timer.getEndTime());
+        updateUpdateTime(timer.getUpdateTime());
+        updateTimerState(timer.getState());
+    }
+
+    public void updateStartTime(Instant startTime) {
+        this.startTime.setText(formatInstant(startTime));
+    }
+
+    public void updateEndTime(Instant endTime) {
+        this.endTime.setText(formatInstant(endTime));
+    }
+
+    public void updateUpdateTime(Instant updateTime) {
+        this.updateTime.setText(formatInstant(updateTime));
+    }
+
+    public void updateTimerState(TimerState timerState) {
+        this.state.setText(timerState.toString());
         state.getElement().getThemeList().clear();
-        state.getElement().getThemeList().add(getTimerStateBadgeTheme(timer.getState()));
+        state.getElement().getThemeList().add(getTimerStateBadgeTheme(timerState));
     }
 
     private String getTimerStateBadgeTheme(TimerState state) {
