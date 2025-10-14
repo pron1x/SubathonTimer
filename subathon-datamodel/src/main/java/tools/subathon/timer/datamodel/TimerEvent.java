@@ -8,6 +8,7 @@ import java.time.Instant;
 public class TimerEvent {
 
     private Long timerId;
+    private String channelId;
     private Instant timestamp;
     private TimerEventType type;
     private Instant oldEndTime;
@@ -22,6 +23,14 @@ public class TimerEvent {
 
     public void setTimerId(Long timerId) {
         this.timerId = timerId;
+    }
+
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
     }
 
     public Instant getTimestamp() {
@@ -84,6 +93,7 @@ public class TimerEvent {
     public String toString() {
         return "TimerEvent{" +
                 "timerId=" + timerId +
+                ", channelId=" + channelId +
                 ", timestamp=" + timestamp +
                 ", type=" + type +
                 ", oldEndTime=" + oldEndTime +

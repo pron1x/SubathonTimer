@@ -142,6 +142,7 @@ CREATE TABLE `timer_event`
 (
     `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Id of the timer event',
     `timer_id`            BIGINT UNSIGNED COMMENT 'Reference to the timer',
+    `channel_id`          VARCHAR(30) NOT NULL COMMENT 'Twitch id of the channel',
     `event_id`            BIGINT UNSIGNED COMMENT 'Reference to the subathon event',
     `timestamp`           TIMESTAMP NOT NULL COMMENT 'Timestamp of the timer event',
     `type`                ENUM ('TIME_ADDITION', 'TIME_SUBTRACTION', 'STATE_CHANGE') NOT NULL COMMENT 'Type of the timer event',

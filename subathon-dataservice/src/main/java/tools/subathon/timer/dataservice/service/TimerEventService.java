@@ -25,13 +25,14 @@ public class TimerEventService implements HasLogger {
         this.timerEventRepository = timerEventRepository;
     }
 
-    public TimerEvent createNewTimerEvent(long timerId, TimerEventType eventType,
+    public TimerEvent createNewTimerEvent(long timerId, String channelId, TimerEventType eventType,
                                           TimerState oldState, TimerState currentState,
                                           Instant oldEnd, Instant currentEnd, SubathonEvent subathonEvent) {
         TimerEvent newEvent = new TimerEvent();
 
         newEvent.setType(eventType);
         newEvent.setTimerId(timerId);
+        newEvent.setChannelId(channelId);
 
         newEvent.setOldTimerState(oldState);
         newEvent.setCurrentTimerState(currentState);

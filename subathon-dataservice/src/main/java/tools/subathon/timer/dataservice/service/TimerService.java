@@ -175,7 +175,7 @@ public class TimerService implements HasLogger {
         getLogger().debug("Starting timer");
         Instant now = Instant.now();
         // Create new TimerEvent with previous timer data
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), TimerEventType.STATE_CHANGE,
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(), TimerEventType.STATE_CHANGE,
                 timer.getState(), TICKING,
                 timer.getEndTime(), now.plusSeconds(INITIAL_TIMER_SECONDS), command);
 
@@ -214,7 +214,7 @@ public class TimerService implements HasLogger {
         timerControl.setPaused(channelId, true);
 
         // Create timer event
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(),
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(),
                 TimerEventType.STATE_CHANGE,
                 timer.getState(), PAUSED,
                 timer.getEndTime(), timer.getEndTime(), command);
@@ -251,7 +251,7 @@ public class TimerService implements HasLogger {
         Instant newEnd = now.plusSeconds(d.getSeconds());
 
         // Create timer event
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(),
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(),
                 TimerEventType.STATE_CHANGE, timer.getState(), TICKING,
                 timer.getEndTime(), newEnd, command);
 
@@ -282,7 +282,7 @@ public class TimerService implements HasLogger {
         // Set end time
         Instant end = Instant.now();
         // Create timer event
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(),
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(),
                 TimerEventType.STATE_CHANGE, timer.getState(), ENDED,
                 timer.getEndTime(), end, null);
 
@@ -382,7 +382,7 @@ public class TimerService implements HasLogger {
         Instant newEnd = timer.getEndTime().plusSeconds(secondsToAdd);
 
         // Create new timer event
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), TimerEventType.TIME_ADDITION,
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(), TimerEventType.TIME_ADDITION,
                 timer.getState(), timer.getState(),
                 timer.getEndTime(), newEnd,
                 event);
@@ -426,7 +426,7 @@ public class TimerService implements HasLogger {
         }
 
         // Create timer event
-        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), TimerEventType.TIME_SUBTRACTION,
+        TimerEvent timerEvent = timerEventService.createNewTimerEvent(timer.getId(), timer.getChannelId(), TimerEventType.TIME_SUBTRACTION,
                 timer.getState(), timer.getState(),
                 timer.getEndTime(), newEnd, command);
 
