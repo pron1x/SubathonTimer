@@ -14,10 +14,10 @@ import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
-import tools.subathon.timer.ui.service.DataserviceRpcService;
 import tools.subathon.timer.ui.service.TimerEventService;
 import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
 import tools.subathon.timer.ui.service.TimerService;
+import tools.subathon.timer.ui.service.UserConfigurationService;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 @UIScope
@@ -26,16 +26,16 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
 
     private final String channelId;
     private final String channelName;
-    private final DataserviceRpcService dataserviceRpcService;
     private final TimerEventService timerEventService;
     private final TimerService timerService;
+    private final UserConfigurationService userConfigurationService;
     private DashboardView view;
 
     @Autowired
-    public DashboardPresenter(TimerService timerService, DataserviceRpcService dataserviceRpcService, TimerEventService timerEventService) {
+    public DashboardPresenter(TimerService timerService, TimerEventService timerEventService, UserConfigurationService userConfigurationService) {
         this.timerService = timerService;
-        this.dataserviceRpcService = dataserviceRpcService;
         this.timerEventService = timerEventService;
+        this.userConfigurationService = userConfigurationService;
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof DefaultOAuth2User oauth2User) {
@@ -56,24 +56,24 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     protected void initializeTimer() {
-        dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
+        timerService.initializeTimerForChannel(channelId, channelName);
     }
 
     protected void startTimer() {
-        dataserviceRpcService.startTimerForChannel(channelId, channelName);
+        timerService.startTimerForChannel(channelId, channelName);
     }
 
     protected void pauseTimer() {
-        dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
+        timerService.pauseTimerForChannel(channelId, channelName);
     }
 
     protected UserConfigurationModel getUserConfig() {
-        return dataserviceRpcService.getUserConfiguration(channelId);
+        return userConfigurationService.getUserConfiguration(channelId);
     }
 
     protected UserConfigurationModel saveUserConfig(UserConfigurationModel userConfigurationModel) {
         userConfigurationModel.setChannelId(channelId);
-        return dataserviceRpcService.saveUserConfiguration(channelId, userConfigurationModel);
+        return userConfigurationService.saveUserConfiguration(channelId, userConfigurationModel);
     }
 
     @Override

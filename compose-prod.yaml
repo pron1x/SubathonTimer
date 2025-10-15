@@ -68,7 +68,6 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - 'DATASERVICE_URL=http://subathon-dataservice:8081'
       - 'SPRING_RABBITMQ_PASSWORD='
       - 'SPRING_RABBITMQ_USERNAME='
       - 'SPRING_RABBITMQ_HOST=rabbitmq'

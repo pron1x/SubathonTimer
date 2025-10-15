@@ -7,15 +7,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class TimerService {
 
-    private final DataserviceRestClient dataserviceRestClient;
+    private final DataserviceRpcService dataserviceRpcService;
 
     @Autowired
-    public TimerService(DataserviceRestClient dataserviceRestClient) {
-        this.dataserviceRestClient = dataserviceRestClient;
+    public TimerService(DataserviceRpcService dataserviceRpcService) {
+        this.dataserviceRpcService = dataserviceRpcService;
     }
 
     public Timer getTimerForChannel(String channelId) {
-        return dataserviceRestClient.getLatestTimerForChannel(channelId);
+        return dataserviceRpcService.getTimerForChannel(channelId);
+    }
+
+    public Timer initializeTimerForChannel(String channelId, String channelName) {
+        return dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
+    }
+
+    public Timer startTimerForChannel(String channelId, String channelName) {
+        return dataserviceRpcService.startTimerForChannel(channelId, channelName);
+    }
+
+    public Timer pauseTimerForChannel(String channelId, String channelName) {
+        return dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
     }
 
 }

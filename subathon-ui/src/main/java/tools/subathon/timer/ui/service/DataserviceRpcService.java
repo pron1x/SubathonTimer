@@ -10,6 +10,7 @@ import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.payload.configuration.ChannelConfigPayload;
 import tools.subathon.rpc.payload.configuration.GetChannelConfigPayload;
 import tools.subathon.rpc.payload.configuration.UpdateChannelConfigPayload;
+import tools.subathon.rpc.payload.timer.GetTimerPayload;
 import tools.subathon.rpc.payload.timer.InitTimerPayload;
 import tools.subathon.rpc.payload.timer.PauseTimerPayload;
 import tools.subathon.rpc.payload.timer.StartTimerPayload;
@@ -45,6 +46,13 @@ public class DataserviceRpcService {
         request.setCommand(RpcCommand.UPDATE_CHANNEL_CONFIG);
         request.setPayload(new UpdateChannelConfigPayload(userId, userConfigurationModel));
         return sendUserConfigRpcGetRequest(request).getBody();
+    }
+
+    public Timer getTimerForChannel(String channelId) {
+        RpcRequest<GetTimerPayload> request = new RpcRequest<>();
+        request.setCommand(RpcCommand.GET_TIMER);
+        request.setPayload(new GetTimerPayload(channelId));
+        return sendTimerRpcRequest(request).getBody();
     }
 
     public Timer initializeTimerForChannel(String channelId, String channelName) {
