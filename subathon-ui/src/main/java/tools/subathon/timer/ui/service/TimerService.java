@@ -4,8 +4,6 @@ import tools.subathon.timer.datamodel.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class TimerService {
 
@@ -20,7 +18,4 @@ public class TimerService {
         return dataserviceRestClient.getLatestTimerForChannel(channelId);
     }
 
-    public List<Timer> getAllActiveTimers() {
-        return dataserviceRestClient.getAllActiveTimers();
-    }
 }

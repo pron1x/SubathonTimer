@@ -3,8 +3,10 @@ package tools.subathon.timer.ui.view.dashboard.modules;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
@@ -34,14 +36,12 @@ public class TimerInfo extends Card {
         Span endDescription = new Span("End time");
         endDescription.getStyle().setFontSize("small");
 
-        setTitle(new Div(timer != null ? timer.getChannelName() : "-"));
-        setSubtitle(new Div(timer != null ? timer.getChannelId() : "-"));
-
+        setHeader(createHeader(timer));
+        state = createTimerStateBadge(timer);
+        setHeaderSuffix(state);
         startTime = new Text(timer != null ? formatInstant(timer.getStartTime()) : "-");
         updateTime = new Text(timer != null ? formatInstant(timer.getUpdateTime()) : "-");
         endTime = new Text(timer != null ? formatInstant(timer.getEndTime()) : "-");
-        state = createTimerStateBadge(timer);
-        setHeaderSuffix(state);
 
         VerticalLayout startLayout = new VerticalLayout(startDescription, startTime);
         startLayout.setPadding(false);
@@ -55,6 +55,27 @@ public class TimerInfo extends Card {
 
         add(new VerticalLayout(startLayout, updateLayout, endLayout));
         setWidth("20em");
+    }
+
+    private static Div createHeader(Timer timer) {
+        Div header = new Div();
+        header.addClassNames(
+                LumoUtility.Display.FLEX,
+                LumoUtility.FlexDirection.COLUMN_REVERSE,
+                LumoUtility.LineHeight.XSMALL
+        );
+
+        H2 title = new H2(timer != null ? timer.getChannelName() : "-");
+
+        Div subtitle = new Div(timer != null ? timer.getChannelId() : "-");
+        subtitle.addClassNames(
+                LumoUtility.TextTransform.UPPERCASE,
+                LumoUtility.FontSize.XSMALL,
+                LumoUtility.TextColor.SECONDARY
+        );
+
+        header.add(title, subtitle);
+        return header;
     }
 
     private Span createTimerStateBadge(Timer timer) {

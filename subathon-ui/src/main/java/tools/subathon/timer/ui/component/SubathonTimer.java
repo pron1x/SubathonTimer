@@ -15,6 +15,7 @@ import elemental.json.JsonNumber;
 public class SubathonTimer extends Component implements HasLogger {
 
     public SubathonTimer(Timer timer) {
+        setClassName("subathon-timer");
         pushInitialState(timer);
     }
 

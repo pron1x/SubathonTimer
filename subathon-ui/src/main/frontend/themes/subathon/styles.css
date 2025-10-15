@@ -1,8 +1,13 @@
-subathon-timer {
-    font-size: 75px;
-    font-family: K2D SemiBold;
+.subathon-timer {
+    font-size: 50px;
     color: white;
     filter: drop-shadow(5px 5px 2px #000000);
+}
+
+vaadin-card::part(header) {
+    background-color: var(--lumo-primary-color-10pct);
+    border-radius: var(--lumo-border-radius-l);
+    padding: var(--lumo-space-s) var(--lumo-space-m);
 }
 
 .neon {

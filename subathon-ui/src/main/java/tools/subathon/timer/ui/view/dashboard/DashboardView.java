@@ -4,15 +4,12 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.AnchorTarget;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoIcon;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +21,6 @@ import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
 import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
 
 import java.time.Instant;
-import java.util.List;
 
 @PermitAll
 @Route(value = "/dashboard", layout = MainLayout.class)
@@ -71,13 +67,6 @@ public class DashboardView extends VerticalLayout {
             userConfigurationModel = new UserConfigurationModel();
         }
 
-        Icon channelJoinedIcon = LumoIcon.CHECKMARK.create();
-        channelJoinedIcon.setColor("green");
-        channelJoinedIcon.setVisible(false);
-        Icon channelFailedIcon = LumoIcon.CROSS.create();
-        channelFailedIcon.setColor("red");
-        channelFailedIcon.setVisible(false);
-
         initTimerButton = new Button("Initialize a new timer");
         initTimerButton.addClickListener(event -> presenter.initializeTimer());
         startTimerButton = new Button("Start");
@@ -105,8 +94,6 @@ public class DashboardView extends VerticalLayout {
         setTimerControlButtonStates(timer.getState());
 
         VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);
-        timerColumn.setSpacing(false);
-        timerColumn.setPadding(false);
         timerColumn.setAlignItems(Alignment.END);
 
         Component configForm = createConfigForm();
@@ -116,8 +103,6 @@ public class DashboardView extends VerticalLayout {
         );
         timerDashboard.setAlignItems(Alignment.STRETCH);
         timerDashboard.setWidthFull();
-        timerDashboard.setFlexGrow(1, configForm);
-        timerDashboard.setFlexGrow(0, timerColumn);
         content.add(timerDashboard);
 
         Paragraph footerText = new Paragraph("TWITCH, the TWITCH Logo, the Glitch Logo, and/or TWITCHTV are trademarks of Twitch Interactive, Inc. or its affiliates.");
@@ -127,36 +112,6 @@ public class DashboardView extends VerticalLayout {
         footer.add(new Anchor("https://github.com/pron1x/SubathonTimer", "Source on Github!", AnchorTarget.BLANK), footerText);
         content.add(footer);
         add(content);
-    }
-
-    private Component createDebugDropdown() {
-        List<Timer> timers = presenter.getAllActiveTimers();
-
-        Button uptime = new Button("Go to Uptime");
-        Button timer = new Button("Go to Timer");
-        ComboBox<Timer> timerComboBox = new ComboBox<>();
-
-        timerComboBox.setItems(timers);
-        timerComboBox.setItemLabelGenerator(t -> t.getChannelName() + "(" + t.getChannelId() + ")");
-        timerComboBox.addValueChangeListener(e -> {
-            if (e.getValue() != null) {
-                uptime.setEnabled(true);
-                timer.setEnabled(true);
-            } else {
-                uptime.setEnabled(false);
-                timer.setEnabled(false);
-            }
-        });
-
-        uptime.addClickListener(event ->
-                getUI().ifPresent(ui -> ui.navigate("uptime/" + timerComboBox.getValue().getChannelId())));
-        uptime.setEnabled(false);
-
-        timer.addClickListener(event ->
-                getUI().ifPresent(ui -> ui.navigate("timer/" + timerComboBox.getValue().getChannelId())));
-        timer.setEnabled(false);
-
-        return new HorizontalLayout(timerComboBox, uptime, timer);
     }
 
     private Component createConfigForm() {

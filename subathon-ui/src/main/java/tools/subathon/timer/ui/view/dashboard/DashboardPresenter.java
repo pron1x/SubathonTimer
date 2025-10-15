@@ -20,8 +20,6 @@ import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
 import tools.subathon.timer.ui.service.TimerService;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-import java.util.List;
-
 @UIScope
 @Component
 public class DashboardPresenter implements TimerEventListener, HasLogger {
@@ -51,10 +49,6 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     protected void init(DashboardView dashboardView) {
         this.view = dashboardView;
         view.initViewInternal();
-    }
-
-    protected List<Timer> getAllActiveTimers() {
-        return timerService.getAllActiveTimers();
     }
 
     protected Timer getTimer() {
