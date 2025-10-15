@@ -5,12 +5,14 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -39,7 +41,7 @@ public class UserConfigurationForm extends VerticalLayout {
         id = new TextField();
         seJwt = new PasswordField("StreamElements JWT Token");
         followerSeconds = new IntegerField("Follower");
-        raiderSeconds = new IntegerField("Raider");
+        raiderSeconds = new IntegerField("per Raider");
         tier1Seconds = new IntegerField("Tier 1");
         tier2Seconds = new IntegerField("Tier 2");
         tier3Seconds = new IntegerField("Tier 3");
@@ -48,7 +50,7 @@ public class UserConfigurationForm extends VerticalLayout {
         tier3GiftSeconds = new IntegerField("Tier 3 Gift");
         bitsSeconds = new IntegerField("per 100 bits");
         currencySeconds = new IntegerField("per EUR/USD");
-        initialSeconds = new IntegerField("Starting Timer (seconds)");
+        initialSeconds = new IntegerField("Starting Time (seconds)");
         saveButton = new Button("Save");
         initInternal();
     }
@@ -87,11 +89,16 @@ public class UserConfigurationForm extends VerticalLayout {
         FormLayout configForm = new FormLayout();
         configForm.setAutoResponsive(true);
         configForm.setExpandFields(true);
-        configForm.setColumnWidth("12em");
+        configForm.setColumnWidth("15em");
 
         configForm.addFormRow(id);
         FormLayout.FormRow row1 = new FormLayout.FormRow();
         row1.add(seJwt, 2);
+
+        Span eventsHeader = new Span("Configure seconds for each twitch event. 0 ignores events");
+        eventsHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
+        FormLayout.FormRow subheader1 = new FormLayout.FormRow();
+        subheader1.add(eventsHeader, 2);
 
         FormLayout.FormRow row2 = new FormLayout.FormRow();
         row2.add(followerSeconds, raiderSeconds);
@@ -108,9 +115,14 @@ public class UserConfigurationForm extends VerticalLayout {
         FormLayout.FormRow row6 = new FormLayout.FormRow();
         row6.add(bitsSeconds, currencySeconds);
 
+        Span startingHeader = new Span("Configure start time of the timer in seconds");
+        startingHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
+        FormLayout.FormRow subheader2 = new FormLayout.FormRow();
+        subheader2.add(startingHeader, 2);
+
         FormLayout.FormRow row7 = new FormLayout.FormRow();
         row7.add(initialSeconds, 2);
-        configForm.add(row1, row2, row3, row4, row5, row6, row7);
+        configForm.add(row1, subheader1, row2, row3, row4, row5, row6, subheader2, row7);
         Div wrapper = new Div(configForm);
         wrapper.setSizeFull();
         wrapper.getStyle()
@@ -124,7 +136,8 @@ public class UserConfigurationForm extends VerticalLayout {
         });
         binder.bindInstanceFields(this);
 
-        add(new H3("Timer Configuration"), wrapper, saveButton);
+        H3 header = new H3("Timer Configuration");
+        add(header, wrapper, saveButton);
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {
