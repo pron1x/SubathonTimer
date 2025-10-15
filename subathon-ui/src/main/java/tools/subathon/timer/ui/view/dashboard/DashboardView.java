@@ -4,6 +4,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.AnchorTarget;
 import com.vaadin.flow.component.html.Paragraph;
@@ -133,21 +134,26 @@ public class DashboardView extends VerticalLayout {
     }
 
     private void setTimerControlButtonStates(TimerState timerState) {
+        startTimerButton.setEnabled(false);
+        startTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        pauseTimerButton.setEnabled(false);
+        pauseTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        initTimerButton.setEnabled(false);
+        initTimerButton.setVisible(false);
+        initTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
         if(timerState == TimerState.INITIALIZED) {
             startTimerButton.setEnabled(true);
-            pauseTimerButton.setEnabled(false);
-            initTimerButton.setEnabled(false);
-            initTimerButton.setVisible(false);
+            startTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         } else if(timerState == TimerState.ENDED || timerState == TimerState.UNINITIALIZED) {
-            startTimerButton.setEnabled(false);
-            pauseTimerButton.setEnabled(false);
             initTimerButton.setEnabled(true);
             initTimerButton.setVisible(true);
-        } else {
+            initTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        } else if(timerState == TimerState.PAUSED) {
             startTimerButton.setEnabled(true);
+            startTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        } else if(timerState == TimerState.TICKING) {
             pauseTimerButton.setEnabled(true);
-            initTimerButton.setEnabled(false);
-            initTimerButton.setVisible(false);
+            pauseTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         }
     }
 
