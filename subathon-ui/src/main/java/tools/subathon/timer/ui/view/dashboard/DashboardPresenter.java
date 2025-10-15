@@ -11,6 +11,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Component;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.enums.TimerEventType;
+import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.service.DataserviceRpcService;
 import tools.subathon.timer.ui.service.TimerEventService;
@@ -60,18 +62,15 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     protected void initializeTimer() {
-        Timer timer = dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
-        //view.updateTimerInfo(timer);
+        dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
     }
 
     protected void startTimer() {
-        Timer timer = dataserviceRpcService.startTimerForChannel(channelId, channelName);
-        //view.updateTimerInfo(timer);
+        dataserviceRpcService.startTimerForChannel(channelId, channelName);
     }
 
     protected void pauseTimer() {
-        Timer timer = dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
-        //view.updateTimerInfo(timer);
+        dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
     }
 
     protected UserConfigurationModel getUserConfig() {
@@ -87,7 +86,12 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     public void handleIncomingTimerEvent(TimerEvent timerEvent) {
         if(channelId.equals(timerEvent.getChannelId())) {
             view.getUI().ifPresent(ui -> ui.access(
-                    () -> view.updateTimerInfo(timerEvent.getCurrentEndTime(), timerEvent.getTimestamp(), timerEvent.getCurrentTimerState())));
+                    () -> {
+                        view.updateTimerInfo(timerEvent.getCurrentEndTime(), timerEvent.getTimestamp(), timerEvent.getCurrentTimerState());
+                        if(timerEvent.getType() == TimerEventType.STATE_CHANGE && timerEvent.getOldTimerState() == TimerState.INITIALIZED) {
+                            view.updateTimerInfoStartTime(timerEvent.getTimestamp());
+                        }
+                    }));
         }
     }
 

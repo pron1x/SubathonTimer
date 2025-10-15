@@ -24,10 +24,6 @@ public class TimerInfo extends Card {
         createContent(timer);
     }
 
-    public TimerInfo() {
-        this(null);
-    }
-
     private void createContent(Timer timer) {
         Span startDescription = new Span("Start time");
         startDescription.getStyle().setFontSize("small");
@@ -65,13 +61,6 @@ public class TimerInfo extends Card {
         Span badge = new Span(timer != null ? timer.getState().toString() : TimerState.UNINITIALIZED.toString());
         badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.getState() : TimerState.UNINITIALIZED));
         return badge;
-    }
-
-    public void updateTimerInfo(Timer timer) {
-        updateStartTime(timer.getStartTime());
-        updateEndTime(timer.getEndTime());
-        updateUpdateTime(timer.getUpdateTime());
-        updateTimerState(timer.getState());
     }
 
     public void updateStartTime(Instant startTime) {

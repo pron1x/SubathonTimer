@@ -173,6 +173,10 @@ public class DashboardView extends VerticalLayout {
         setTimerControlButtonStates(timerState);
     }
 
+    protected void updateTimerInfoStartTime(Instant startTime) {
+        timerInfoCard.updateStartTime(startTime);
+    }
+
     private void setTimerControlButtonStates(TimerState timerState) {
         if(timerState == TimerState.INITIALIZED) {
             startTimerButton.setEnabled(true);
