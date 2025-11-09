@@ -1,5 +1,6 @@
 package tools.subathon.timer.ui.view.timer;
 
+import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
@@ -40,7 +41,14 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
 
     public Timer getTimerForChannel(String channelId) {
         if(timer == null || !channelId.equals(timer.getChannelId())) {
-            timer = timerService.getTimerForChannel(channelId);
+            RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+            timer = switch(timerResponse) {
+                case RpcResponse.Success<Timer> success -> success.body();
+                case RpcResponse.Failure<Timer> error -> {
+                    getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
+                    yield null;
+                }
+            };
         }
         return timer;
     }

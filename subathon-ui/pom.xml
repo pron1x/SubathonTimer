@@ -12,7 +12,7 @@
     <artifactId>subathon-ui</artifactId>
 
     <properties>
-        <vaadin.version>24.5.5</vaadin.version>
+        <vaadin.version>24.8.3</vaadin.version>
     </properties>
 
     <dependencies>
@@ -45,6 +45,11 @@
             <artifactId>subathon-util</artifactId>
             <version>0.0.2-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>tools.subathon</groupId>
+            <artifactId>rpc-contract</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

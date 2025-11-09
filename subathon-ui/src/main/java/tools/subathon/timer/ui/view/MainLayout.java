@@ -22,31 +22,17 @@ public class MainLayout extends AppLayout {
         this.authContext = authContext;
 
         HorizontalLayout navLayout = new HorizontalLayout();
-        HorizontalLayout left = new HorizontalLayout();
-        HorizontalLayout middle = new HorizontalLayout();
-        HorizontalLayout right = new HorizontalLayout();
 
         navLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         navLayout.setWidthFull();
         navLayout.setPadding(true);
 
-        left.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        left.setWidthFull();
-
-        middle.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-        middle.setWidthFull();
-
-        right.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        right.setWidthFull();
-
         H2 title = new H2("Subathon Tools");
         loginDialog = new LoginDialog();
         MenuBar userBar = createUserMenuBar(authContext);
 
-        middle.add(title);
-        right.add(userBar);
-
-        navLayout.add(left, middle, right);
+        navLayout.addToMiddle(title);
+        navLayout.addToEnd(userBar);
 
         addToNavbar(navLayout);
     }
@@ -62,6 +48,8 @@ public class MainLayout extends AppLayout {
                                     getUI().ifPresent(ui -> ui.navigate("timer/" + user.getAttribute("sub"))));
                             userMenu.addItem("Uptime", e ->
                                     getUI().ifPresent(ui -> ui.navigate("uptime/" + user.getAttribute("sub"))));
+                            userMenu.addItem("Logout", e ->
+                                    getUI().ifPresent(ui -> authContext.logout()));
                         },
                         () -> userBar.addItem("Login", e -> loginDialog.open()));
         return userBar;

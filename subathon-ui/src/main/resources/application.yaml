@@ -22,7 +22,3 @@ spring:
             jwk-set-uri: 'https://id.twitch.tv/oauth2/keys'
             user-info-uri: 'https://id.twitch.tv/oauth2/userinfo'
             user-name-attribute: 'preferred_username'
-
-ui:
-  endpoints:
-    dataservice: ${DATASERVICE_URL}

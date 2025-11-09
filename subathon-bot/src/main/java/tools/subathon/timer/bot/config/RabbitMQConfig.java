@@ -12,8 +12,8 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_RPC_QUEUE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_RPC_ROUTING_KEY;
+import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_QUEUE;
+import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 
 @EnableRabbit
@@ -21,18 +21,18 @@ import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 public class RabbitMQConfig {
 
     @Bean
-    Queue queue() {
-        return new Queue(BOT_RPC_QUEUE_NAME, true);
-    }
-
-    @Bean
     TopicExchange exchange() {
         return new TopicExchange(EXCHANGE_NAME, true, false);
     }
 
     @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(BOT_RPC_ROUTING_KEY);
+    Queue channelManagementRpcQueue() {
+        return new Queue(CHANNEL_MANAGEMENT_QUEUE, true);
+    }
+
+    @Bean
+    Binding channelManagementRpcBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(channelManagementRpcQueue()).to(exchange).with(CHANNEL_MANAGEMENT_ROUTING_KEY);
     }
 
     @Bean

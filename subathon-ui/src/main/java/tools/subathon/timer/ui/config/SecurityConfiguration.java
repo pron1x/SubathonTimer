@@ -11,8 +11,8 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
         http.oauth2Login(customizer ->
                 customizer.loginPage("/oauth2/authorization/twitch").permitAll());
+        super.configure(http);
     }
 }

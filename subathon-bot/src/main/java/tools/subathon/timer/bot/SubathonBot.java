@@ -5,10 +5,12 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
-import tools.subathon.timer.bot.service.DataServiceRpcClient;
+import tools.subathon.rpc.RpcResponse;
+import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.SubathonEventMessage;
+import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.enums.Command;
+import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ import java.util.Set;
 @Component
 public class SubathonBot implements HasLogger {
 
-    private static final String EVENT_SOURCE = "subathon-bot";
+    private static final String EVENT_SOURCE = "TwitchChat";
 
     @Value("${bot.subathon.channels}")
     private List<String> channelNames;
@@ -32,13 +34,13 @@ public class SubathonBot implements HasLogger {
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
-    private final DataServiceRpcClient dataServiceRpcClient;
+    private final DataserviceRpcService dataserviceRpcService;
 
     private final TwitchClient twitchClient;
 
     @Autowired
-    public SubathonBot(DataServiceRpcClient dataServiceRpcClient, TwitchClient twitchClient) {
-        this.dataServiceRpcClient = dataServiceRpcClient;
+    public SubathonBot(DataserviceRpcService dataserviceRpcService, TwitchClient twitchClient) {
+        this.dataserviceRpcService = dataserviceRpcService;
         this.twitchClient = twitchClient;
     }
 
@@ -70,6 +72,11 @@ public class SubathonBot implements HasLogger {
         return twitchClient.getChat().isChannelJoined(channelName);
     }
 
+    public List<String> getJoinedChannels() {
+        return twitchClient.getChat().getChannels().stream().toList();
+    }
+
+    // TODO: Add init command?
     private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {
         getLogger().debug("Handling '!timer' command for channel '{} ({})'. Sub command: {}, args: {}", eventChannel.getName(), eventChannel.getId(), command, args);
         switch (command) {
@@ -125,11 +132,17 @@ public class SubathonBot implements HasLogger {
 
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
-        SubathonEventMessage message = new SubathonEventMessage();
-        message.setChannelId(channelId);
-        message.setSubathonEvent(event);
         try {
-            return dataServiceRpcClient.requestTimeChange(message);
+            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            switch (response) {
+                case RpcResponse.Success<Timer> success -> {
+                    return success.body().getState() == (isPause ? TimerState.PAUSED : TimerState.TICKING);
+                }
+                case RpcResponse.Failure<Timer> error -> {
+                    getLogger().error("Error while executing state change command for channelId {}: {}", channelId, error.errorMessage());
+                    return false;
+                }
+            }
         } catch (Exception e) {
             getLogger().error("Failed to send and receive state change command!", e);
             return false;
@@ -140,11 +153,17 @@ public class SubathonBot implements HasLogger {
         getLogger().debug("Handling timer time change command [{}]", isRemove ? "del" : "add");
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
-        SubathonEventMessage message = new SubathonEventMessage();
-        message.setChannelId(channelId);
-        message.setSubathonEvent(event);
         try {
-            return dataServiceRpcClient.requestTimeChange(message);
+            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            switch (response) {
+                case RpcResponse.Success<Timer> success -> {
+                    return true;
+                }
+                case RpcResponse.Failure<Timer> error -> {
+                    getLogger().warn("Error while executing time change command for channelId {}: {}", channelId, error.errorMessage());
+                    return false;
+                }
+            }
         } catch (Exception e) {
             getLogger().error("Failed to send and receive time change command!", e);
             return false;
