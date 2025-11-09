@@ -22,7 +22,7 @@ public class DataserviceRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public Timer executeBotCommand(String channelId, SubathonCommandEvent command) {
+    public RpcResponse<Timer> executeBotCommand(String channelId, SubathonCommandEvent command) {
         RpcRequest<TimerPayload> request = new RpcRequest<>();
         TimerPayload payload = createPayloadFromSubathonCommandEvent(channelId, command);
         request.setPayload(payload);
@@ -33,12 +33,16 @@ public class DataserviceRpcService {
             case ADD -> RpcCommand.ADD_TIME;
             case REMOVE -> RpcCommand.SUBTRACT_TIME;
         });
-        return sendTimerRpcRequest(request).getBody();
+        return sendTimerRpcRequest(request);
     }
 
     private RpcResponse<Timer> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, BOT_COMMAND_ROUTING_KEY, request,
+        RpcResponse<Timer> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, BOT_COMMAND_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
+        if(response == null) {
+            return RpcResponse.timeout();
+        }
+        return response;
     }
 
     private TimerPayload createPayloadFromSubathonCommandEvent(String channelId, SubathonCommandEvent command) {

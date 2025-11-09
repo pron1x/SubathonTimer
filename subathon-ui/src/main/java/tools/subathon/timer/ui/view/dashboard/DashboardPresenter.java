@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Component;
+import tools.subathon.rpc.RpcResponse;
+import tools.subathon.rpc.RpcStatus;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
@@ -52,7 +54,17 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     protected Timer getTimer() {
-        return timerService.getTimerForChannel(channelId);
+        RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+        return switch(timerResponse) {
+            case RpcResponse.Success<Timer> success -> success.body();
+            case RpcResponse.Failure<Timer> error -> {
+                if(error.statusCode() == RpcStatus.ERROR) {
+                    getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
+                    view.showErrorNotification("Error loading timer!");
+                }
+                yield null;
+            }
+        };
     }
 
     protected void initializeTimer() {
@@ -68,12 +80,33 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     protected UserConfigurationModel getUserConfig() {
-        return userConfigurationService.getUserConfiguration(channelId);
+        RpcResponse<UserConfigurationModel> configResponse = userConfigurationService.getUserConfiguration(channelId);
+        return switch(configResponse) {
+            case RpcResponse.Success<UserConfigurationModel> success -> success.body();
+            case RpcResponse.Failure<UserConfigurationModel> error -> {
+                if(error.statusCode() == RpcStatus.ERROR) {
+                    getLogger().error("Error while fetching user configuration for channelId {}: {}", channelId, error.errorMessage());
+                    view.showErrorNotification("Error loading channel configuration!");
+                }
+                yield null;
+            }
+        };
     }
 
     protected UserConfigurationModel saveUserConfig(UserConfigurationModel userConfigurationModel) {
         userConfigurationModel.setChannelId(channelId);
-        return userConfigurationService.saveUserConfiguration(channelId, userConfigurationModel);
+        RpcResponse<UserConfigurationModel> response = userConfigurationService.saveUserConfiguration(channelId, userConfigurationModel);
+        if(response instanceof RpcResponse.Failure<UserConfigurationModel> error) {
+            getLogger().error("Error saving user configuration for channelId {}: {}", channelId, error.errorMessage());
+            view.showErrorNotification("Could not save channel configuration! Please try again.");
+            return userConfigurationModel;
+        } else if(response instanceof RpcResponse.Success<UserConfigurationModel>(UserConfigurationModel body)) {
+            view.showSuccessNotification("Configuration saved successfully!");
+            return body;
+        }
+        // Should never happen!
+        getLogger().warn("Unknown response while saving user configuration for channelId {}: {}", channelId, response);
+        return userConfigurationModel;
     }
 
     @Override

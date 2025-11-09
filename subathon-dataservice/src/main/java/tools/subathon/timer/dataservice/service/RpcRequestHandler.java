@@ -39,7 +39,6 @@ public class RpcRequestHandler implements HasLogger {
         this.timerService = timerService;
     }
 
-    // TODO: Error handling
     @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
     public RpcResponse<UserConfigurationModel> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
         getLogger().info("New user configuration request handler called with request '{}'", request);
@@ -47,7 +46,10 @@ public class RpcRequestHandler implements HasLogger {
             case null -> RpcResponse.error("Request command is null.");
             case GET_CHANNEL_CONFIG -> {
                 GetChannelConfigPayload payload = (GetChannelConfigPayload) request.getPayload();
-                yield RpcResponse.of(userConfigurationService.getForChannel(payload.channelId()));
+                if(payload == null) {
+                    yield RpcResponse.notFound();
+                }
+                yield RpcResponse.ok(userConfigurationService.getForChannel(payload.channelId()));
             }
             case UPDATE_CHANNEL_CONFIG -> {
                 UpdateChannelConfigPayload payload = (UpdateChannelConfigPayload) request.getPayload();
@@ -55,13 +57,17 @@ public class RpcRequestHandler implements HasLogger {
                 if(config == null) {
                     yield RpcResponse.error("UserConfiguration is null!");
                 }
-                yield RpcResponse.of(userConfigurationService.save(config));
+                try {
+                    yield RpcResponse.ok(userConfigurationService.save(config));
+                } catch (Exception e) {
+                    getLogger().error("Error while saving user configuration {}", payload.channelConfig(), e);
+                    yield RpcResponse.error("Error saving user configuration.");
+                }
             }
             default -> RpcResponse.error("Request command is not available for this queue.");
         };
     }
 
-    // TODO: Error handling
     @RabbitListener(queues = TIMER_RPC_QUEUE)
     public RpcResponse<Timer> handleTimerRequest(RpcRequest<TimerPayload> request) {
         getLogger().info("New timer request handler called with request '{}'", request);
@@ -69,31 +75,55 @@ public class RpcRequestHandler implements HasLogger {
             case null -> RpcResponse.error("Request command is null.");
             case GET_TIMER -> {
                 GetTimerPayload payload = (GetTimerPayload) request.getPayload();
-                yield RpcResponse.of(timerService.getLatestTimerForChannel(payload.channelId()));
+                Timer result = timerService.getLatestTimerForChannel(payload.channelId());
+                if(result == null) {
+                    yield RpcResponse.notFound();
+                }
+                yield RpcResponse.ok(result);
             }
             case INIT_TIMER -> {
                 InitTimerPayload payload = (InitTimerPayload) request.getPayload();
-                yield RpcResponse.of(timerService.initializeTimer(payload.channelId(), payload.channelName()));
+                Timer result = timerService.initializeTimer(payload.channelId(), payload.channelName());
+                if(result == null) {
+                    yield RpcResponse.error("Could not initialize timer for channel " + payload.channelId());
+                }
+                yield RpcResponse.ok(result);
             }
             case START_TIMER -> {
                 StartTimerPayload payload = (StartTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                yield RpcResponse.of(timerService.startTimer(payload.channelId(), event));
+                Timer result = timerService.startTimer(payload.channelId(), event);
+                if(result == null) {
+                    yield RpcResponse.error("Could not start timer for channel " + payload.channelId());
+                }
+                yield RpcResponse.ok(result);
             }
             case PAUSE_TIMER -> {
                 PauseTimerPayload payload = (PauseTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                yield RpcResponse.of(timerService.pauseTimer(payload.channelId(), event));
+                Timer result = timerService.pauseTimer(payload.channelId(), event);
+                if(result == null) {
+                    yield RpcResponse.error("Could not pause timer for channel " + payload.channelId());
+                }
+                yield RpcResponse.ok(result);
             }
             case ADD_TIME -> {
                 IncrementTimerPayload payload = (IncrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                yield RpcResponse.of(timerService.addSubathonEventTime(payload.channelId(), event));
+                Timer result = timerService.addSubathonEventTime(payload.channelId(), event);
+                if(result == null) {
+                    yield RpcResponse.error("Could not add time to timer for channel " + payload.channelId());
+                }
+                yield RpcResponse.ok(result);
             }
             case SUBTRACT_TIME -> {
                 DecrementTimerPayload payload = (DecrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                yield RpcResponse.of(timerService.subtractSubathonEventTime(payload.channelId(), event));
+                Timer result = timerService.subtractSubathonEventTime(payload.channelId(), event);
+                if(result == null) {
+                    yield RpcResponse.error("Could not subtract time from timer for channel " + payload.channelId());
+                }
+                yield RpcResponse.ok(result);
             }
             default -> RpcResponse.error("Request command is not available for this queue.");
         };

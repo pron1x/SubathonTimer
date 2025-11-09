@@ -25,11 +25,20 @@ public class SeImporterRpcService {
         AuthenticateStreamelementsPayload payload = new AuthenticateStreamelementsPayload(jwt);
         request.setPayload(payload);
         request.setCommand(RpcCommand.AUTHENTICATE_SE);
-        return sendStreamElementsRpcRequest(request).getBody();
+        RpcResponse<Boolean> response = sendStreamElementsRpcRequest(request);
+        if(response instanceof RpcResponse.Success<Boolean>(Boolean body)) {
+            return body;
+        } else {
+            return false;
+        }
     }
 
     private RpcResponse<Boolean> sendStreamElementsRpcRequest(RpcRequest<? extends StreamelementsPayload> request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, IMPORTER_MANAGEMENT_ROUTING_KEY, request,
+        RpcResponse<Boolean> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, IMPORTER_MANAGEMENT_ROUTING_KEY, request,
                 new org.springframework.core.ParameterizedTypeReference<>() {});
+        if(response == null) {
+            return RpcResponse.timeout();
+        }
+        return response;
     }
 }

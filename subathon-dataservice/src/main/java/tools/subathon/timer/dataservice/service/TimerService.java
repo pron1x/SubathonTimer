@@ -113,7 +113,6 @@ public class TimerService implements HasLogger {
         }
     }
 
-
     // TODO: Throw exception instead of null if errors occur
     public Timer initializeTimer(String channelId, String channelName) {
         // Create new timer object only if it doesn't exist yet
@@ -122,15 +121,20 @@ public class TimerService implements HasLogger {
             return null;
         }
         // Make sure bot joined the channel
-        botRpcService.requestChannelJoin(channelName);
+        if(channelName.equals(botRpcService.requestChannelJoin(channelName))) {
+            getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
+            return null;
+        }
 
         // Make sure SEImporter is authenticated with jwt
         UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
         if (config == null) {
+            getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
             return null;
         }
         if (!seImporterRpcService.authenticateWithJwt(config.getSeJwt())) {
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
+            return null;
         }
 
         // Create new timer
@@ -158,14 +162,10 @@ public class TimerService implements HasLogger {
     }
 
     // TODO: Throw exception instead of null on errors
-    // TODO: More gracefully handle difference between start and resume
     public Timer startTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {
-//            getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
-//            getLogger().warn("FOR TESTING, INITIALIZE A NEW TIMER!");
-//            initializeTimer(channelId);
-//            timer = timers.get(channelId);
+            getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
             return null;
         }
         if (timer.getState() != INITIALIZED) {
@@ -197,7 +197,7 @@ public class TimerService implements HasLogger {
         return returnTimer;
     }
 
-    //TODO: Throw exception instead of void on errors
+    //TODO: Throw exception instead of null on errors
     public Timer pauseTimer(String channelId, SubathonCommandEvent command) {
         Timer timer = timers.get(channelId);
         if (timer == null) {

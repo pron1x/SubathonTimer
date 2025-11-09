@@ -32,13 +32,13 @@ public class RpcRequestHandler implements HasLogger {
             case JOIN_CHANNEL -> {
                 JoinChannelPayload payload = (JoinChannelPayload) request.getPayload();
                 if(twitchBot.joinChannel(payload.channelName())) {
-                    yield RpcResponse.of(List.of(payload.channelName()));
+                    yield RpcResponse.ok(List.of(payload.channelName()));
                 } else {
                     yield RpcResponse.error("Could not join channel " + payload.channelName());
                 }
             }
             case GET_JOINED_CHANNELS ->
-                RpcResponse.of(twitchBot.getJoinedChannels());
+                RpcResponse.ok(twitchBot.getJoinedChannels());
             default -> RpcResponse.error("Request command is not available for this queue.");
         };
     }

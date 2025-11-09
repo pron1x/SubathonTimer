@@ -1,5 +1,6 @@
 package tools.subathon.timer.ui.service;
 
+import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,19 +15,19 @@ public class TimerService {
         this.dataserviceRpcService = dataserviceRpcService;
     }
 
-    public Timer getTimerForChannel(String channelId) {
+    public RpcResponse<Timer> getTimerForChannel(String channelId) {
         return dataserviceRpcService.getTimerForChannel(channelId);
     }
 
-    public Timer initializeTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> initializeTimerForChannel(String channelId, String channelName) {
         return dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
     }
 
-    public Timer startTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> startTimerForChannel(String channelId, String channelName) {
         return dataserviceRpcService.startTimerForChannel(channelId, channelName);
     }
 
-    public Timer pauseTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> pauseTimerForChannel(String channelId, String channelName) {
         return dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
     }
 

@@ -1,5 +1,6 @@
 package tools.subathon.timer.ui.view.uptime;
 
+import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerState;
@@ -46,7 +47,7 @@ public class UptimePresenter implements TimerEventListener {
     //          - Previous timer stopped and new timer is started -> fetch new timer on event?
     public Timer getTimerForChannel(String channelId) {
         if(timer == null || !channelId.equals(timer.getChannelId())) {
-            timer = timerService.getTimerForChannel(channelId);
+            timer = fetchTimer(channelId);
         }
         return timer;
     }
@@ -60,10 +61,22 @@ public class UptimePresenter implements TimerEventListener {
         if(timerEvent.getCurrentTimerState() == TimerState.ENDED ||
                 (timerEvent.getCurrentTimerState() == TimerState.TICKING && timerEvent.getOldTimerState() == TimerState.INITIALIZED)) {
             if(timerEvent.getOldTimerState() == TimerState.INITIALIZED) {
-                timer = timerService.getTimerForChannel(timer.getChannelId()); // Refetch timer with correct start time!
+                timer = fetchTimer(timer.getChannelId()); // Refetch timer with correct start time!
                 uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.setTimer(timer)));
             }
             uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.updateTimerState(timerEvent)));
+        }
+    }
+
+    private Timer fetchTimer(String channelId) {
+        RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+        switch (timerResponse) {
+            case RpcResponse.Success<Timer> success -> {
+                return success.body();
+            }
+            case RpcResponse.Failure<Timer> error -> {
+                return null;
+            }
         }
     }
 }

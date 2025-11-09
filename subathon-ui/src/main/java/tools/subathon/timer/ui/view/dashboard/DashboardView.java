@@ -3,11 +3,15 @@ package tools.subathon.timer.ui.view.dashboard;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.AnchorTarget;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -92,7 +96,9 @@ public class DashboardView extends VerticalLayout {
         initTimerButton.setWidthFull();
         timerInfoCard.addToFooter(timerControls);
 
-        setTimerControlButtonStates(timer.getState());
+        if(timer != null) {
+            setTimerControlButtonStates(timer.getState());
+        }
 
         VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);
         timerColumn.setAlignItems(Alignment.END);
@@ -155,6 +161,30 @@ public class DashboardView extends VerticalLayout {
             pauseTimerButton.setEnabled(true);
             pauseTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         }
+    }
+
+    protected void showSuccessNotification(String message) {
+        Notification notification = Notification.show(message);
+        notification.setPosition(Notification.Position.BOTTOM_START);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    }
+
+    protected void showErrorNotification(String message) {
+        Notification notification = new Notification();
+        notification.setPosition(Notification.Position.TOP_CENTER);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+        Text text = new Text(message);
+        Button closeButton = new Button(new Icon("lumo", "cross"));
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.setAriaLabel("Close");
+        closeButton.addClickListener(event -> notification.close());
+
+        HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+        layout.setAlignItems(Alignment.CENTER);
+
+        notification.add(layout);
+        notification.open();
     }
 
 }

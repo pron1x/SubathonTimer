@@ -17,6 +17,7 @@ import tools.subathon.rpc.payload.timer.StartTimerPayload;
 import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.time.Instant;
 
@@ -25,7 +26,7 @@ import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_ROUTING_KEY;
 
 @Service
-public class DataserviceRpcService {
+public class DataserviceRpcService implements HasLogger {
 
     private final RabbitTemplate rabbitTemplate;
     private static final String SOURCE = "UI";
@@ -34,56 +35,64 @@ public class DataserviceRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public UserConfigurationModel getUserConfiguration(String channelId) {
+    public RpcResponse<UserConfigurationModel> getUserConfiguration(String channelId) {
         RpcRequest<GetChannelConfigPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.GET_CHANNEL_CONFIG);
         request.setPayload(new GetChannelConfigPayload(channelId));
-        return sendUserConfigRpcGetRequest(request).getBody();
+        return sendUserConfigRpcGetRequest(request);
     }
 
-    public UserConfigurationModel saveUserConfiguration(String userId, UserConfigurationModel userConfigurationModel) {
+    public RpcResponse<UserConfigurationModel> saveUserConfiguration(String userId, UserConfigurationModel userConfigurationModel) {
         RpcRequest<UpdateChannelConfigPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.UPDATE_CHANNEL_CONFIG);
         request.setPayload(new UpdateChannelConfigPayload(userId, userConfigurationModel));
-        return sendUserConfigRpcGetRequest(request).getBody();
+        return sendUserConfigRpcGetRequest(request);
     }
 
-    public Timer getTimerForChannel(String channelId) {
+    public RpcResponse<Timer> getTimerForChannel(String channelId) {
         RpcRequest<GetTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.GET_TIMER);
         request.setPayload(new GetTimerPayload(channelId));
-        return sendTimerRpcRequest(request).getBody();
+        return sendTimerRpcRequest(request);
     }
 
-    public Timer initializeTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> initializeTimerForChannel(String channelId, String channelName) {
         RpcRequest<InitTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.INIT_TIMER);
         request.setPayload(new InitTimerPayload(channelId, channelName, channelName, Instant.now(), SOURCE));
-        return sendTimerRpcRequest(request).getBody();
+        return sendTimerRpcRequest(request);
     }
 
-    public Timer startTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> startTimerForChannel(String channelId, String channelName) {
         RpcRequest<StartTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.START_TIMER);
         request.setPayload(new StartTimerPayload(channelId, channelName, Instant.now(), SOURCE));
-        return sendTimerRpcRequest(request).getBody();
+        return sendTimerRpcRequest(request);
     }
 
-    public Timer pauseTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<Timer> pauseTimerForChannel(String channelId, String channelName) {
         RpcRequest<PauseTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.PAUSE_TIMER);
         request.setPayload(new PauseTimerPayload(channelId, channelName, Instant.now(), SOURCE));
-        return sendTimerRpcRequest(request).getBody();
+        return sendTimerRpcRequest(request);
     }
 
     private RpcResponse<UserConfigurationModel> sendUserConfigRpcGetRequest(RpcRequest<? extends ChannelConfigPayload> request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, USER_CONFIG_ROUTING_KEY, request,
+        RpcResponse<UserConfigurationModel> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, USER_CONFIG_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
+        if(response == null) {
+            return RpcResponse.timeout();
+        }
+        return response;
     }
 
     private RpcResponse<Timer> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, TIMER_ROUTING_KEY, request,
+        RpcResponse<Timer> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, TIMER_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
+        if(response == null) {
+            return RpcResponse.timeout();
+        }
+        return response;
     }
 
 }

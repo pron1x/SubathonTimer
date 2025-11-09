@@ -26,7 +26,7 @@ public class RpcRequestHandler implements HasLogger {
             case null -> RpcResponse.error("Request command is null.");
             case AUTHENTICATE_SE -> {
                 AuthenticateStreamelementsPayload payload = (AuthenticateStreamelementsPayload) request.getPayload();
-                yield RpcResponse.of(socketService.connectWithJwt(payload.jwt()));
+                yield RpcResponse.ok(socketService.connectWithJwt(payload.jwt()));
             }
             default -> RpcResponse.error("Request command is not available for this queue.");
         };

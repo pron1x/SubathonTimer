@@ -5,9 +5,12 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
+import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
+import tools.subathon.timer.datamodel.Timer;
 import tools.subathon.timer.datamodel.enums.Command;
+import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,7 +133,16 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
         try {
-            return dataserviceRpcService.executeBotCommand(channelId, event) != null;
+            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            switch (response) {
+                case RpcResponse.Success<Timer> success -> {
+                    return success.body().getState() == (isPause ? TimerState.PAUSED : TimerState.TICKING);
+                }
+                case RpcResponse.Failure<Timer> error -> {
+                    getLogger().error("Error while executing state change command for channelId {}: {}", channelId, error.errorMessage());
+                    return false;
+                }
+            }
         } catch (Exception e) {
             getLogger().error("Failed to send and receive state change command!", e);
             return false;
@@ -142,7 +154,16 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
         try {
-            return dataserviceRpcService.executeBotCommand(channelId, event) != null;
+            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            switch (response) {
+                case RpcResponse.Success<Timer> success -> {
+                    return true;
+                }
+                case RpcResponse.Failure<Timer> error -> {
+                    getLogger().warn("Error while executing time change command for channelId {}: {}", channelId, error.errorMessage());
+                    return false;
+                }
+            }
         } catch (Exception e) {
             getLogger().error("Failed to send and receive time change command!", e);
             return false;

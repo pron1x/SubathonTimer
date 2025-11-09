@@ -2,6 +2,7 @@ package tools.subathon.timer.ui.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 
 @Service
@@ -14,11 +15,11 @@ public class UserConfigurationService {
         this.dataserviceRpcService = dataserviceRpcService;
     }
 
-    public UserConfigurationModel getUserConfiguration(String channelId) {
+    public RpcResponse<UserConfigurationModel> getUserConfiguration(String channelId) {
         return dataserviceRpcService.getUserConfiguration(channelId);
     }
 
-    public UserConfigurationModel saveUserConfiguration(String channelId, UserConfigurationModel config) {
+    public RpcResponse<UserConfigurationModel> saveUserConfiguration(String channelId, UserConfigurationModel config) {
         return dataserviceRpcService.saveUserConfiguration(channelId, config);
     }
 }

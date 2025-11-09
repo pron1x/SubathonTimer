@@ -1,54 +1,42 @@
 package tools.subathon.rpc;
 
-public class RpcResponse<T> {
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-    private T body;
-    private RpcStatus statusCode;
-    private String errorMessage;
+import java.util.Objects;
 
-    public static <T> RpcResponse<T> of(T body) {
-        RpcResponse<T> response = new RpcResponse<>();
-        if (body != null) {
-            response.setBody(body);
-            response.setStatusCode(RpcStatus.OK);
-        } else {
-            response.setStatusCode(RpcStatus.NOT_FOUND);
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "@type"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = RpcResponse.Success.class, name = "success"),
+        @JsonSubTypes.Type(value = RpcResponse.Failure.class, name = "failure")
+})
+public sealed interface RpcResponse<T> permits RpcResponse.Success, RpcResponse.Failure {
+
+    record Success<T>(T body) implements RpcResponse<T> {}
+
+    record Failure<T>(RpcStatus statusCode, String errorMessage) implements RpcResponse<T> {}
+
+    static <T> RpcResponse<T> ok(T body) {
+        if(body == null) {
+            throw new IllegalArgumentException("Success body must not be null");
         }
-        return response;
+        return new Success<>(body);
     }
 
-    public static <T> RpcResponse<T> of() {
-        return of(null);
+    static <T> RpcResponse<T> notFound() {
+        return new Failure<>(RpcStatus.NOT_FOUND, "Resource not found");
     }
 
-    public static <T> RpcResponse<T> error(String errorMessage) {
-        RpcResponse<T> response = new RpcResponse<>();
-        response.setStatusCode(RpcStatus.ERROR);
-        response.setErrorMessage(errorMessage);
-        return response;
+    static <T> RpcResponse<T> error(String message) {
+        return new Failure<>(RpcStatus.ERROR, Objects.requireNonNull(message, "Error message must not be null"));
     }
 
-    public T getBody() {
-        return body;
+    static <T> RpcResponse<T> timeout() {
+        return new Failure<>(RpcStatus.ERROR, "Request timed out");
     }
 
-    public void setBody(T body) {
-        this.body = body;
-    }
-
-    public RpcStatus getStatusCode() {
-        return statusCode;
-    }
-
-    public void setStatusCode(RpcStatus statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
 }
