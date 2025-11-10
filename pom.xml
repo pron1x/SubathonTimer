@@ -11,7 +11,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.pronixxx</groupId>
+    <groupId>tools.subathon</groupId>
     <artifactId>subathon-root</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
