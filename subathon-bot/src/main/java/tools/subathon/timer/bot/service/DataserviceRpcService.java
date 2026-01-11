@@ -8,7 +8,7 @@ import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
@@ -22,7 +22,7 @@ public class DataserviceRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public RpcResponse<Timer> executeBotCommand(String channelId, SubathonCommandEvent command) {
+    public RpcResponse<TimerDto> executeBotCommand(String channelId, SubathonCommandEvent command) {
         RpcRequest<TimerPayload> request = new RpcRequest<>();
         TimerPayload payload = createPayloadFromSubathonCommandEvent(channelId, command);
         request.setPayload(payload);
@@ -36,8 +36,8 @@ public class DataserviceRpcService {
         return sendTimerRpcRequest(request);
     }
 
-    private RpcResponse<Timer> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
-        RpcResponse<Timer> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, BOT_COMMAND_ROUTING_KEY, request,
+    private RpcResponse<TimerDto> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
+        RpcResponse<TimerDto> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, BOT_COMMAND_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
         if(response == null) {
             return RpcResponse.timeout();

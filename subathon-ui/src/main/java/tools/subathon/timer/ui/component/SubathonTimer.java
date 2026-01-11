@@ -1,6 +1,6 @@
 package tools.subathon.timer.ui.component;
 
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import com.vaadin.flow.component.ClientCallable;
@@ -14,7 +14,7 @@ import elemental.json.JsonNumber;
 @Tag("subathon-timer")
 public class SubathonTimer extends Component implements HasLogger {
 
-    public SubathonTimer(Timer timer) {
+    public SubathonTimer(TimerDto timer) {
         setClassName("subathon-timer");
         pushInitialState(timer);
     }
@@ -25,7 +25,7 @@ public class SubathonTimer extends Component implements HasLogger {
         }
     }
 
-    private void pushInitialState(Timer timer) {
+    private void pushInitialState(TimerDto timer) {
         if(timer == null) return;
         long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : 0;
         long update = timer.getUpdateTime() != null ? timer.getUpdateTime().toEpochMilli() : 0;

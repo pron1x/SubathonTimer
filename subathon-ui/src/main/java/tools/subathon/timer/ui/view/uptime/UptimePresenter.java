@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.view.uptime;
 
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.ui.service.TimerEventService;
@@ -22,7 +22,7 @@ public class UptimePresenter implements TimerEventListener {
 
     private UptimeView uptimeView;
 
-    private Timer timer;
+    private TimerDto timer;
 
     @Autowired
     public UptimePresenter(TimerService timerService, TimerEventService timerEventService) {
@@ -45,7 +45,7 @@ public class UptimePresenter implements TimerEventListener {
     // TODO: Handle cases where:
     //          - No previous timer was ever run -> timer is null on init
     //          - Previous timer stopped and new timer is started -> fetch new timer on event?
-    public Timer getTimerForChannel(String channelId) {
+    public TimerDto getTimerForChannel(String channelId) {
         if(timer == null || !channelId.equals(timer.getChannelId())) {
             timer = fetchTimer(channelId);
         }
@@ -68,13 +68,13 @@ public class UptimePresenter implements TimerEventListener {
         }
     }
 
-    private Timer fetchTimer(String channelId) {
-        RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+    private TimerDto fetchTimer(String channelId) {
+        RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
         switch (timerResponse) {
-            case RpcResponse.Success<Timer> success -> {
+            case RpcResponse.Success<TimerDto> success -> {
                 return success.body();
             }
-            case RpcResponse.Failure<Timer> error -> {
+            case RpcResponse.Failure<TimerDto> error -> {
                 return null;
             }
         }

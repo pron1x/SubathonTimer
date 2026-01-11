@@ -15,7 +15,7 @@ import tools.subathon.rpc.payload.timer.InitTimerPayload;
 import tools.subathon.rpc.payload.timer.PauseTimerPayload;
 import tools.subathon.rpc.payload.timer.StartTimerPayload;
 import tools.subathon.rpc.payload.timer.TimerPayload;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
@@ -49,28 +49,28 @@ public class DataserviceRpcService implements HasLogger {
         return sendUserConfigRpcGetRequest(request);
     }
 
-    public RpcResponse<Timer> getTimerForChannel(String channelId) {
+    public RpcResponse<TimerDto> getTimerForChannel(String channelId) {
         RpcRequest<GetTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.GET_TIMER);
         request.setPayload(new GetTimerPayload(channelId));
         return sendTimerRpcRequest(request);
     }
 
-    public RpcResponse<Timer> initializeTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<TimerDto> initializeTimerForChannel(String channelId, String channelName) {
         RpcRequest<InitTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.INIT_TIMER);
         request.setPayload(new InitTimerPayload(channelId, channelName, channelName, Instant.now(), SOURCE));
         return sendTimerRpcRequest(request);
     }
 
-    public RpcResponse<Timer> startTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<TimerDto> startTimerForChannel(String channelId, String channelName) {
         RpcRequest<StartTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.START_TIMER);
         request.setPayload(new StartTimerPayload(channelId, channelName, Instant.now(), SOURCE));
         return sendTimerRpcRequest(request);
     }
 
-    public RpcResponse<Timer> pauseTimerForChannel(String channelId, String channelName) {
+    public RpcResponse<TimerDto> pauseTimerForChannel(String channelId, String channelName) {
         RpcRequest<PauseTimerPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.PAUSE_TIMER);
         request.setPayload(new PauseTimerPayload(channelId, channelName, Instant.now(), SOURCE));
@@ -86,8 +86,8 @@ public class DataserviceRpcService implements HasLogger {
         return response;
     }
 
-    private RpcResponse<Timer> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
-        RpcResponse<Timer> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, TIMER_ROUTING_KEY, request,
+    private RpcResponse<TimerDto> sendTimerRpcRequest(RpcRequest<? extends TimerPayload> request) {
+        RpcResponse<TimerDto> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, TIMER_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
         if(response == null) {
             return RpcResponse.timeout();

@@ -17,7 +17,7 @@ import tools.subathon.rpc.payload.timer.PauseTimerPayload;
 import tools.subathon.rpc.payload.timer.StartTimerPayload;
 import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -69,13 +69,13 @@ public class RpcRequestHandler implements HasLogger {
     }
 
     @RabbitListener(queues = TIMER_RPC_QUEUE)
-    public RpcResponse<Timer> handleTimerRequest(RpcRequest<TimerPayload> request) {
+    public RpcResponse<TimerDto> handleTimerRequest(RpcRequest<TimerPayload> request) {
         getLogger().info("New timer request handler called with request '{}'", request);
         return switch(request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
             case GET_TIMER -> {
                 GetTimerPayload payload = (GetTimerPayload) request.getPayload();
-                Timer result = timerService.getLatestTimerForChannel(payload.channelId());
+                TimerDto result = timerService.getLatestTimerForChannel(payload.channelId());
                 if(result == null) {
                     yield RpcResponse.notFound();
                 }
@@ -83,7 +83,7 @@ public class RpcRequestHandler implements HasLogger {
             }
             case INIT_TIMER -> {
                 InitTimerPayload payload = (InitTimerPayload) request.getPayload();
-                Timer result = timerService.initializeTimer(payload.channelId(), payload.channelName());
+                TimerDto result = timerService.initializeTimer(payload.channelId(), payload.channelName());
                 if(result == null) {
                     yield RpcResponse.error("Could not initialize timer for channel " + payload.channelId());
                 }
@@ -92,7 +92,7 @@ public class RpcRequestHandler implements HasLogger {
             case START_TIMER -> {
                 StartTimerPayload payload = (StartTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                Timer result = timerService.startTimer(payload.channelId(), event);
+                TimerDto result = timerService.startTimer(payload.channelId(), event);
                 if(result == null) {
                     yield RpcResponse.error("Could not start timer for channel " + payload.channelId());
                 }
@@ -101,7 +101,7 @@ public class RpcRequestHandler implements HasLogger {
             case PAUSE_TIMER -> {
                 PauseTimerPayload payload = (PauseTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                Timer result = timerService.pauseTimer(payload.channelId(), event);
+                TimerDto result = timerService.pauseTimer(payload.channelId(), event);
                 if(result == null) {
                     yield RpcResponse.error("Could not pause timer for channel " + payload.channelId());
                 }
@@ -110,7 +110,7 @@ public class RpcRequestHandler implements HasLogger {
             case ADD_TIME -> {
                 IncrementTimerPayload payload = (IncrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                Timer result = timerService.addSubathonEventTime(payload.channelId(), event);
+                TimerDto result = timerService.addSubathonEventTime(payload.channelId(), event);
                 if(result == null) {
                     yield RpcResponse.error("Could not add time to timer for channel " + payload.channelId());
                 }
@@ -119,7 +119,7 @@ public class RpcRequestHandler implements HasLogger {
             case SUBTRACT_TIME -> {
                 DecrementTimerPayload payload = (DecrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                Timer result = timerService.subtractSubathonEventTime(payload.channelId(), event);
+                TimerDto result = timerService.subtractSubathonEventTime(payload.channelId(), event);
                 if(result == null) {
                     yield RpcResponse.error("Could not subtract time from timer for channel " + payload.channelId());
                 }

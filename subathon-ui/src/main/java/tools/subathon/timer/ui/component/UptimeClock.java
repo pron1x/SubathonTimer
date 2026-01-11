@@ -1,6 +1,6 @@
 package tools.subathon.timer.ui.component;
 
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
@@ -13,18 +13,18 @@ import elemental.json.JsonNumber;
 @Tag("uptime-clock")
 public class UptimeClock extends Component {
 
-    private Timer timer;
+    private TimerDto timer;
 
-    public UptimeClock(Timer timer) {
+    public UptimeClock(TimerDto timer) {
         this.timer = timer;
         pushInitialState(timer);
     }
 
-    public void setTimer(Timer timer) {
+    public void setTimer(TimerDto timer) {
         this.timer = timer;
     }
 
-    public void pushInitialState(Timer timer) {
+    public void pushInitialState(TimerDto timer) {
         if(timer == null) return;
         long start = timer.getStartTime() != null ? timer.getStartTime().toEpochMilli() : -1;
         long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : -1;

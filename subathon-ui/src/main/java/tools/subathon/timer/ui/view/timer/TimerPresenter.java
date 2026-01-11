@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.view.timer;
 
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.ui.service.TimerEventService;
@@ -26,7 +26,7 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
 
     private TimerView timerView;
 
-    private Timer timer;
+    private TimerDto timer;
     private CompletableFuture<Void> stage;
 
     @Autowired
@@ -39,12 +39,12 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
         this.timerView = timerView;
     }
 
-    public Timer getTimerForChannel(String channelId) {
+    public TimerDto getTimerForChannel(String channelId) {
         if(timer == null || !channelId.equals(timer.getChannelId())) {
-            RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+            RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
             timer = switch(timerResponse) {
-                case RpcResponse.Success<Timer> success -> success.body();
-                case RpcResponse.Failure<Timer> error -> {
+                case RpcResponse.Success<TimerDto> success -> success.body();
+                case RpcResponse.Failure<TimerDto> error -> {
                     getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
                     yield null;
                 }

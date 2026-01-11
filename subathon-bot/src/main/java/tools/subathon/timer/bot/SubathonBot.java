@@ -8,7 +8,7 @@ import com.github.twitch4j.common.events.domain.EventUser;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -133,12 +133,12 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
                 createCommandEvent(user.getName(), Command.START);
         try {
-            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(channelId, event);
             switch (response) {
-                case RpcResponse.Success<Timer> success -> {
+                case RpcResponse.Success<TimerDto> success -> {
                     return success.body().getState() == (isPause ? TimerState.PAUSED : TimerState.TICKING);
                 }
-                case RpcResponse.Failure<Timer> error -> {
+                case RpcResponse.Failure<TimerDto> error -> {
                     getLogger().error("Error while executing state change command for channelId {}: {}", channelId, error.errorMessage());
                     return false;
                 }
@@ -154,12 +154,12 @@ public class SubathonBot implements HasLogger {
         SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
                 createCommandEvent(user.getName(), Command.ADD, seconds);
         try {
-            RpcResponse<Timer> response = dataserviceRpcService.executeBotCommand(channelId, event);
+            RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(channelId, event);
             switch (response) {
-                case RpcResponse.Success<Timer> success -> {
+                case RpcResponse.Success<TimerDto> success -> {
                     return true;
                 }
-                case RpcResponse.Failure<Timer> error -> {
+                case RpcResponse.Failure<TimerDto> error -> {
                     getLogger().warn("Error while executing time change command for channelId {}: {}", channelId, error.errorMessage());
                     return false;
                 }

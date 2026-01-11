@@ -7,7 +7,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
@@ -22,11 +22,11 @@ public class TimerInfo extends Card {
     private Text updateTime;
     private Text endTime;
 
-    public TimerInfo(Timer timer) {
+    public TimerInfo(TimerDto timer) {
         createContent(timer);
     }
 
-    private void createContent(Timer timer) {
+    private void createContent(TimerDto timer) {
         Span startDescription = new Span("Start time");
         startDescription.getStyle().setFontSize("small");
 
@@ -57,7 +57,7 @@ public class TimerInfo extends Card {
         setWidth("20em");
     }
 
-    private static Div createHeader(Timer timer) {
+    private static Div createHeader(TimerDto timer) {
         Div header = new Div();
         header.addClassNames(
                 LumoUtility.Display.FLEX,
@@ -78,7 +78,7 @@ public class TimerInfo extends Card {
         return header;
     }
 
-    private Span createTimerStateBadge(Timer timer) {
+    private Span createTimerStateBadge(TimerDto timer) {
         Span badge = new Span(timer != null ? timer.getState().toString() : TimerState.UNINITIALIZED.toString());
         badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.getState() : TimerState.UNINITIALIZED));
         return badge;

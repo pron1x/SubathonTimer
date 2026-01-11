@@ -18,7 +18,7 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationModel;
 import tools.subathon.timer.ui.view.MainLayout;
@@ -80,7 +80,7 @@ public class DashboardView extends VerticalLayout {
         pauseTimerButton = new Button("Pause");
         pauseTimerButton.addClickListener(event -> presenter.pauseTimer());
 
-        Timer timer = presenter.getTimer();
+        TimerDto timer = presenter.getTimer();
         timerInfoCard = new TimerInfo(timer);
 
         VerticalLayout timerControls = new VerticalLayout();

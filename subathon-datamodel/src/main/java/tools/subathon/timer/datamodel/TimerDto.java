@@ -4,7 +4,7 @@ import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
 
-public class Timer {
+public class TimerDto {
 
     private Long id;
     private String channelName;

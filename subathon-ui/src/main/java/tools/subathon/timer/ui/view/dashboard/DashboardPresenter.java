@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.RpcStatus;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
@@ -53,11 +53,11 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
         view.initViewInternal();
     }
 
-    protected Timer getTimer() {
-        RpcResponse<Timer> timerResponse = timerService.getTimerForChannel(channelId);
+    protected TimerDto getTimer() {
+        RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
         return switch(timerResponse) {
-            case RpcResponse.Success<Timer> success -> success.body();
-            case RpcResponse.Failure<Timer> error -> {
+            case RpcResponse.Success<TimerDto> success -> success.body();
+            case RpcResponse.Failure<TimerDto> error -> {
                 if(error.statusCode() == RpcStatus.ERROR) {
                     getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
                     view.showErrorNotification("Error loading timer!");

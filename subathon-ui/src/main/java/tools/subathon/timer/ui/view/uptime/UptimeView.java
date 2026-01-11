@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.view.uptime;
 
 import jakarta.annotation.security.PermitAll;
-import tools.subathon.timer.datamodel.Timer;
+import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.ui.component.UptimeClock;
 import com.vaadin.flow.component.AttachEvent;
@@ -54,7 +54,7 @@ public class UptimeView extends Div implements HasUrlParameter<String> {
         clock.pushState(timerEvent);
     }
 
-    public void setTimer(Timer timer) {
+    public void setTimer(TimerDto timer) {
         clock.setTimer(timer);
     }
 }
