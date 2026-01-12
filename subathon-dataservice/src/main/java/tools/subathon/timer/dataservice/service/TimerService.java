@@ -132,7 +132,7 @@ public class TimerService implements HasLogger {
         }
 
         Instant now = Instant.now();
-        Timer domainTimer = Timer.initialize(channelId, channelName, now);
+        Timer domainTimer = Timer.initialize(channelId, channelName);
 
         // Create initial event for the timer and set timer ID
         TimerEvent initialEvent = new TimerEvent();
