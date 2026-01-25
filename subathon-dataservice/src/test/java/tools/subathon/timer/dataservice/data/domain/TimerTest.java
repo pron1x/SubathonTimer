@@ -2,6 +2,10 @@ package tools.subathon.timer.dataservice.data.domain;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.subathon.timer.datamodel.TimerDto;
+import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.enums.TimerEventType;
+import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -9,17 +13,23 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 class TimerTest {
 
     private Clock fixedClock;
+    private Clock mockedClock;
 
     @BeforeEach
     void setUp() {
         fixedClock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneId.of("UTC"));
+        mockedClock = mock(Clock.class);
     }
 
     @Test
@@ -41,7 +51,7 @@ class TimerTest {
     void startSetsCorrectEndTimeAndState() {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
 
-        timer.start(Duration.ofMinutes(30));
+        TimerEvent startEvent = timer.start(Duration.ofMinutes(30));
 
         // Timer should be active after starting
         assert(timer.isActive());
@@ -49,6 +59,36 @@ class TimerTest {
 
         // End time should be 30 minutes from fixed clock time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), timer.getEndTime());
+
+        // Assert that the start event is correctly populated
+        assertEquals("channelId", startEvent.getChannelId());
+        assertEquals(TimerEventType.STATE_CHANGE, startEvent.getType());
+
+        assertEquals(TimerState.INITIALIZED, startEvent.getOldTimerState());
+        assertEquals(TimerState.TICKING, startEvent.getCurrentTimerState());
+
+        assertNull(startEvent.getOldEndTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), startEvent.getCurrentEndTime());
+
+        assertEquals(fixedClock.instant(), startEvent.getTimestamp());
+    }
+
+    @Test
+    void startFailsOnAnythingButInitialized() {
+        Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
+        timer.start(Duration.ofMinutes(30));
+
+        // Timer is now ticking, starting again should throw exception
+        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
+
+        // Pause time to change into PAUSED state, should throw when trying to start
+        timer.pause();
+        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
+
+        // Start and stop timer to change into ENDED state, should throw when trying to start
+        timer.resume();
+        timer.stop();
+        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
     }
 
     @Test
@@ -56,7 +96,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        timer.stop();
+        TimerEvent stopEvent = timer.stop();
 
         // Timer should not be active after stopping
         assert(!timer.isActive());
@@ -64,6 +104,39 @@ class TimerTest {
 
         // End time should be set to the current time, as we can stop 'prematurely' as well
         assertEquals(fixedClock.instant(), timer.getEndTime());
+
+        // Assert that the stop event is correctly populated
+        assertEquals("channelId", stopEvent.getChannelId());
+        assertEquals(TimerEventType.STATE_CHANGE, stopEvent.getType());
+
+        assertEquals(TimerState.TICKING, stopEvent.getOldTimerState());
+        assertEquals(TimerState.ENDED, stopEvent.getCurrentTimerState());
+
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), stopEvent.getOldEndTime());
+        assertEquals(fixedClock.instant(), stopEvent.getCurrentEndTime());
+
+        assertEquals(fixedClock.instant(), stopEvent.getTimestamp());
+    }
+
+    @Test
+    void stopThrowsExceptionIfNotActive() {
+        Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
+
+        // Timer is only initialized, stopping should throw exception
+        assertThrows(IllegalStateException.class, timer::stop);
+
+        // Start and then pause the timer
+        timer.start(Duration.ofMinutes(30));
+
+        timer.pause();
+        assertThrows(IllegalStateException.class, timer::stop);
+
+        // Resume and then stop the timer
+        timer.resume();
+        timer.stop();
+
+        // Timer is ended, stopping again should throw exception
+        assertThrows(IllegalStateException.class, timer::stop);
     }
 
     @Test
@@ -73,9 +146,20 @@ class TimerTest {
 
         assert(timer.isActive());
 
-        timer.pause();
+        TimerEvent pauseEvent = timer.pause();
 
         assert(timer.isPaused());
+
+        assertEquals("channelId", pauseEvent.getChannelId());
+        assertEquals(TimerEventType.STATE_CHANGE, pauseEvent.getType());
+
+        assertEquals(TimerState.TICKING, pauseEvent.getOldTimerState());
+        assertEquals(TimerState.PAUSED, pauseEvent.getCurrentTimerState());
+
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), pauseEvent.getOldEndTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), pauseEvent.getCurrentEndTime());
+
+        assertEquals(fixedClock.instant(), pauseEvent.getTimestamp());
     }
 
     @Test
@@ -108,6 +192,33 @@ class TimerTest {
 
     @Test
     void resume() {
+        Instant init = fixedClock.instant();
+        Instant start = fixedClock.instant();
+        Instant pause = start.plus(Duration.ofMinutes(10));
+        Instant resume = pause.plus(Duration.ofMinutes(5));
+
+        when(mockedClock.instant()).thenReturn(init, start, pause, resume);
+
+        Timer timer = Timer.initialize("channelId", "channelName", mockedClock);
+        timer.start(Duration.ofMinutes(30));
+        // At this point, end time should be start + 30 minutes
+        // Pause after 10 minutes
+        timer.pause();
+        // 5 Minutes pass while paused
+        TimerEvent resumeEvent = timer.resume();
+        // End time should now be extended by the 5 minutes
+        assertEquals(start.plus(Duration.ofMinutes(35)), timer.getEndTime());
+
+        assertEquals("channelId", resumeEvent.getChannelId());
+        assertEquals(TimerEventType.STATE_CHANGE, resumeEvent.getType());
+
+        assertEquals(TimerState.PAUSED, resumeEvent.getOldTimerState());
+        assertEquals(TimerState.TICKING, resumeEvent.getCurrentTimerState());
+
+        assertEquals(start.plus(Duration.ofMinutes(30)), resumeEvent.getOldEndTime());
+        assertEquals(start.plus(Duration.ofMinutes(35)), resumeEvent.getCurrentEndTime());
+
+        assertEquals(resume, resumeEvent.getTimestamp());
     }
 
     @Test
@@ -115,7 +226,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        timer.addTime(Duration.ofMinutes(30));
+        TimerEvent addEvent = timer.addTime(Duration.ofMinutes(30));
 
         // End time should be extended by 30 minutes, from the 30-minute start time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(60)), timer.getEndTime());
@@ -123,6 +234,17 @@ class TimerTest {
         // Timer state should be unchanged
         assert(timer.isActive());
         assert(!timer.isPaused());
+
+        assertEquals("channelId", addEvent.getChannelId());
+        assertEquals(TimerEventType.TIME_ADDITION, addEvent.getType());
+
+        assertEquals(TimerState.TICKING, addEvent.getOldTimerState());
+        assertEquals(TimerState.TICKING, addEvent.getCurrentTimerState());
+
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), addEvent.getOldEndTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(60)), addEvent.getCurrentEndTime());
+
+        assertEquals(fixedClock.instant(), addEvent.getTimestamp());
     }
 
     @Test
@@ -130,7 +252,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        timer.subtractTime(Duration.ofMinutes(15));
+        TimerEvent subtractEvent = timer.subtractTime(Duration.ofMinutes(15));
 
         // End time should be reduced by 15 minutes, from the 30-minute start time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(15)), timer.getEndTime());
@@ -138,21 +260,135 @@ class TimerTest {
         // Timer state should be unchanged
         assert(timer.isActive());
         assert(!timer.isPaused());
+
+        assertEquals("channelId", subtractEvent.getChannelId());
+        assertEquals(TimerEventType.TIME_SUBTRACTION, subtractEvent.getType());
+
+        assertEquals(TimerState.TICKING, subtractEvent.getOldTimerState());
+        assertEquals(TimerState.TICKING, subtractEvent.getCurrentTimerState());
+
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), subtractEvent.getOldEndTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(15)), subtractEvent.getCurrentEndTime());
+
+        assertEquals(fixedClock.instant(), subtractEvent.getTimestamp());
     }
 
     @Test
     void isActive() {
+        Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
+        // Initialized timer should not be active
+        assertFalse(timer.isActive());
+
+        // Started time should be active
+        timer.start(Duration.ofMinutes(10));
+        assertTrue(timer.isActive());
+
+        // Paused timer is active
+        timer.pause();
+        assertTrue(timer.isActive());
+
+        // Ended timer should not be active
+        timer.resume();
+        timer.stop();
+        assertFalse(timer.isActive());
     }
 
     @Test
     void isPaused() {
+        Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
+        // Initialized timer should not be paused
+        assertFalse(timer.isPaused());
+
+        // Started time should not be paused
+        timer.start(Duration.ofMinutes(10));
+        assertFalse(timer.isPaused());
+
+        // Paused timer is paused
+        timer.pause();
+        assertTrue(timer.isPaused());
+
+        // Resumed timer should not be paused
+        timer.resume();
+        assertFalse(timer.isPaused());
+
+        // Ended timer should not be paused
+        timer.stop();
+        assertFalse(timer.isPaused());
     }
 
     @Test
     void toDto() {
+        Instant init = fixedClock.instant();
+        Instant start = fixedClock.instant();
+        Instant pause = start.plus(Duration.ofMinutes(10));
+        Instant resume = pause.plus(Duration.ofMinutes(5));
+        when(mockedClock.instant()).thenReturn(init, start, pause, resume);
+
+        Timer timer = Timer.initialize("channelId", "channelName", mockedClock);
+
+        TimerDto dto = timer.toDto();
+
+        assertEquals("channelId", dto.getChannelId());
+        assertEquals("channelName", dto.getChannelName());
+        assertNull(dto.getStartTime());
+        assertNull(dto.getEndTime());
+        assertEquals(init, dto.getUpdateTime());
+        assertEquals(TimerState.INITIALIZED, dto.getState());
+
+        timer.start(Duration.ofMinutes(30));
+        dto = timer.toDto();
+
+        assertEquals("channelId", dto.getChannelId());
+        assertEquals("channelName", dto.getChannelName());
+        assertEquals(start, dto.getStartTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.getEndTime());
+        assertEquals(start, dto.getUpdateTime());
+        assertEquals(TimerState.TICKING, dto.getState());
+
+        timer.pause();
+        dto = timer.toDto();
+
+        assertEquals("channelId", dto.getChannelId());
+        assertEquals("channelName", dto.getChannelName());
+        assertEquals(start, dto.getStartTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.getEndTime());
+        assertEquals(pause, dto.getUpdateTime());
+        assertEquals(TimerState.PAUSED, dto.getState());
+
+        timer.resume();
+        dto = timer.toDto();
+
+        assertEquals("channelId", dto.getChannelId());
+        assertEquals("channelName", dto.getChannelName());
+        assertEquals(start, dto.getStartTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(35)), dto.getEndTime());
+        assertEquals(resume, dto.getUpdateTime());
+        assertEquals(TimerState.TICKING, dto.getState());
     }
 
     @Test
     void fromDto() {
+        TimerDto dto = new TimerDto();
+        dto.setId(123L);
+        dto.setChannelId("channelId");
+        dto.setChannelName("channelName");
+        dto.setStartTime(fixedClock.instant());
+        dto.setEndTime(fixedClock.instant().plus(Duration.ofMinutes(30)));
+        dto.setUpdateTime(fixedClock.instant().plus(Duration.ofMinutes(5)));
+        dto.setState(TimerState.TICKING);
+
+        // Convert to timer
+        Timer timer = Timer.fromDto(dto);
+
+        // We should get the same dto back when converting back
+        TimerDto resultDto = timer.toDto();
+
+        assertEquals(dto.getId(), resultDto.getId());
+        assertEquals(dto.getChannelId(), resultDto.getChannelId());
+        assertEquals(dto.getChannelName(), resultDto.getChannelName());
+        assertEquals(dto.getStartTime(), resultDto.getStartTime());
+        assertEquals(dto.getEndTime(), resultDto.getEndTime());
+        assertEquals(dto.getUpdateTime(), resultDto.getUpdateTime());
+        assertEquals(dto.getState(), resultDto.getState());
     }
 }

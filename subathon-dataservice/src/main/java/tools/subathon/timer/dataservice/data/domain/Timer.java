@@ -62,11 +62,13 @@ public class Timer {
             throw new IllegalStateException("Can not stop a timer that is not ticking");
         }
         Instant now = clock.instant();
+        Instant oldEndTime = this.endTime;
+
         this.state = TimerState.ENDED;
         this.endTime = now;
         this.updateTime = now;
 
-        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, this.endTime, this.endTime);
+        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, oldEndTime, this.endTime);
     }
 
     public TimerEvent pause() {
