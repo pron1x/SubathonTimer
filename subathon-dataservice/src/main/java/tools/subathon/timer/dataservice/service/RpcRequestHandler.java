@@ -19,7 +19,7 @@ import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
@@ -40,7 +40,7 @@ public class RpcRequestHandler implements HasLogger {
     }
 
     @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
-    public RpcResponse<UserConfigurationModel> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
+    public RpcResponse<UserConfigurationDto> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
         getLogger().info("New user configuration request handler called with request '{}'", request);
         return switch (request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
@@ -53,7 +53,7 @@ public class RpcRequestHandler implements HasLogger {
             }
             case UPDATE_CHANNEL_CONFIG -> {
                 UpdateChannelConfigPayload payload = (UpdateChannelConfigPayload) request.getPayload();
-                UserConfigurationModel config = mapper.convertValue(payload.channelConfig(), UserConfigurationModel.class);
+                UserConfigurationDto config = mapper.convertValue(payload.channelConfig(), UserConfigurationDto.class);
                 if(config == null) {
                     yield RpcResponse.error("UserConfiguration is null!");
                 }

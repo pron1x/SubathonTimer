@@ -2,7 +2,7 @@ package tools.subathon.timer.dataservice.service;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
 import tools.subathon.timer.dataservice.data.repository.UserConfigurationRepository;
 
@@ -18,17 +18,17 @@ public class UserConfigurationService {
         this.userConfigurationRepository = userConfigurationRepository;
     }
 
-    public UserConfigurationModel save(UserConfigurationModel userConfigurationModel) {
-        return modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationModel.class);
+    public UserConfigurationDto save(UserConfigurationDto userConfigurationModel) {
+        return modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationDto.class);
     }
 
-    public UserConfigurationModel getForChannel(String channelId) {
+    public UserConfigurationDto getForChannel(String channelId) {
         UserConfigurationEntity config = userConfigurationRepository.findByChannelId(channelId);
-        return config != null ? modelMapper.map(config, UserConfigurationModel.class) : null;
+        return config != null ? modelMapper.map(config, UserConfigurationDto.class) : null;
     }
 
-    public UserConfigurationModel deleteForChannel(String channelId) {
-        return modelMapper.map(userConfigurationRepository.deleteByChannelId(channelId), UserConfigurationModel.class);
+    public UserConfigurationDto deleteForChannel(String channelId) {
+        return modelMapper.map(userConfigurationRepository.deleteByChannelId(channelId), UserConfigurationDto.class);
     }
 
 }

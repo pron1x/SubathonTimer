@@ -1,5 +1,6 @@
 package tools.subathon.timer.dataservice.config;
 
+import org.modelmapper.record.RecordModule;
 import tools.subathon.timer.dataservice.data.entity.CheerEntity;
 import tools.subathon.timer.dataservice.data.entity.CommandEntity;
 import tools.subathon.timer.dataservice.data.entity.CommunityGiftEntity;
@@ -34,6 +35,7 @@ public class ModelMapperConfig implements HasLogger {
     ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        modelMapper.registerModule(new RecordModule());
 
         modelMapper.createTypeMap(EventEntity.class, SubathonEvent.class)
                 .include(FollowEntity.class, SubathonFollowerEvent.class)

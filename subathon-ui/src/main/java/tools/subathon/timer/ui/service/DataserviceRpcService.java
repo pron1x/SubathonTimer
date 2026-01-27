@@ -16,7 +16,7 @@ import tools.subathon.rpc.payload.timer.PauseTimerPayload;
 import tools.subathon.rpc.payload.timer.StartTimerPayload;
 import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.time.Instant;
@@ -35,14 +35,14 @@ public class DataserviceRpcService implements HasLogger {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public RpcResponse<UserConfigurationModel> getUserConfiguration(String channelId) {
+    public RpcResponse<UserConfigurationDto> getUserConfiguration(String channelId) {
         RpcRequest<GetChannelConfigPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.GET_CHANNEL_CONFIG);
         request.setPayload(new GetChannelConfigPayload(channelId));
         return sendUserConfigRpcGetRequest(request);
     }
 
-    public RpcResponse<UserConfigurationModel> saveUserConfiguration(String userId, UserConfigurationModel userConfigurationModel) {
+    public RpcResponse<UserConfigurationDto> saveUserConfiguration(String userId, UserConfigurationDto userConfigurationModel) {
         RpcRequest<UpdateChannelConfigPayload> request = new RpcRequest<>();
         request.setCommand(RpcCommand.UPDATE_CHANNEL_CONFIG);
         request.setPayload(new UpdateChannelConfigPayload(userId, userConfigurationModel));
@@ -77,8 +77,8 @@ public class DataserviceRpcService implements HasLogger {
         return sendTimerRpcRequest(request);
     }
 
-    private RpcResponse<UserConfigurationModel> sendUserConfigRpcGetRequest(RpcRequest<? extends ChannelConfigPayload> request) {
-        RpcResponse<UserConfigurationModel> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, USER_CONFIG_ROUTING_KEY, request,
+    private RpcResponse<UserConfigurationDto> sendUserConfigRpcGetRequest(RpcRequest<? extends ChannelConfigPayload> request) {
+        RpcResponse<UserConfigurationDto> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, USER_CONFIG_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
         if(response == null) {
             return RpcResponse.timeout();

@@ -6,22 +6,27 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+
+import java.util.Objects;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class UserConfigurationForm extends VerticalLayout {
 
-    private final Binder<UserConfigurationModel> binder;
+    private final Binder<UserConfigurationDto> binder;
     private SaveHandler saveHandler;
 
     private final TextField id;
+    private final TextField channelId;
     private final PasswordField seJwt;
     private final IntegerField followerSeconds;
     private final IntegerField raiderSeconds;
@@ -37,8 +42,9 @@ public class UserConfigurationForm extends VerticalLayout {
     private final Button saveButton;
 
     public UserConfigurationForm() {
-        binder = new BeanValidationBinder<>(UserConfigurationModel.class);
+        binder = new BeanValidationBinder<>(UserConfigurationDto.class);
         id = new TextField();
+        channelId = new TextField();
         seJwt = new PasswordField("StreamElements JWT Token");
         followerSeconds = new IntegerField("Follower");
         raiderSeconds = new IntegerField("per Raider");
@@ -55,8 +61,8 @@ public class UserConfigurationForm extends VerticalLayout {
         initInternal();
     }
 
-    public void setModel(UserConfigurationModel model) {
-        binder.setBean(model);
+    public void setModel(UserConfigurationDto model) {
+        binder.readRecord(model);
     }
 
     public void setSaveHandler(SaveHandler saveHandler) {
@@ -67,6 +73,9 @@ public class UserConfigurationForm extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         id.setVisible(false);
         id.setEnabled(false);
+
+        channelId.setVisible(false);
+        channelId.setEnabled(false);
 
         seJwt.setRequired(true);
         followerSeconds.setRequired(true);
@@ -131,13 +140,35 @@ public class UserConfigurationForm extends VerticalLayout {
 
         saveButton.addClickListener(event -> {
             if (binder.validate().isOk()) {
-                saveHandler.save();
+                try {
+                    saveHandler.save(binder.writeRecord());
+                } catch (ValidationException e) {
+                    Notification.show("Could not save configuration, check values and try again!", 5000, Notification.Position.MIDDLE);
+                }
             }
         });
-        binder.bindInstanceFields(this);
+        bindFields();
 
         H3 header = new H3("Timer Configuration");
         add(header, wrapper, saveButton);
+    }
+
+    private void bindFields() {
+        // Need to bind the empty text field to allow writing record.
+        binder.bind(channelId, "channelId");
+        binder.forField(id).withConverter(Long::valueOf, Objects::toString).bind("id");
+        binder.bind(seJwt, "seJwt");
+        binder.bind(followerSeconds, "followerSeconds");
+        binder.bind(raiderSeconds, "raiderSeconds");
+        binder.bind(tier1Seconds, "tier1Seconds");
+        binder.bind(tier2Seconds, "tier2Seconds");
+        binder.bind(tier3Seconds, "tier3Seconds");
+        binder.bind(tier1GiftSeconds, "tier1GiftSeconds");
+        binder.bind(tier2GiftSeconds, "tier2GiftSeconds");
+        binder.bind(tier3GiftSeconds, "tier3GiftSeconds");
+        binder.bind(bitsSeconds, "bitsSeconds");
+        binder.bind(currencySeconds, "currencySeconds");
+        binder.bind(initialSeconds, "initialSeconds");
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {
@@ -149,6 +180,6 @@ public class UserConfigurationForm extends VerticalLayout {
     }
 
     public interface SaveHandler {
-        void save();
+        void save(UserConfigurationDto configModel);
     }
 }

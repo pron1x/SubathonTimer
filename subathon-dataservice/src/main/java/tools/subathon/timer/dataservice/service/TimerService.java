@@ -1,6 +1,6 @@
 package tools.subathon.timer.dataservice.service;
 
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
 import tools.subathon.timer.dataservice.data.repository.TimerRepository;
@@ -121,12 +121,12 @@ public class TimerService implements HasLogger {
         }
 
         // Make sure SEImporter is authenticated with jwt
-        UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
+        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
         if (config == null) {
             getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
             return null;
         }
-        if (!seImporterRpcService.authenticateWithJwt(config.getSeJwt())) {
+        if (!seImporterRpcService.authenticateWithJwt(config.seJwt())) {
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
             return null;
         }
@@ -244,20 +244,11 @@ public class TimerService implements HasLogger {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
             return null;
         }
-        UserConfigurationModel config = userConfigurationService.getForChannel(channelId);
+        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
         if (config == null) {
             getLogger().warn("Config for channel id '{}' not found, using fallback values!", channelId);
-            config = new UserConfigurationModel();
-            config.setFollowerSeconds(FOLLOWER_SECONDS);
-            config.setRaiderSeconds(RAIDER_SECONDS);
-            config.setBitsSeconds(BITS_SECONDS);
-            config.setCurrencySeconds(EURO_SECONDS);
-            config.setTier1GiftSeconds(TIER_1_GIFT_SECONDS);
-            config.setTier2GiftSeconds(TIER_2_GIFT_SECONDS);
-            config.setTier3GiftSeconds(TIER_3_GIFT_SECONDS);
-            config.setTier1Seconds(TIER_1_SECONDS);
-            config.setTier2Seconds(TIER_2_SECONDS);
-            config.setTier3Seconds(TIER_3_SECONDS);
+            config = new UserConfigurationDto(null, null, null, FOLLOWER_SECONDS, RAIDER_SECONDS, TIER_1_SECONDS, TIER_2_SECONDS, TIER_3_SECONDS,
+                    TIER_1_GIFT_SECONDS, TIER_2_GIFT_SECONDS, TIER_3_GIFT_SECONDS, EURO_SECONDS, BITS_SECONDS, INITIAL_TIMER_SECONDS);
         }
 
         if(!domainTimer.isActive()) {
@@ -267,23 +258,23 @@ public class TimerService implements HasLogger {
         getLogger().debug("Adding time for event: {}", event);
 
         double seconds = switch (event.getType()) {
-            case FOLLOW -> config.getFollowerSeconds();
-            case RAID -> ((SubathonRaidEvent) event).getAmount() * config.getRaiderSeconds();
+            case FOLLOW -> config.followerSeconds();
+            case RAID -> ((SubathonRaidEvent) event).getAmount() * config.raiderSeconds();
             case SUBSCRIPTION -> {
                 SubathonSubEvent subEvent = (SubathonSubEvent) event;
                 if (subEvent.isGifted()) {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? config.getTier3GiftSeconds() :
-                            subEvent.getTier() == SubTier.TIER_2 ? config.getTier2GiftSeconds() : config.getTier1GiftSeconds();
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3GiftSeconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2GiftSeconds() : config.tier1GiftSeconds();
                 } else {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? config.getTier3Seconds() :
-                            subEvent.getTier() == SubTier.TIER_2 ? config.getTier2Seconds() : config.getTier1Seconds();
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3Seconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2Seconds() : config.tier1Seconds();
                 }
             }
             /* Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
             Time is added for the individual gifted subscriptions */
             case GIFT -> 0;
-            case TIP -> config.getCurrencySeconds() * ((SubathonTipEvent) event).getAmount();
-            case CHEER -> config.getBitsSeconds() * (((SubathonBitCheerEvent) event).getAmount() / 100.0);
+            case TIP -> config.currencySeconds() * ((SubathonTipEvent) event).getAmount();
+            case CHEER -> config.bitsSeconds() * (((SubathonBitCheerEvent) event).getAmount() / 100.0);
             case COMMAND -> ((SubathonCommandEvent) event).getSeconds();
         };
 

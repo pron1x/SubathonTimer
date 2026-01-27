@@ -12,7 +12,7 @@
     <artifactId>subathon-dataservice</artifactId>
 
     <properties>
-            <modelmapper.version>3.2.0</modelmapper.version>
+            <modelmapper.version>3.2.6</modelmapper.version>
     </properties>
 
     <dependencies>
@@ -37,6 +37,11 @@
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
             <version>${modelmapper.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper-module-record</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
         <dependency>

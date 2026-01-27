@@ -15,7 +15,7 @@ import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.ui.service.TimerEventService;
 import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
 import tools.subathon.timer.ui.service.TimerService;
@@ -79,11 +79,11 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
         timerService.pauseTimerForChannel(channelId, channelName);
     }
 
-    protected UserConfigurationModel getUserConfig() {
-        RpcResponse<UserConfigurationModel> configResponse = userConfigurationService.getUserConfiguration(channelId);
+    protected UserConfigurationDto getUserConfig() {
+        RpcResponse<UserConfigurationDto> configResponse = userConfigurationService.getUserConfiguration(channelId);
         return switch(configResponse) {
-            case RpcResponse.Success<UserConfigurationModel> success -> success.body();
-            case RpcResponse.Failure<UserConfigurationModel> error -> {
+            case RpcResponse.Success<UserConfigurationDto> success -> success.body();
+            case RpcResponse.Failure<UserConfigurationDto> error -> {
                 if(error.statusCode() == RpcStatus.ERROR) {
                     getLogger().error("Error while fetching user configuration for channelId {}: {}", channelId, error.errorMessage());
                     view.showErrorNotification("Error loading channel configuration!");
@@ -93,14 +93,13 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
         };
     }
 
-    protected UserConfigurationModel saveUserConfig(UserConfigurationModel userConfigurationModel) {
-        userConfigurationModel.setChannelId(channelId);
-        RpcResponse<UserConfigurationModel> response = userConfigurationService.saveUserConfiguration(channelId, userConfigurationModel);
-        if(response instanceof RpcResponse.Failure<UserConfigurationModel> error) {
+    protected UserConfigurationDto saveUserConfig(UserConfigurationDto userConfigurationModel) {
+        RpcResponse<UserConfigurationDto> response = userConfigurationService.saveUserConfiguration(channelId, UserConfigurationDto.withChannelId(userConfigurationModel, channelId));
+        if(response instanceof RpcResponse.Failure<UserConfigurationDto> error) {
             getLogger().error("Error saving user configuration for channelId {}: {}", channelId, error.errorMessage());
             view.showErrorNotification("Could not save channel configuration! Please try again.");
             return userConfigurationModel;
-        } else if(response instanceof RpcResponse.Success<UserConfigurationModel>(UserConfigurationModel body)) {
+        } else if(response instanceof RpcResponse.Success<UserConfigurationDto>(UserConfigurationDto body)) {
             view.showSuccessNotification("Configuration saved successfully!");
             return body;
         }

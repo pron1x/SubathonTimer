@@ -20,7 +20,7 @@ import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
-import tools.subathon.timer.datamodel.user.UserConfigurationModel;
+import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.ui.view.MainLayout;
 import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
 import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
@@ -33,7 +33,7 @@ public class DashboardView extends VerticalLayout {
 
     private final DashboardPresenter presenter;
 
-    private UserConfigurationModel userConfigurationModel;
+    private UserConfigurationDto userConfigurationModel;
     private TimerInfo timerInfoCard;
     private Button initTimerButton;
     private Button pauseTimerButton;
@@ -69,7 +69,10 @@ public class DashboardView extends VerticalLayout {
 
         userConfigurationModel = presenter.getUserConfig();
         if(userConfigurationModel == null) {
-            userConfigurationModel = new UserConfigurationModel();
+            userConfigurationModel = new UserConfigurationDto(null, null, null,
+                    null, null, null,
+                    null, null, null,
+                    null, null, null, null, null);
         }
 
         initTimerButton = new Button("Initialize a new timer");
@@ -124,7 +127,7 @@ public class DashboardView extends VerticalLayout {
     private Component createConfigForm() {
         UserConfigurationForm form = new UserConfigurationForm();
         form.setModel(userConfigurationModel);
-        form.setSaveHandler(() -> form.setModel(presenter.saveUserConfig(userConfigurationModel)));
+        form.setSaveHandler((model) -> form.setModel(presenter.saveUserConfig(model)));
         return form;
     }
 
