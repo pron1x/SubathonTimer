@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.RpcStatus;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
@@ -109,13 +109,13 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     @Override
-    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
-        if(channelId.equals(timerEvent.getChannelId())) {
+    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
+        if(channelId.equals(timerEventDto.channelId())) {
             view.getUI().ifPresent(ui -> ui.access(
                     () -> {
-                        view.updateTimerInfo(timerEvent.getCurrentEndTime(), timerEvent.getTimestamp(), timerEvent.getCurrentTimerState());
-                        if(timerEvent.getType() == TimerEventType.STATE_CHANGE && timerEvent.getOldTimerState() == TimerState.INITIALIZED) {
-                            view.updateTimerInfoStartTime(timerEvent.getTimestamp());
+                        view.updateTimerInfo(timerEventDto.currentEndTime(), timerEventDto.timestamp(), timerEventDto.currentTimerState());
+                        if(timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
+                            view.updateTimerInfoStartTime(timerEventDto.timestamp());
                         }
                     }));
         }

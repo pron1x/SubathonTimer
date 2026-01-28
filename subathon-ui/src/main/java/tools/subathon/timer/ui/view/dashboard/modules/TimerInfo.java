@@ -39,9 +39,9 @@ public class TimerInfo extends Card {
         setHeader(createHeader(timer));
         state = createTimerStateBadge(timer);
         setHeaderSuffix(state);
-        startTime = new Text(timer != null ? formatInstant(timer.getStartTime()) : "-");
-        updateTime = new Text(timer != null ? formatInstant(timer.getUpdateTime()) : "-");
-        endTime = new Text(timer != null ? formatInstant(timer.getEndTime()) : "-");
+        startTime = new Text(timer != null ? formatInstant(timer.startTime()) : "-");
+        updateTime = new Text(timer != null ? formatInstant(timer.updateTime()) : "-");
+        endTime = new Text(timer != null ? formatInstant(timer.endTime()) : "-");
 
         VerticalLayout startLayout = new VerticalLayout(startDescription, startTime);
         startLayout.setPadding(false);
@@ -65,9 +65,9 @@ public class TimerInfo extends Card {
                 LumoUtility.LineHeight.XSMALL
         );
 
-        H2 title = new H2(timer != null ? timer.getChannelName() : "-");
+        H2 title = new H2(timer != null ? timer.channelName() : "-");
 
-        Div subtitle = new Div(timer != null ? timer.getChannelId() : "-");
+        Div subtitle = new Div(timer != null ? timer.channelId() : "-");
         subtitle.addClassNames(
                 LumoUtility.TextTransform.UPPERCASE,
                 LumoUtility.FontSize.XSMALL,
@@ -79,8 +79,8 @@ public class TimerInfo extends Card {
     }
 
     private Span createTimerStateBadge(TimerDto timer) {
-        Span badge = new Span(timer != null ? timer.getState().toString() : TimerState.UNINITIALIZED.toString());
-        badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.getState() : TimerState.UNINITIALIZED));
+        Span badge = new Span(timer != null ? timer.state().toString() : TimerState.UNINITIALIZED.toString());
+        badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.state() : TimerState.UNINITIALIZED));
         return badge;
     }
 

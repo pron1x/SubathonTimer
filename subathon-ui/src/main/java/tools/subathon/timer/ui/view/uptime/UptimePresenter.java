@@ -2,7 +2,7 @@ package tools.subathon.timer.ui.view.uptime;
 
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.ui.service.TimerEventService;
 import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
@@ -46,25 +46,25 @@ public class UptimePresenter implements TimerEventListener {
     //          - No previous timer was ever run -> timer is null on init
     //          - Previous timer stopped and new timer is started -> fetch new timer on event?
     public TimerDto getTimerForChannel(String channelId) {
-        if(timer == null || !channelId.equals(timer.getChannelId())) {
+        if(timer == null || !channelId.equals(timer.channelId())) {
             timer = fetchTimer(channelId);
         }
         return timer;
     }
 
     @Override
-    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
-        if(timerEvent.getTimerId() != timer.getId()) {
+    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
+        if(!timer.id().equals(timerEventDto.timerId())) {
             return;
         }
 
-        if(timerEvent.getCurrentTimerState() == TimerState.ENDED ||
-                (timerEvent.getCurrentTimerState() == TimerState.TICKING && timerEvent.getOldTimerState() == TimerState.INITIALIZED)) {
-            if(timerEvent.getOldTimerState() == TimerState.INITIALIZED) {
-                timer = fetchTimer(timer.getChannelId()); // Refetch timer with correct start time!
+        if(timerEventDto.currentTimerState() == TimerState.ENDED ||
+                (timerEventDto.currentTimerState() == TimerState.TICKING && timerEventDto.oldTimerState() == TimerState.INITIALIZED)) {
+            if(timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
+                timer = fetchTimer(timer.channelId()); // Refetch timer with correct start time!
                 uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.setTimer(timer)));
             }
-            uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.updateTimerState(timerEvent)));
+            uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.updateTimerState(timerEventDto)));
         }
     }
 

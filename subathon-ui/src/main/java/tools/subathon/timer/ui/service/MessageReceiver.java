@@ -2,7 +2,7 @@ package tools.subathon.timer.ui.service;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,7 +19,7 @@ public class MessageReceiver implements HasLogger {
     }
 
     @RabbitListener(queues = TIMER_EVENT_QUEUE)
-    public void receiveMessage(TimerEvent timerEvent) {
-        timerEventService.handleIncomingTimerEvent(timerEvent);
+    public void receiveMessage(TimerEventDto timerEventDto) {
+        timerEventService.handleIncomingTimerEvent(timerEventDto);
     }
 }

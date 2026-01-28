@@ -2,6 +2,7 @@ package tools.subathon.timer.dataservice.service;
 
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
+import tools.subathon.timer.dataservice.data.domain.TimerEvent;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
 import tools.subathon.timer.dataservice.data.repository.TimerRepository;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
@@ -11,7 +12,6 @@ import tools.subathon.timer.datamodel.SubathonRaidEvent;
 import tools.subathon.timer.datamodel.SubathonSubEvent;
 import tools.subathon.timer.datamodel.SubathonTipEvent;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.SubTier;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorService;
@@ -115,7 +115,7 @@ public class TimerService implements HasLogger {
             return null;
         }
         // Make sure bot joined the channel
-        if(channelName.equals(botRpcService.requestChannelJoin(channelName))) {
+        if(!channelName.equals(botRpcService.requestChannelJoin(channelName))) {
             getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
             return null;
         }
@@ -174,7 +174,7 @@ public class TimerService implements HasLogger {
         // Save and publish timer event
         domainTimerEvent.setSubathonEvent(command);
         publishEvent(timerEventService.save(domainTimerEvent));
-        getLogger().info("Timer started. [Start: {}, End: {}]", returnTimer.getStartTime(), returnTimer.getEndTime());
+        getLogger().info("Timer started. [Start: {}, End: {}]", returnTimer.startTime(), returnTimer.endTime());
         return returnTimer;
     }
 

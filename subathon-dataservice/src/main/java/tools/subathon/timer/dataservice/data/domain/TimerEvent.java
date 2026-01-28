@@ -1,12 +1,12 @@
-package tools.subathon.timer.datamodel;
+package tools.subathon.timer.dataservice.data.domain;
 
+import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
 
 public class TimerEvent {
-
     private Long timerId;
     private String channelId;
     private Instant timestamp;

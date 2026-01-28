@@ -100,7 +100,7 @@ public class DashboardView extends VerticalLayout {
         timerInfoCard.addToFooter(timerControls);
 
         if(timer != null) {
-            setTimerControlButtonStates(timer.getState());
+            setTimerControlButtonStates(timer.state());
         }
 
         VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);

@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.component;
 
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
@@ -26,16 +26,16 @@ public class UptimeClock extends Component {
 
     public void pushInitialState(TimerDto timer) {
         if(timer == null) return;
-        long start = timer.getStartTime() != null ? timer.getStartTime().toEpochMilli() : -1;
-        long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : -1;
-        String state = timer.getState().toString();
+        long start = timer.startTime() != null ? timer.startTime().toEpochMilli() : -1;
+        long end = timer.endTime() != null ? timer.endTime().toEpochMilli() : -1;
+        String state = timer.state().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
     }
 
-    public void pushState(TimerEvent event) {
-        long start = timer.getStartTime().toEpochMilli();
-        long end = event.getCurrentEndTime().toEpochMilli();
-        String state = event.getCurrentTimerState().toString();
+    public void pushState(TimerEventDto event) {
+        long start = timer.startTime().toEpochMilli();
+        long end = event.currentEndTime().toEpochMilli();
+        String state = event.currentTimerState().toString();
         getElement().callJsFunction("setState", Json.create(start), Json.create(end), state);
     }
 

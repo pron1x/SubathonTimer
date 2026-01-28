@@ -76,7 +76,6 @@ public class SubathonBot implements HasLogger {
         return twitchClient.getChat().getChannels().stream().toList();
     }
 
-    // TODO: Add init command?
     private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {
         getLogger().debug("Handling '!timer' command for channel '{} ({})'. Sub command: {}, args: {}", eventChannel.getName(), eventChannel.getId(), command, args);
         switch (command) {
@@ -136,7 +135,7 @@ public class SubathonBot implements HasLogger {
             RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(channelId, event);
             switch (response) {
                 case RpcResponse.Success<TimerDto> success -> {
-                    return success.body().getState() == (isPause ? TimerState.PAUSED : TimerState.TICKING);
+                    return success.body().state() == (isPause ? TimerState.PAUSED : TimerState.TICKING);
                 }
                 case RpcResponse.Failure<TimerDto> error -> {
                     getLogger().error("Error while executing state change command for channelId {}: {}", channelId, error.errorMessage());

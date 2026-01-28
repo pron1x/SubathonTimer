@@ -4,72 +4,15 @@ import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
 
-public class TimerDto {
-
-    private Long id;
-    private String channelName;
-    private String channelId;
-    private Instant startTime;
-    private Instant endTime;
-    private TimerState state;
-    private Instant updateTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getChannelName() {
-        return channelName;
-    }
-
-    public void setChannelName(String channelName) {
-        this.channelName = channelName;
-    }
-
-    public String getChannelId() {
-        return channelId;
-    }
-
-    public void setChannelId(String channelId) {
-        this.channelId = channelId;
-    }
-
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = startTime;
-    }
-
-    public Instant getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = endTime;
-    }
-
-    public TimerState getState() {
-        return state;
-    }
-
-    public void setState(TimerState state) {
-        this.state = state;
-    }
-
-    public Instant getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Instant updateTime) {
-        this.updateTime = updateTime;
-    }
-
+public record TimerDto(
+        Long id,
+        String channelId,
+        String channelName,
+        Instant startTime,
+        Instant endTime,
+        TimerState state,
+        Instant updateTime
+) {
     @Override
     public String toString() {
         return "Timer{" +

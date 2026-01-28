@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.view.timer;
 
 import jakarta.annotation.security.PermitAll;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.ui.component.SubathonTimer;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import com.vaadin.flow.component.AttachEvent;
@@ -51,8 +51,8 @@ public class TimerView extends HorizontalLayout implements HasLogger, HasUrlPara
         add(timerWrapper);
     }
 
-    public void updateTimer(TimerEvent timerEvent) {
-        timerComponent.updateWithNewEvent(timerEvent);
+    public void updateTimer(TimerEventDto timerEventDto) {
+        timerComponent.updateWithNewEvent(timerEventDto);
 
     }
 

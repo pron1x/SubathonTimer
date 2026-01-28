@@ -3,7 +3,6 @@ package tools.subathon.timer.dataservice.data.domain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
@@ -328,54 +327,53 @@ class TimerTest {
 
         TimerDto dto = timer.toDto();
 
-        assertEquals("channelId", dto.getChannelId());
-        assertEquals("channelName", dto.getChannelName());
-        assertNull(dto.getStartTime());
-        assertNull(dto.getEndTime());
-        assertEquals(init, dto.getUpdateTime());
-        assertEquals(TimerState.INITIALIZED, dto.getState());
+        assertEquals("channelId", dto.channelId());
+        assertEquals("channelName", dto.channelName());
+        assertNull(dto.startTime());
+        assertNull(dto.endTime());
+        assertEquals(init, dto.updateTime());
+        assertEquals(TimerState.INITIALIZED, dto.state());
 
         timer.start(Duration.ofMinutes(30));
         dto = timer.toDto();
 
-        assertEquals("channelId", dto.getChannelId());
-        assertEquals("channelName", dto.getChannelName());
-        assertEquals(start, dto.getStartTime());
-        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.getEndTime());
-        assertEquals(start, dto.getUpdateTime());
-        assertEquals(TimerState.TICKING, dto.getState());
+        assertEquals("channelId", dto.channelId());
+        assertEquals("channelName", dto.channelName());
+        assertEquals(start, dto.startTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.endTime());
+        assertEquals(start, dto.updateTime());
+        assertEquals(TimerState.TICKING, dto.state());
 
         timer.pause();
         dto = timer.toDto();
 
-        assertEquals("channelId", dto.getChannelId());
-        assertEquals("channelName", dto.getChannelName());
-        assertEquals(start, dto.getStartTime());
-        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.getEndTime());
-        assertEquals(pause, dto.getUpdateTime());
-        assertEquals(TimerState.PAUSED, dto.getState());
+        assertEquals("channelId", dto.channelId());
+        assertEquals("channelName", dto.channelName());
+        assertEquals(start, dto.startTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), dto.endTime());
+        assertEquals(pause, dto.updateTime());
+        assertEquals(TimerState.PAUSED, dto.state());
 
         timer.resume();
         dto = timer.toDto();
 
-        assertEquals("channelId", dto.getChannelId());
-        assertEquals("channelName", dto.getChannelName());
-        assertEquals(start, dto.getStartTime());
-        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(35)), dto.getEndTime());
-        assertEquals(resume, dto.getUpdateTime());
-        assertEquals(TimerState.TICKING, dto.getState());
+        assertEquals("channelId", dto.channelId());
+        assertEquals("channelName", dto.channelName());
+        assertEquals(start, dto.startTime());
+        assertEquals(fixedClock.instant().plus(Duration.ofMinutes(35)), dto.endTime());
+        assertEquals(resume, dto.updateTime());
+        assertEquals(TimerState.TICKING, dto.state());
     }
 
     @Test
     void fromDto() {
-        TimerDto dto = new TimerDto();
-        dto.setId(123L);
-        dto.setChannelId("channelId");
-        dto.setChannelName("channelName");
-        dto.setStartTime(fixedClock.instant());
-        dto.setEndTime(fixedClock.instant().plus(Duration.ofMinutes(30)));
-        dto.setUpdateTime(fixedClock.instant().plus(Duration.ofMinutes(5)));
-        dto.setState(TimerState.TICKING);
+        TimerDto dto = new TimerDto(123L,
+                "channelId",
+                "channelName",
+                fixedClock.instant(),
+                fixedClock.instant().plus(Duration.ofMinutes(30)),
+                TimerState.TICKING,
+                fixedClock.instant().plus(Duration.ofMinutes(5)));
 
         // Convert to timer
         Timer timer = Timer.fromDto(dto);
@@ -383,12 +381,12 @@ class TimerTest {
         // We should get the same dto back when converting back
         TimerDto resultDto = timer.toDto();
 
-        assertEquals(dto.getId(), resultDto.getId());
-        assertEquals(dto.getChannelId(), resultDto.getChannelId());
-        assertEquals(dto.getChannelName(), resultDto.getChannelName());
-        assertEquals(dto.getStartTime(), resultDto.getStartTime());
-        assertEquals(dto.getEndTime(), resultDto.getEndTime());
-        assertEquals(dto.getUpdateTime(), resultDto.getUpdateTime());
-        assertEquals(dto.getState(), resultDto.getState());
+        assertEquals(dto.id(), resultDto.id());
+        assertEquals(dto.channelId(), resultDto.channelId());
+        assertEquals(dto.channelName(), resultDto.channelName());
+        assertEquals(dto.startTime(), resultDto.startTime());
+        assertEquals(dto.endTime(), resultDto.endTime());
+        assertEquals(dto.updateTime(), resultDto.updateTime());
+        assertEquals(dto.state(), resultDto.state());
     }
 }

@@ -1,7 +1,7 @@
 package tools.subathon.timer.ui.component;
 
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
@@ -19,7 +19,7 @@ public class SubathonTimer extends Component implements HasLogger {
         pushInitialState(timer);
     }
 
-    public void updateWithNewEvent(TimerEvent event) {
+    public void updateWithNewEvent(TimerEventDto event) {
         if(event != null) {
             pushNewTimerEvent(event);
         }
@@ -27,16 +27,16 @@ public class SubathonTimer extends Component implements HasLogger {
 
     private void pushInitialState(TimerDto timer) {
         if(timer == null) return;
-        long end = timer.getEndTime() != null ? timer.getEndTime().toEpochMilli() : 0;
-        long update = timer.getUpdateTime() != null ? timer.getUpdateTime().toEpochMilli() : 0;
-        String state = timer.getState().toString();
+        long end = timer.endTime() != null ? timer.endTime().toEpochMilli() : 0;
+        long update = timer.updateTime() != null ? timer.updateTime().toEpochMilli() : 0;
+        String state = timer.state().toString();
         getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
     }
 
-    private void pushNewTimerEvent(TimerEvent event) {
-        long end = event.getCurrentEndTime().toEpochMilli();
-        long update = event.getTimestamp().toEpochMilli();
-        String state = event.getCurrentTimerState().toString();
+    private void pushNewTimerEvent(TimerEventDto event) {
+        long end = event.currentEndTime().toEpochMilli();
+        long update = event.timestamp().toEpochMilli();
+        String state = event.currentTimerState().toString();
         getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
     }
 

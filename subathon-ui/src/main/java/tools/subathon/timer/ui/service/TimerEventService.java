@@ -1,6 +1,6 @@
 package tools.subathon.timer.ui.service;
 
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +12,10 @@ public class TimerEventService implements HasLogger {
 
     private final List<TimerEventListener> listeners = new ArrayList<>();
 
-    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
+    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
         for (TimerEventListener listener : listeners) {
             try {
-                listener.handleIncomingTimerEvent(timerEvent);
+                listener.handleIncomingTimerEvent(timerEventDto);
             } catch (Exception e) {
                 getLogger().warn("Error when handling a timer event listener", e);
             }
@@ -35,7 +35,7 @@ public class TimerEventService implements HasLogger {
     }
 
     public interface TimerEventListener {
-        void handleIncomingTimerEvent(TimerEvent timerEvent);
+        void handleIncomingTimerEvent(TimerEventDto timerEventDto);
     }
 
 }

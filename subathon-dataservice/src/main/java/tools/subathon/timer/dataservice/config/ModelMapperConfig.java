@@ -1,6 +1,7 @@
 package tools.subathon.timer.dataservice.config;
 
 import org.modelmapper.record.RecordModule;
+import tools.subathon.timer.dataservice.data.domain.TimerEvent;
 import tools.subathon.timer.dataservice.data.entity.CheerEntity;
 import tools.subathon.timer.dataservice.data.entity.CommandEntity;
 import tools.subathon.timer.dataservice.data.entity.CommunityGiftEntity;
@@ -26,7 +27,6 @@ import tools.subathon.timer.datamodel.SubathonFollowerEvent;
 import tools.subathon.timer.datamodel.SubathonRaidEvent;
 import tools.subathon.timer.datamodel.SubathonSubEvent;
 import tools.subathon.timer.datamodel.SubathonTipEvent;
-import tools.subathon.timer.datamodel.TimerEvent;
 
 @Configuration
 public class ModelMapperConfig implements HasLogger {
@@ -90,7 +90,7 @@ public class ModelMapperConfig implements HasLogger {
         return modelMapper;
     }
 
-    public class SubathonEventToSubathonEventEntityConverter implements Converter<SubathonEvent, EventEntity> {
+    private static class SubathonEventToSubathonEventEntityConverter implements Converter<SubathonEvent, EventEntity> {
 
         @Override
         public EventEntity convert(MappingContext<SubathonEvent, EventEntity> mappingContext) {
@@ -151,7 +151,7 @@ public class ModelMapperConfig implements HasLogger {
         }
     }
 
-    public class TimerEventToTimerEventEntityMap extends PropertyMap<TimerEvent, TimerEventEntity> {
+    private static class TimerEventToTimerEventEntityMap extends PropertyMap<TimerEvent, TimerEventEntity> {
 
         @Override
         protected void configure() {

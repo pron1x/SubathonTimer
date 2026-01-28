@@ -2,7 +2,7 @@ package tools.subathon.timer.ui.view.timer;
 
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
+import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.ui.service.TimerEventService;
 import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
@@ -40,7 +40,7 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
     }
 
     public TimerDto getTimerForChannel(String channelId) {
-        if(timer == null || !channelId.equals(timer.getChannelId())) {
+        if(timer == null || !channelId.equals(timer.channelId())) {
             RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
             timer = switch(timerResponse) {
                 case RpcResponse.Success<TimerDto> success -> success.body();
@@ -62,14 +62,14 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
     }
 
     @Override
-    public void handleIncomingTimerEvent(TimerEvent timerEvent) {
+    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
         // Filter for relevant timerEvents
-        if(timerEvent.getTimerId() != timer.getId()) {
+        if(!timer.id().equals(timerEventDto.timerId())) {
             return;
         }
 
-        timerView.getUI().ifPresent(ui -> ui.access(() -> timerView.updateTimer(timerEvent)));
-        if(TimerEventType.TIME_ADDITION.equals(timerEvent.getType())) {
+        timerView.getUI().ifPresent(ui -> ui.access(() -> timerView.updateTimer(timerEventDto)));
+        if(TimerEventType.TIME_ADDITION.equals(timerEventDto.type())) {
             addTimeAdditionTheme();
         }
     }

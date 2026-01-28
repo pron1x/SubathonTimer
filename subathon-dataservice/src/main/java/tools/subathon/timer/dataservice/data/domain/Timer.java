@@ -1,9 +1,8 @@
 package tools.subathon.timer.dataservice.data.domain;
 
 import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEvent;
-import tools.subathon.timer.datamodel.enums.TimerEventType;
-import tools.subathon.timer.datamodel.enums.TimerState;
+import tools.subathon.timer.dataservice.data.domain.enums.TimerEventType;
+import tools.subathon.timer.dataservice.data.domain.enums.TimerState;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -160,24 +159,24 @@ public class Timer {
     }
 
     public TimerDto toDto() {
-        TimerDto dto = new TimerDto();
-        dto.setId(this.id);
-        dto.setChannelId(this.channelId);
-        dto.setChannelName(this.channelName);
-        dto.setStartTime(this.startTime);
-        dto.setEndTime(this.endTime);
-        dto.setUpdateTime(this.updateTime);
-        dto.setState(this.state);
-        return dto;
+        return new TimerDto(
+                this.id,
+                this.channelId,
+                this.channelName,
+                this.startTime,
+                this.endTime,
+                mapToDtoState(this.state),
+                this.updateTime
+        );
     }
 
     public static Timer fromDto(TimerDto dto) {
-        Timer timer = new Timer(dto.getChannelId(), dto.getChannelName());
-        timer.id = dto.getId();
-        timer.startTime = dto.getStartTime();
-        timer.endTime = dto.getEndTime();
-        timer.updateTime = dto.getUpdateTime();
-        timer.state = dto.getState();
+        Timer timer = new Timer(dto.channelId(), dto.channelName());
+        timer.id = dto.id();
+        timer.startTime = dto.startTime();
+        timer.endTime = dto.endTime();
+        timer.updateTime = dto.updateTime();
+        timer.state = mapFromDtoState(dto.state());
         return timer;
     }
 
@@ -185,12 +184,40 @@ public class Timer {
         TimerEvent event = new TimerEvent();
         event.setTimerId(this.id);
         event.setChannelId(this.channelId);
-        event.setType(type);
-        event.setOldTimerState(oldState);
-        event.setCurrentTimerState(newState);
+        event.setType(mapToDtoType(type));
+        event.setOldTimerState(mapToDtoState(oldState));
+        event.setCurrentTimerState(mapToDtoState(newState));
         event.setOldEndTime(oldEnd);
         event.setCurrentEndTime(newEnd);
         event.setTimestamp(this.updateTime);
         return event;
+    }
+
+    private static tools.subathon.timer.datamodel.enums.TimerState mapToDtoState(TimerState state) {
+        return switch (state) {
+            case UNINITIALIZED -> tools.subathon.timer.datamodel.enums.TimerState.UNINITIALIZED;
+            case INITIALIZED -> tools.subathon.timer.datamodel.enums.TimerState.INITIALIZED;
+            case PAUSED -> tools.subathon.timer.datamodel.enums.TimerState.PAUSED;
+            case TICKING -> tools.subathon.timer.datamodel.enums.TimerState.TICKING;
+            case ENDED -> tools.subathon.timer.datamodel.enums.TimerState.ENDED;
+        };
+    }
+
+    private static TimerState mapFromDtoState(tools.subathon.timer.datamodel.enums.TimerState state) {
+        return switch (state) {
+            case UNINITIALIZED -> TimerState.UNINITIALIZED;
+            case INITIALIZED -> TimerState.INITIALIZED;
+            case PAUSED -> TimerState.PAUSED;
+            case TICKING -> TimerState.TICKING;
+            case ENDED -> TimerState.ENDED;
+        };
+    }
+
+    private static tools.subathon.timer.datamodel.enums.TimerEventType mapToDtoType(TimerEventType type) {
+        return switch (type) {
+            case STATE_CHANGE -> tools.subathon.timer.datamodel.enums.TimerEventType.STATE_CHANGE;
+            case TIME_ADDITION -> tools.subathon.timer.datamodel.enums.TimerEventType.TIME_ADDITION;
+            case TIME_SUBTRACTION -> tools.subathon.timer.datamodel.enums.TimerEventType.TIME_SUBTRACTION;
+        };
     }
 }
