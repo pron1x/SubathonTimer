@@ -18,7 +18,6 @@ import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorServ
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
-import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,6 @@ import static tools.subathon.timer.datamodel.enums.TimerState.UNINITIALIZED;
 @Service
 public class TimerService implements HasLogger {
 
-    private final RabbitMessageService messageService;
     private final BotRpcService botRpcService;
     private final SeImporterRpcService seImporterRpcService;
     private final TimerRepository timerRepository;
@@ -79,8 +77,7 @@ public class TimerService implements HasLogger {
 
 
     @Autowired
-    public TimerService(RabbitMessageService messageService, TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper, BotRpcService botRpcService, SeImporterRpcService seImporterRpcService) {
-        this.messageService = messageService;
+    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper, BotRpcService botRpcService, SeImporterRpcService seImporterRpcService) {
         this.botRpcService = botRpcService;
         this.seImporterRpcService = seImporterRpcService;
         this.timerRepository = timerRepository;
@@ -164,6 +161,7 @@ public class TimerService implements HasLogger {
         }
         getLogger().debug("Starting timer");
 
+        // TODO: Actually use the channel config initial seconds....
         TimerEvent domainTimerEvent = domainTimer.start(Duration.ofSeconds(INITIAL_TIMER_SECONDS));
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), domainTimer.getEndTime());
@@ -173,7 +171,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimerEvent.setSubathonEvent(command);
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
         getLogger().info("Timer started. [Start: {}, End: {}]", returnTimer.startTime(), returnTimer.endTime());
         return returnTimer;
     }
@@ -195,7 +193,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimerEvent.setSubathonEvent(command);
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
         return returnTimer;
     }
 
@@ -216,7 +214,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimerEvent.setSubathonEvent(command);
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
         return returnTimer;
     }
 
@@ -233,7 +231,7 @@ public class TimerService implements HasLogger {
         domainTimers.remove(channelId);
 
         // Save and publish timer event
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
 
         getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", domainTimer.getChannelId(), domainTimerEvent.getTimestamp(), domainTimerEvent.getCurrentEndTime());
     }
@@ -288,7 +286,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timerEvent
         domainTimerEvent.setSubathonEvent(event);
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
         return mapper.map(returnTimer, TimerDto.class);
     }
 
@@ -312,7 +310,7 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimerEvent.setSubathonEvent(command);
-        publishEvent(timerEventService.save(domainTimerEvent));
+        timerEventService.saveAndPublish(domainTimerEvent);
         return mapper.map(returnTimer, TimerDto.class);
     }
 
@@ -323,14 +321,6 @@ public class TimerService implements HasLogger {
 
     public List<TimerDto> getAllActiveTimers() {
         return timerRepository.findByStateIsNot(ENDED).stream().map(entity -> mapper.map(entity, TimerDto.class)).toList();
-    }
-
-    private void publishEvent(TimerEvent event) {
-        try {
-            messageService.sendMessage(event);
-        } catch (AmqpException e) {
-            getLogger().warn("Could not send message! {}", event, e);
-        }
     }
 
 }
