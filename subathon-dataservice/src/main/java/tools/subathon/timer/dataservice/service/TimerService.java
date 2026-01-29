@@ -160,9 +160,13 @@ public class TimerService implements HasLogger {
             return resumeTimer(channelId, command);
         }
         getLogger().debug("Starting timer");
+        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
+        if(config == null) {
+            getLogger().warn("Config for channel id '{}' not found, can not start an initialized timer!", channelId);
+            return null;
+        }
 
-        // TODO: Actually use the channel config initial seconds....
-        TimerEvent domainTimerEvent = domainTimer.start(Duration.ofSeconds(INITIAL_TIMER_SECONDS));
+        TimerEvent domainTimerEvent = domainTimer.start(Duration.ofSeconds(config.initialSeconds()));
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), domainTimer.getEndTime());
         timerControl.setPaused(channelId, false);
