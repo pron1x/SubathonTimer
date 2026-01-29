@@ -133,6 +133,7 @@ public class TimerService implements HasLogger {
 
         // Create initial event for the timer and set timer ID
         TimerEvent initialEvent = new TimerEvent();
+        initialEvent.setChannelId(channelId);
         initialEvent.setType(TimerEventType.STATE_CHANGE);
         initialEvent.setOldTimerState(UNINITIALIZED);
         initialEvent.setCurrentTimerState(INITIALIZED);
@@ -144,7 +145,7 @@ public class TimerService implements HasLogger {
         domainTimer.setId(timerEntity.getId());
         domainTimers.put(channelId, domainTimer);
 
-        timerEventService.save(initialEvent);
+        timerEventService.saveAndPublish(initialEvent);
         return domainTimer.toDto();
     }
 
