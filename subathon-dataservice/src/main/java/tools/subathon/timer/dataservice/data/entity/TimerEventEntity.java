@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "timer_event")
@@ -21,7 +22,7 @@ public class TimerEventEntity extends BaseEntity {
     private Instant timestamp;
 
     @Column(name = "timer_id")
-    private Long timerId;
+    private UUID timerId;
 
     @Column(name = "channel_id", length = 30)
     private String channelId;
@@ -56,11 +57,11 @@ public class TimerEventEntity extends BaseEntity {
         this.timestamp = timestamp;
     }
 
-    public Long getTimerId() {
+    public UUID getTimerId() {
         return timerId;
     }
 
-    public void setTimerId(Long timerId) {
+    public void setTimerId(UUID timerId) {
         this.timerId = timerId;
     }
 

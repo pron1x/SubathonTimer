@@ -3,9 +3,10 @@ package tools.subathon.timer.datamodel;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record TimerDto(
-        Long id,
+        UUID id,
         String channelId,
         String channelName,
         Instant startTime,

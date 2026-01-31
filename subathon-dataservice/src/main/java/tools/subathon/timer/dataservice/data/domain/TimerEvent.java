@@ -5,9 +5,10 @@ import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class TimerEvent {
-    private Long timerId;
+    private UUID timerId;
     private String channelId;
     private Instant timestamp;
     private TimerEventType type;
@@ -17,11 +18,11 @@ public class TimerEvent {
     private TimerState currentTimerState;
     private SubathonEvent subathonEvent;
 
-    public Long getTimerId() {
+    public UUID getTimerId() {
         return timerId;
     }
 
-    public void setTimerId(Long timerId) {
+    public void setTimerId(UUID timerId) {
         this.timerId = timerId;
     }
 

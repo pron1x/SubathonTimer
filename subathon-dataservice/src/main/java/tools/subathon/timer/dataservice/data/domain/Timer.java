@@ -7,12 +7,13 @@ import tools.subathon.timer.dataservice.data.domain.enums.TimerState;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 public class Timer {
 
     private final Clock clock;
 
-    private Long id;
+    private UUID id;
     private final String channelName;
     private final String channelId;
     private Instant startTime;
@@ -21,6 +22,7 @@ public class Timer {
     private Instant updateTime;
 
     private Timer(String channelId, String channelName, Clock clock) {
+        this.id = UUID.randomUUID();
         this.clock = clock;
         this.channelId = channelId;
         this.channelName = channelName;
@@ -142,11 +144,11 @@ public class Timer {
         return this.state == TimerState.PAUSED;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

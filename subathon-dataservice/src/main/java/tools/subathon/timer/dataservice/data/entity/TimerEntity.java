@@ -4,10 +4,15 @@ import tools.subathon.timer.datamodel.enums.TimerState;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "timer")
-public class TimerEntity extends BaseEntity {
+public class TimerEntity {
+
+    @Id
+    @Column(name = "id", nullable = false, unique = true)
+    private UUID id;
 
     @Column(name = "channel_name")
     private String channelName;
@@ -27,6 +32,14 @@ public class TimerEntity extends BaseEntity {
 
     @Column(name = "update_time")
     private Instant updateTime;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getChannelName() {
         return channelName;

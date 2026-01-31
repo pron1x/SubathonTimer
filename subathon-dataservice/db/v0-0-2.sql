@@ -35,7 +35,7 @@ CREATE TABLE `user_configuration`
 
 CREATE TABLE `timer`
 (
-    `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Internal id of the timer',
+    `id`                BINARY(16) NOT NULL COMMENT 'Internal id of the timer',
     `channel_name`      VARCHAR(30) NOT NULL COMMENT 'Name of the Twitch channel',
     `channel_id`        VARCHAR(30) NOT NULL COMMENT 'Twitch id of the channel',
     `start_time`        TIMESTAMP COMMENT 'Start timestamp of the timer',
@@ -141,7 +141,7 @@ CREATE TABLE `command_event`
 CREATE TABLE `timer_event`
 (
     `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Id of the timer event',
-    `timer_id`            BIGINT UNSIGNED COMMENT 'Reference to the timer',
+    `timer_id`            BINARY(16) COMMENT 'Reference to the timer',
     `channel_id`          VARCHAR(30) NOT NULL COMMENT 'Twitch id of the channel',
     `event_id`            BIGINT UNSIGNED COMMENT 'Reference to the subathon event',
     `timestamp`           TIMESTAMP NOT NULL COMMENT 'Timestamp of the timer event',
