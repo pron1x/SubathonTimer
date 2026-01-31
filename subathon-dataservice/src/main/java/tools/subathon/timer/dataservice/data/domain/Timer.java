@@ -7,9 +7,13 @@ import tools.subathon.timer.dataservice.data.domain.enums.TimerState;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Timer {
+
+    private final List<TimerEvent> pendingEvents = new ArrayList<>();
 
     private final Clock clock;
 
@@ -37,6 +41,8 @@ public class Timer {
         Timer timer = new Timer(channelId, channelName, clock);
         timer.state = TimerState.INITIALIZED;
         timer.updateTime = clock.instant();
+        timer.pendingEvents.add(
+                timer.createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.UNINITIALIZED, TimerState.INITIALIZED, null, null));
 
         return timer;
     }
@@ -45,7 +51,7 @@ public class Timer {
         return initialize(channelId, channelName, Clock.systemUTC());
     }
 
-    public TimerEvent start(Duration startTime) {
+    public void start(Duration startTime) {
         if(this.state != TimerState.INITIALIZED) {
             throw new IllegalStateException("Can not start a timer that is not initialized");
         }
@@ -55,10 +61,10 @@ public class Timer {
         this.startTime = now;
         this.endTime = now.plus(startTime);
         this.updateTime = now;
-        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.INITIALIZED, TimerState.TICKING, null, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.INITIALIZED, TimerState.TICKING, null, this.endTime));
     }
 
-    public TimerEvent stop() {
+    public void stop() {
         if(this.state != TimerState.TICKING) {
             throw new IllegalStateException("Can not stop a timer that is not ticking");
         }
@@ -69,10 +75,10 @@ public class Timer {
         this.endTime = now;
         this.updateTime = now;
 
-        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, oldEndTime, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, oldEndTime, this.endTime));
     }
 
-    public TimerEvent pause() {
+    public void pause() {
         if(this.state != TimerState.TICKING) {
             throw new IllegalStateException("Can not pause a timer that is not ticking");
         }
@@ -80,10 +86,10 @@ public class Timer {
         this.state = TimerState.PAUSED;
         this.updateTime = now;
 
-        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.PAUSED, this.endTime, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.PAUSED, this.endTime, this.endTime));
     }
 
-    public TimerEvent resume() {
+    public void resume() {
         if(this.state != TimerState.PAUSED) {
             throw new IllegalStateException("Can not resume a timer that is not paused");
         }
@@ -96,10 +102,10 @@ public class Timer {
         this.endTime = oldEndTime.plus(pausedDuration);
         this.updateTime = now;
 
-        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.PAUSED, TimerState.TICKING, oldEndTime, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.PAUSED, TimerState.TICKING, oldEndTime, this.endTime));
     }
 
-    public TimerEvent addTime(Duration duration) {
+    public void addTime(Duration duration) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
             throw new IllegalStateException("Can only add time to a ticking or paused timer");
         }
@@ -112,10 +118,10 @@ public class Timer {
         }
         this.endTime = oldEndTime.plus(duration);
         this.updateTime = now;
-        return createTimerEvent(TimerEventType.TIME_ADDITION, this.state, this.state, oldEndTime, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.TIME_ADDITION, this.state, this.state, oldEndTime, this.endTime));
     }
 
-    public TimerEvent subtractTime(Duration duration) {
+    public void subtractTime(Duration duration) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
             throw new IllegalStateException("Can only subtract time from a ticking or paused timer");
         }
@@ -133,7 +139,7 @@ public class Timer {
 
         this.endTime = newEnd;
         this.updateTime = now;
-        return createTimerEvent(TimerEventType.TIME_SUBTRACTION, this.state, this.state, oldEndTime, this.endTime);
+        pendingEvents.add(createTimerEvent(TimerEventType.TIME_SUBTRACTION, this.state, this.state, oldEndTime, this.endTime));
     }
 
     public boolean isActive() {
@@ -221,5 +227,11 @@ public class Timer {
             case TIME_ADDITION -> tools.subathon.timer.datamodel.enums.TimerEventType.TIME_ADDITION;
             case TIME_SUBTRACTION -> tools.subathon.timer.datamodel.enums.TimerEventType.TIME_SUBTRACTION;
         };
+    }
+
+    public List<TimerEvent> getAndClearPendingEvents() {
+        List<TimerEvent> events = List.copyOf(pendingEvents);
+        pendingEvents.clear();
+        return events;
     }
 }

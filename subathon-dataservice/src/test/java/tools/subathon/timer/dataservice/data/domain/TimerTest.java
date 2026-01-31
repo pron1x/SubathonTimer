@@ -10,6 +10,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,7 +52,7 @@ class TimerTest {
     void startSetsCorrectEndTimeAndState() {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
 
-        TimerEvent startEvent = timer.start(Duration.ofMinutes(30));
+        timer.start(Duration.ofMinutes(30));
 
         // Timer should be active after starting
         assert(timer.isActive());
@@ -58,6 +60,11 @@ class TimerTest {
 
         // End time should be 30 minutes from fixed clock time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(30)), timer.getEndTime());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+        assertEquals(2, events.size());
+
+        TimerEvent startEvent = events.getLast();
 
         // Assert that the start event is correctly populated
         assertEquals("channelId", startEvent.getChannelId());
@@ -95,7 +102,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        TimerEvent stopEvent = timer.stop();
+        timer.stop();
 
         // Timer should not be active after stopping
         assert(!timer.isActive());
@@ -103,6 +110,11 @@ class TimerTest {
 
         // End time should be set to the current time, as we can stop 'prematurely' as well
         assertEquals(fixedClock.instant(), timer.getEndTime());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+        assertEquals(3, events.size());
+
+        TimerEvent stopEvent = events.getLast();
 
         // Assert that the stop event is correctly populated
         assertEquals("channelId", stopEvent.getChannelId());
@@ -145,9 +157,14 @@ class TimerTest {
 
         assert(timer.isActive());
 
-        TimerEvent pauseEvent = timer.pause();
+        timer.pause();
 
         assert(timer.isPaused());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+        assertEquals(3, events.size());
+
+        TimerEvent pauseEvent = events.getLast();
 
         assertEquals("channelId", pauseEvent.getChannelId());
         assertEquals(TimerEventType.STATE_CHANGE, pauseEvent.getType());
@@ -204,9 +221,14 @@ class TimerTest {
         // Pause after 10 minutes
         timer.pause();
         // 5 Minutes pass while paused
-        TimerEvent resumeEvent = timer.resume();
+        timer.resume();
         // End time should now be extended by the 5 minutes
         assertEquals(start.plus(Duration.ofMinutes(35)), timer.getEndTime());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+        assertEquals(4, events.size());
+
+        TimerEvent resumeEvent = events.getLast();
 
         assertEquals("channelId", resumeEvent.getChannelId());
         assertEquals(TimerEventType.STATE_CHANGE, resumeEvent.getType());
@@ -225,7 +247,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        TimerEvent addEvent = timer.addTime(Duration.ofMinutes(30));
+        timer.addTime(Duration.ofMinutes(30));
 
         // End time should be extended by 30 minutes, from the 30-minute start time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(60)), timer.getEndTime());
@@ -233,6 +255,11 @@ class TimerTest {
         // Timer state should be unchanged
         assert(timer.isActive());
         assert(!timer.isPaused());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+
+        assertEquals(3, events.size());
+        TimerEvent addEvent = events.getLast();
 
         assertEquals("channelId", addEvent.getChannelId());
         assertEquals(TimerEventType.TIME_ADDITION, addEvent.getType());
@@ -251,7 +278,7 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
         timer.start(Duration.ofMinutes(30));
 
-        TimerEvent subtractEvent = timer.subtractTime(Duration.ofMinutes(15));
+        timer.subtractTime(Duration.ofMinutes(15));
 
         // End time should be reduced by 15 minutes, from the 30-minute start time
         assertEquals(fixedClock.instant().plus(Duration.ofMinutes(15)), timer.getEndTime());
@@ -259,6 +286,12 @@ class TimerTest {
         // Timer state should be unchanged
         assert(timer.isActive());
         assert(!timer.isPaused());
+
+        List<TimerEvent> events = timer.getAndClearPendingEvents();
+
+        assertEquals(3, events.size());
+
+        TimerEvent subtractEvent = events.getLast();
 
         assertEquals("channelId", subtractEvent.getChannelId());
         assertEquals(TimerEventType.TIME_SUBTRACTION, subtractEvent.getType());
@@ -367,7 +400,7 @@ class TimerTest {
 
     @Test
     void fromDto() {
-        TimerDto dto = new TimerDto(123L,
+        TimerDto dto = new TimerDto(UUID.randomUUID(),
                 "channelId",
                 "channelName",
                 fixedClock.instant(),
