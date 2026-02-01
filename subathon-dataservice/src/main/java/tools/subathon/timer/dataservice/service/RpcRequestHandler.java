@@ -22,6 +22,8 @@ import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
+import java.util.Optional;
+
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 
@@ -47,9 +49,10 @@ public class RpcRequestHandler implements HasLogger {
             case GET_CHANNEL_CONFIG -> {
                 GetChannelConfigPayload payload = (GetChannelConfigPayload) request.getPayload();
                 if(payload == null) {
-                    yield RpcResponse.notFound();
+                    yield RpcResponse.error("Request payload is null!");
                 }
-                yield RpcResponse.ok(userConfigurationService.getForChannel(payload.channelId()));
+                Optional<UserConfigurationDto> configOpt = userConfigurationService.getForChannel(payload.channelId());
+                yield configOpt.map(RpcResponse::ok).orElseGet(RpcResponse::notFound);
             }
             case UPDATE_CHANNEL_CONFIG -> {
                 UpdateChannelConfigPayload payload = (UpdateChannelConfigPayload) request.getPayload();

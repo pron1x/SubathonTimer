@@ -6,6 +6,8 @@ import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
 import tools.subathon.timer.dataservice.data.repository.UserConfigurationRepository;
 
+import java.util.Optional;
+
 @Service
 public class UserConfigurationService {
 
@@ -22,9 +24,9 @@ public class UserConfigurationService {
         return modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationDto.class);
     }
 
-    public UserConfigurationDto getForChannel(String channelId) {
+    public Optional<UserConfigurationDto> getForChannel(String channelId) {
         UserConfigurationEntity config = userConfigurationRepository.findByChannelId(channelId);
-        return config != null ? modelMapper.map(config, UserConfigurationDto.class) : null;
+        return config != null ? Optional.of(modelMapper.map(config, UserConfigurationDto.class)) : Optional.empty();
     }
 
     public UserConfigurationDto deleteForChannel(String channelId) {

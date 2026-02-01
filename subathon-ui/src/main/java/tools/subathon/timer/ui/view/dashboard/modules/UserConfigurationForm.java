@@ -145,6 +145,8 @@ public class UserConfigurationForm extends VerticalLayout {
                 } catch (ValidationException e) {
                     Notification.show("Could not save configuration, check values and try again!", 5000, Notification.Position.MIDDLE);
                 }
+            } else {
+                Notification.show("Could not save configuration, check values and try again!", 5000, Notification.Position.MIDDLE);
             }
         });
         bindFields();
@@ -156,7 +158,9 @@ public class UserConfigurationForm extends VerticalLayout {
     private void bindFields() {
         // Need to bind the empty text field to allow writing record.
         binder.bind(channelId, "channelId");
-        binder.forField(id).withConverter(Long::valueOf, Objects::toString).bind("id");
+        binder.forField(id).withConverter(
+                stringValue -> !Objects.equals(stringValue, id.getEmptyValue()) ? Long.valueOf(stringValue) : null,
+                longValue -> longValue != null ? longValue.toString() : id.getEmptyValue()).bind("id");
         binder.bind(seJwt, "seJwt");
         binder.bind(followerSeconds, "followerSeconds");
         binder.bind(raiderSeconds, "raiderSeconds");

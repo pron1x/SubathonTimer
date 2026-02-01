@@ -114,12 +114,12 @@ public class TimerService implements HasLogger {
         }
 
         // Make sure SEImporter is authenticated with jwt
-        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
-        if (config == null) {
+        Optional<UserConfigurationDto> configOptional = userConfigurationService.getForChannel(channelId);
+        if (configOptional.isEmpty()) {
             getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
             return null;
         }
-        if (!seImporterRpcService.authenticateWithJwt(config.seJwt())) {
+        if (!seImporterRpcService.authenticateWithJwt(configOptional.get().seJwt())) {
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
             return null;
         }
@@ -146,13 +146,13 @@ public class TimerService implements HasLogger {
             return resumeTimer(channelId, command);
         }
         getLogger().debug("Starting timer");
-        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
-        if(config == null) {
+        Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(channelId);
+        if(config.isEmpty()) {
             getLogger().warn("Config for channel id '{}' not found, can not start an initialized timer!", channelId);
             return null;
         }
 
-        domainTimer.start(Duration.ofSeconds(config.initialSeconds()));
+        domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), domainTimer.getEndTime());
         timerControl.setPaused(channelId, false);
@@ -243,7 +243,7 @@ public class TimerService implements HasLogger {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
             return null;
         }
-        UserConfigurationDto config = userConfigurationService.getForChannel(channelId);
+        UserConfigurationDto config = userConfigurationService.getForChannel(channelId).orElse(null);
         if (config == null) {
             getLogger().warn("Config for channel id '{}' not found, using fallback values!", channelId);
             config = new UserConfigurationDto(null, null, null, FOLLOWER_SECONDS, RAIDER_SECONDS, TIER_1_SECONDS, TIER_2_SECONDS, TIER_3_SECONDS,
