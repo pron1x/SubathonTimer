@@ -7,6 +7,7 @@ import org.springframework.data.repository.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @org.springframework.stereotype.Repository
 public interface TimerRepository extends Repository<TimerEntity, Long> {
@@ -14,7 +15,7 @@ public interface TimerRepository extends Repository<TimerEntity, Long> {
     TimerEntity save(TimerEntity timerEntity);
 
     List<TimerEntity> findAll();
-    Optional<TimerEntity> findById(long id);
+    Optional<TimerEntity> findById(UUID id);
     Optional<TimerEntity> findByChannelNameAndState(String channelName, TimerState timerState);
     List<TimerEntity> findByStateIsNot(TimerState timerState);
 

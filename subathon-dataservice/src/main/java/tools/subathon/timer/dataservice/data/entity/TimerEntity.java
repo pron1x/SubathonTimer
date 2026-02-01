@@ -14,6 +14,9 @@ public class TimerEntity {
     @Column(name = "id", nullable = false, unique = true)
     private UUID id;
 
+    @Column(name = "insert_time")
+    protected Instant insertTime;
+
     @Column(name = "channel_name")
     private String channelName;
 
@@ -87,5 +90,13 @@ public class TimerEntity {
 
     public void setUpdateTime(Instant updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public Instant getInsertTime() {
+        return insertTime;
+    }
+
+    public void setInsertTime(Instant insertTime) {
+        this.insertTime = insertTime;
     }
 }

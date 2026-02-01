@@ -4,6 +4,7 @@ import tools.subathon.timer.dataservice.data.entity.TimerEventEntity;
 import org.springframework.data.repository.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface TimerEventRepository extends Repository<TimerEventEntity, Long> {
 
@@ -13,6 +14,6 @@ public interface TimerEventRepository extends Repository<TimerEventEntity, Long>
 
     TimerEventEntity findFirstByOrderByInsertTimeDescIdDesc();
 
-    TimerEventEntity findFirstByTimerIdOrderByInsertTimeDesc(long timerId);
+    TimerEventEntity findFirstByTimerIdOrderByInsertTimeDesc(UUID timerId);
 
 }
