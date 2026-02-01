@@ -18,7 +18,6 @@ import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -299,10 +298,6 @@ public class TimerService implements HasLogger {
     public TimerDto getLatestTimerForChannel(String channelId) {
         Optional<TimerEntity> entity = timerRepository.findLatestForChannelId(channelId);
         return entity.map(timerEntity -> mapper.map(timerEntity, TimerDto.class)).orElse(null);
-    }
-
-    public List<TimerDto> getAllActiveTimers() {
-        return timerRepository.findByStateIsNot(ENDED).stream().map(entity -> mapper.map(entity, TimerDto.class)).toList();
     }
 
 }
