@@ -4,9 +4,10 @@ import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record TimerEventDto(
-        Long timerId,
+        UUID timerId,
         String channelId,
         Instant timestamp,
         TimerEventType type,
