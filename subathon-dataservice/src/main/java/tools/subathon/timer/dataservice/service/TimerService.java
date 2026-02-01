@@ -41,30 +41,6 @@ public class TimerService implements HasLogger {
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
-    @Value("${timer.seconds.follow}")
-    private int FOLLOWER_SECONDS = 10;
-    @Value("${timer.seconds.raid}")
-    private int RAIDER_SECONDS = 1;
-    @Value("${timer.seconds.tier1}")
-    private int TIER_1_SECONDS = 300;
-    @Value("${timer.seconds.tier2}")
-    private int TIER_2_SECONDS = 600;
-    @Value("${timer.seconds.tier3}")
-    private int TIER_3_SECONDS = 1500;
-    @Value("${timer.seconds.tier1-gift}")
-    private int TIER_1_GIFT_SECONDS = 300;
-    @Value("${timer.seconds.tier2-gift}")
-    private int TIER_2_GIFT_SECONDS = 600;
-    @Value("${timer.seconds.tier3-gift}")
-    private int TIER_3_GIFT_SECONDS = 1500;
-    @Value("${timer.seconds.euro}")
-    private int EURO_SECONDS = 60; // Seconds added per 100 Euro cents
-    @Value("${timer.seconds.bits}")
-    private int BITS_SECONDS = 60; // Seconds added per 100 bits
-    @Value("${timer.seconds.initial}")
-    private int INITIAL_TIMER_SECONDS = 100;
-
-
     /*
      * In-memory map of all timers by channel ID
      * Contains currently active (i.e. any timers NOT with ENDED as their state) timers, fetched on startup from the database.
@@ -246,8 +222,7 @@ public class TimerService implements HasLogger {
         UserConfigurationDto config = userConfigurationService.getForChannel(channelId).orElse(null);
         if (config == null) {
             getLogger().warn("Config for channel id '{}' not found, using fallback values!", channelId);
-            config = new UserConfigurationDto(null, null, null, FOLLOWER_SECONDS, RAIDER_SECONDS, TIER_1_SECONDS, TIER_2_SECONDS, TIER_3_SECONDS,
-                    TIER_1_GIFT_SECONDS, TIER_2_GIFT_SECONDS, TIER_3_GIFT_SECONDS, EURO_SECONDS, BITS_SECONDS, INITIAL_TIMER_SECONDS);
+            config = userConfigurationService.getDefaultConfiguration();
         }
 
         if(!domainTimer.isActive()) {

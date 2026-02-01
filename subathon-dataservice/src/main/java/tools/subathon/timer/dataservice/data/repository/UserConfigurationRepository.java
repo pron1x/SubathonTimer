@@ -8,6 +8,4 @@ import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
 public interface UserConfigurationRepository extends CrudRepository<UserConfigurationEntity, Long> {
 
     UserConfigurationEntity findByChannelId(String channelId);
-
-    UserConfigurationEntity deleteByChannelId(String channelId);
 }
