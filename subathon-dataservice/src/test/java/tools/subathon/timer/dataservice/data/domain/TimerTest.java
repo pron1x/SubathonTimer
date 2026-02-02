@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
+import tools.subathon.timer.dataservice.data.domain.exception.IllegalTimerStateException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -85,16 +86,16 @@ class TimerTest {
         timer.start(Duration.ofMinutes(30));
 
         // Timer is now ticking, starting again should throw exception
-        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
+        assertThrows(IllegalTimerStateException.class, () -> timer.start(Duration.ofMinutes(15)));
 
         // Pause time to change into PAUSED state, should throw when trying to start
         timer.pause();
-        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
+        assertThrows(IllegalTimerStateException.class, () -> timer.start(Duration.ofMinutes(15)));
 
         // Start and stop timer to change into ENDED state, should throw when trying to start
         timer.resume();
         timer.stop();
-        assertThrows(IllegalStateException.class, () -> timer.start(Duration.ofMinutes(15)));
+        assertThrows(IllegalTimerStateException.class, () -> timer.start(Duration.ofMinutes(15)));
     }
 
     @Test
@@ -134,20 +135,20 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
 
         // Timer is only initialized, stopping should throw exception
-        assertThrows(IllegalStateException.class, timer::stop);
+        assertThrows(IllegalTimerStateException.class, timer::stop);
 
         // Start and then pause the timer
         timer.start(Duration.ofMinutes(30));
 
         timer.pause();
-        assertThrows(IllegalStateException.class, timer::stop);
+        assertThrows(IllegalTimerStateException.class, timer::stop);
 
         // Resume and then stop the timer
         timer.resume();
         timer.stop();
 
         // Timer is ended, stopping again should throw exception
-        assertThrows(IllegalStateException.class, timer::stop);
+        assertThrows(IllegalTimerStateException.class, timer::stop);
     }
 
     @Test
@@ -183,14 +184,14 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
 
         // Timer is only initialized, pausing should throw exception
-        assertThrows(IllegalStateException.class, timer::pause);
+        assertThrows(IllegalTimerStateException.class, timer::pause);
 
         // Start and then pause the timer
         timer.start(Duration.ofMinutes(30));
         timer.pause();
 
         // Timer is paused, pausing again should throw exception
-        assertThrows(IllegalStateException.class, timer::pause);
+        assertThrows(IllegalTimerStateException.class, timer::pause);
     }
 
     @Test
@@ -198,12 +199,12 @@ class TimerTest {
         Timer timer = Timer.initialize("channelId", "channelName", fixedClock);
 
         // Timer is only initialized, resuming should throw exception
-        assertThrows(IllegalStateException.class, timer::resume);
+        assertThrows(IllegalTimerStateException.class, timer::resume);
 
         // Timer is ticking, not paused, resuming should throw exception
         timer.start(Duration.ofMinutes(30));
 
-        assertThrows(IllegalStateException.class, timer::resume);
+        assertThrows(IllegalTimerStateException.class, timer::resume);
     }
 
     @Test

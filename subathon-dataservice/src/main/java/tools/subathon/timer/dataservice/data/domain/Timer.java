@@ -3,6 +3,8 @@ package tools.subathon.timer.dataservice.data.domain;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.dataservice.data.domain.enums.TimerEventType;
 import tools.subathon.timer.dataservice.data.domain.enums.TimerState;
+import tools.subathon.timer.dataservice.data.domain.exception.IllegalTimerStateException;
+import tools.subathon.timer.dataservice.data.domain.exception.InsufficientTimeRemainingException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -53,7 +55,7 @@ public class Timer {
 
     public void start(Duration startTime) {
         if(this.state != TimerState.INITIALIZED) {
-            throw new IllegalStateException("Can not start a timer that is not initialized");
+            throw new IllegalTimerStateException(TimerState.INITIALIZED, this.state, "start");
         }
         Instant now = clock.instant();
         this.state = TimerState.TICKING;
@@ -66,7 +68,7 @@ public class Timer {
 
     public void stop() {
         if(this.state != TimerState.TICKING) {
-            throw new IllegalStateException("Can not stop a timer that is not ticking");
+            throw new IllegalTimerStateException(TimerState.TICKING, this.state, "stop");
         }
         Instant now = clock.instant();
         Instant oldEndTime = this.endTime;
@@ -80,7 +82,7 @@ public class Timer {
 
     public void pause() {
         if(this.state != TimerState.TICKING) {
-            throw new IllegalStateException("Can not pause a timer that is not ticking");
+            throw new IllegalTimerStateException(TimerState.TICKING, this.state, "pause");
         }
         Instant now  = clock.instant();
         this.state = TimerState.PAUSED;
@@ -91,7 +93,7 @@ public class Timer {
 
     public void resume() {
         if(this.state != TimerState.PAUSED) {
-            throw new IllegalStateException("Can not resume a timer that is not paused");
+            throw new IllegalTimerStateException(TimerState.PAUSED, this.state, "resume");
         }
         Instant now = clock.instant();
         Duration pausedDuration = Duration.between(this.updateTime, now);
@@ -107,7 +109,7 @@ public class Timer {
 
     public void addTime(Duration duration) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
-            throw new IllegalStateException("Can only add time to a ticking or paused timer");
+            throw new IllegalTimerStateException(List.of(TimerState.TICKING, TimerState.PAUSED), this.state, "add time");
         }
         Instant now = clock.instant();
         // Calc paused time
@@ -123,7 +125,7 @@ public class Timer {
 
     public void subtractTime(Duration duration) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
-            throw new IllegalStateException("Can only subtract time from a ticking or paused timer");
+            throw new IllegalTimerStateException(List.of(TimerState.TICKING, TimerState.PAUSED), this.state, "subtract time");
         }
         Instant now = clock.instant();
         // Calc paused time
@@ -134,7 +136,7 @@ public class Timer {
         }
         Instant newEnd = oldEndTime.minus(duration);
         if(newEnd.isBefore(now)) {
-            throw new IllegalStateException("Can not subtract more time than remaining");
+            throw new InsufficientTimeRemainingException(duration, Duration.between(now, oldEndTime));
         }
 
         this.endTime = newEnd;

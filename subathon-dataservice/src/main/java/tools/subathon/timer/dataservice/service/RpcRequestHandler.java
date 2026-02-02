@@ -20,6 +20,7 @@ import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.util.Optional;
@@ -95,7 +96,12 @@ public class RpcRequestHandler implements HasLogger {
             case START_TIMER -> {
                 StartTimerPayload payload = (StartTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                TimerDto result = timerService.startTimer(payload.channelId(), event);
+                TimerDto result;
+                try {
+                    result = timerService.startTimer(payload.channelId(), event);
+                } catch (MissingTimerException e) {
+                    yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                }
                 if(result == null) {
                     yield RpcResponse.error("Could not start timer for channel " + payload.channelId());
                 }
@@ -104,7 +110,12 @@ public class RpcRequestHandler implements HasLogger {
             case PAUSE_TIMER -> {
                 PauseTimerPayload payload = (PauseTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                TimerDto result = timerService.pauseTimer(payload.channelId(), event);
+                TimerDto result;
+                try {
+                    result = timerService.pauseTimer(payload.channelId(), event);
+                } catch (MissingTimerException e) {
+                    yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                }
                 if(result == null) {
                     yield RpcResponse.error("Could not pause timer for channel " + payload.channelId());
                 }
@@ -113,7 +124,12 @@ public class RpcRequestHandler implements HasLogger {
             case ADD_TIME -> {
                 IncrementTimerPayload payload = (IncrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                TimerDto result = timerService.addSubathonEventTime(payload.channelId(), event);
+                TimerDto result;
+                try {
+                    result = timerService.addSubathonEventTime(payload.channelId(), event);
+                } catch (MissingTimerException e) {
+                    yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                }
                 if(result == null) {
                     yield RpcResponse.error("Could not add time to timer for channel " + payload.channelId());
                 }
@@ -122,7 +138,12 @@ public class RpcRequestHandler implements HasLogger {
             case SUBTRACT_TIME -> {
                 DecrementTimerPayload payload = (DecrementTimerPayload) request.getPayload();
                 SubathonCommandEvent event = createFromTimerPayload(payload, payload.source());
-                TimerDto result = timerService.subtractSubathonEventTime(payload.channelId(), event);
+                TimerDto result;
+                try {
+                    result = timerService.subtractSubathonEventTime(payload.channelId(), event);
+                } catch (MissingTimerException e) {
+                    yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                }
                 if(result == null) {
                     yield RpcResponse.error("Could not subtract time from timer for channel " + payload.channelId());
                 }

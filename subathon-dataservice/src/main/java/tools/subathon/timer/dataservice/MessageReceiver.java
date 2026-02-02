@@ -4,6 +4,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.dataservice.service.TimerService;
+import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +36,11 @@ public class MessageReceiver implements HasLogger {
             getLogger().info("Event is mock: {}", event);
             return;
         }
-        timerService.addSubathonEventTime(eventMessage.getChannelId(), event);
+        try {
+            timerService.addSubathonEventTime(eventMessage.getChannelId(), event);
+        } catch (MissingTimerException e) {
+            getLogger().error("Failed to handle twitch event!", e);
+        }
     }
 
 }

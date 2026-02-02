@@ -14,6 +14,7 @@ import tools.subathon.timer.datamodel.SubathonTipEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.SubTier;
 import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorService;
+import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
@@ -69,21 +70,28 @@ public class TimerService implements HasLogger {
             domainTimers.put(domainTimer.getChannelId(), domainTimer);
 
             if (domainTimer.isActive()) {
-                timerControl.scheduleCommand(domainTimer.getChannelId(), () -> stopTimer(domainTimer.getChannelId()), domainTimer.getEndTime());
+                timerControl.scheduleCommand(domainTimer.getChannelId(), () -> {
+                    try {
+                        stopTimer(domainTimer.getChannelId());
+                    } catch (MissingTimerException e) {
+                        getLogger().error("Something went VERY wrong here! Timer with scheduled command is missing!", e);
+                    }
+                }, domainTimer.getEndTime());
                 timerControl.setPaused(domainTimer.getChannelId(), domainTimer.isPaused());
             }
         }
     }
 
-    // TODO: Throw exception instead of null if errors occur
     public TimerDto initializeTimer(String channelId, String channelName) {
         // Create new timer object only if it doesn't exist yet
         if (domainTimers.containsKey(channelId)) {
+            // TODO: Add duplicate timer exception
             getLogger().info("Timer for channel id '{}'already exists.", channelId);
             return null;
         }
         // Make sure bot joined the channel
         if(!channelName.equals(botRpcService.requestChannelJoin(channelName))) {
+            // TODO: Add failed init exception
             getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
             return null;
         }
@@ -91,10 +99,12 @@ public class TimerService implements HasLogger {
         // Make sure SEImporter is authenticated with jwt
         Optional<UserConfigurationDto> configOptional = userConfigurationService.getForChannel(channelId);
         if (configOptional.isEmpty()) {
+            // TODO: Add missing config exception
             getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
             return null;
         }
         if (!seImporterRpcService.authenticateWithJwt(configOptional.get().seJwt())) {
+            // TODO: Add failed init exception
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
             return null;
         }
@@ -109,12 +119,11 @@ public class TimerService implements HasLogger {
         return domainTimer.toDto();
     }
 
-    // TODO: Throw exception instead of null on errors
-    public TimerDto startTimer(String channelId, SubathonCommandEvent command) {
+    public TimerDto startTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
-            return null;
+            throw new MissingTimerException(channelId, "start");
         }
         if (domainTimer.isActive()) {
             getLogger().warn("Cannot start the timer if it is already active. An active timer has to be resumed! Delegating to resumeTimer...");
@@ -123,13 +132,20 @@ public class TimerService implements HasLogger {
         getLogger().debug("Starting timer");
         Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(channelId);
         if(config.isEmpty()) {
-            getLogger().warn("Config for channel id '{}' not found, can not start an initialized timer!", channelId);
+            // TODO: Add missing config exception
+            getLogger().warn("Config for channel id '{}' not found, can not start without valid config!", channelId);
             return null;
         }
 
         domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
         // Schedule `stopTimer` command
-        timerControl.scheduleCommand(channelId, () -> stopTimer(channelId), domainTimer.getEndTime());
+        timerControl.scheduleCommand(channelId, () -> {
+            try {
+                stopTimer(channelId);
+            } catch (MissingTimerException e) {
+                getLogger().error("Something went VERY wrong here! Timer with scheduled command is missing!", e);
+            }
+        }, domainTimer.getEndTime());
         timerControl.setPaused(channelId, false);
 
         TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
@@ -144,12 +160,11 @@ public class TimerService implements HasLogger {
         return returnTimer;
     }
 
-    //TODO: Throw exception instead of null on errors
-    public TimerDto pauseTimer(String channelId, SubathonCommandEvent command) {
+    public TimerDto pauseTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to pause it!", channelId);
-            return null;
+            throw new MissingTimerException(channelId, "pause");
         }
 
         getLogger().debug("Pausing timer");
@@ -168,11 +183,11 @@ public class TimerService implements HasLogger {
         return returnTimer;
     }
 
-    private TimerDto resumeTimer(String channelId, SubathonCommandEvent command) {
+    private TimerDto resumeTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to resume it!", channelId);
-            return null;
+            throw new MissingTimerException(channelId, "resume");
         }
         getLogger().debug("Resuming timer!");
 
@@ -192,11 +207,11 @@ public class TimerService implements HasLogger {
         return returnTimer;
     }
 
-    public void stopTimer(String channelId) {
+    public void stopTimer(String channelId) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to stop!", channelId);
-            return;
+            throw new MissingTimerException(channelId, "stop");
         }
         getLogger().debug("Stopping timer!");
 
@@ -212,11 +227,11 @@ public class TimerService implements HasLogger {
         getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", domainTimer.getChannelId(), domainTimerEvent.getTimestamp(), domainTimerEvent.getCurrentEndTime());
     }
 
-    public TimerDto addSubathonEventTime(String channelId, SubathonEvent event) {
+    public TimerDto addSubathonEventTime(String channelId, SubathonEvent event) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
-            return null;
+            throw new MissingTimerException(channelId, "add time to");
         }
         UserConfigurationDto config = userConfigurationService.getForChannel(channelId).orElse(null);
         if (config == null) {
@@ -225,6 +240,7 @@ public class TimerService implements HasLogger {
         }
 
         if(!domainTimer.isActive()) {
+            // TODO: Add timer not active exception?
             getLogger().info("Not adding time to timer because it is not active. Ignoring {}.", event);
             return null;
         }
@@ -268,14 +284,15 @@ public class TimerService implements HasLogger {
         return mapper.map(returnTimer, TimerDto.class);
     }
 
-    public TimerDto subtractSubathonEventTime(String channelId, SubathonCommandEvent command) {
+    public TimerDto subtractSubathonEventTime(String channelId, SubathonCommandEvent command) throws MissingTimerException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, command);
-            return null;
+            throw new MissingTimerException(channelId, "subtract time from");
         }
 
         if(!domainTimer.isActive()) {
+            // TODO: Add timer not active exception?
             getLogger().info("Not removing time from timer because it is not active. Ignoring {}.", command);
             return null;
         }
