@@ -246,28 +246,7 @@ public class TimerService implements HasLogger {
         }
         getLogger().debug("Adding time for event: {}", event);
 
-        double seconds = switch (event.getType()) {
-            case FOLLOW -> config.followerSeconds();
-            case RAID -> ((SubathonRaidEvent) event).getAmount() * config.raiderSeconds();
-            case SUBSCRIPTION -> {
-                SubathonSubEvent subEvent = (SubathonSubEvent) event;
-                if (subEvent.isGifted()) {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3GiftSeconds() :
-                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2GiftSeconds() : config.tier1GiftSeconds();
-                } else {
-                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3Seconds() :
-                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2Seconds() : config.tier1Seconds();
-                }
-            }
-            /* Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
-            Time is added for the individual gifted subscriptions */
-            case GIFT -> 0;
-            case TIP -> config.currencySeconds() * ((SubathonTipEvent) event).getAmount();
-            case CHEER -> config.bitsSeconds() * (((SubathonBitCheerEvent) event).getAmount() / 100.0);
-            case COMMAND -> ((SubathonCommandEvent) event).getSeconds();
-        };
-
-        long secondsToAdd = (long) Math.ceil(seconds);
+        long secondsToAdd = getSecondsToAdd(event, config);
         getLogger().info("Adding {} seconds for event {}", secondsToAdd, event);
         domainTimer.addTime(Duration.ofSeconds(secondsToAdd));
 
@@ -315,6 +294,31 @@ public class TimerService implements HasLogger {
     public TimerDto getLatestTimerForChannel(String channelId) {
         Optional<TimerEntity> entity = timerRepository.findLatestForChannelId(channelId);
         return entity.map(timerEntity -> mapper.map(timerEntity, TimerDto.class)).orElse(null);
+    }
+
+    private static long getSecondsToAdd(SubathonEvent event, UserConfigurationDto config) {
+        double seconds = switch (event.getType()) {
+            case FOLLOW -> config.followerSeconds();
+            case RAID -> ((SubathonRaidEvent) event).getAmount() * config.raiderSeconds();
+            case SUBSCRIPTION -> {
+                SubathonSubEvent subEvent = (SubathonSubEvent) event;
+                if (subEvent.isGifted()) {
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3GiftSeconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2GiftSeconds() : config.tier1GiftSeconds();
+                } else {
+                    yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3Seconds() :
+                            subEvent.getTier() == SubTier.TIER_2 ? config.tier2Seconds() : config.tier1Seconds();
+                }
+            }
+            /* Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
+            Time is added for the individual gifted subscriptions */
+            case GIFT -> 0;
+            case TIP -> config.currencySeconds() * ((SubathonTipEvent) event).getAmount();
+            case CHEER -> config.bitsSeconds() * (((SubathonBitCheerEvent) event).getAmount() / 100.0);
+            case COMMAND -> ((SubathonCommandEvent) event).getSeconds();
+        };
+
+        return (long) Math.ceil(seconds);
     }
 
 }
