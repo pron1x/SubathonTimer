@@ -138,6 +138,7 @@ public class TimerService implements HasLogger {
         }
 
         domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
+        TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> {
             try {
@@ -147,8 +148,6 @@ public class TimerService implements HasLogger {
             }
         }, domainTimer.getEndTime());
         timerControl.setPaused(channelId, false);
-
-        TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(event -> {
@@ -168,11 +167,11 @@ public class TimerService implements HasLogger {
         }
 
         getLogger().debug("Pausing timer");
-        // Pause scheduled execution
         domainTimer.pause();
-        timerControl.setPaused(channelId, true);
 
         TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
+
+        timerControl.setPaused(channelId, true);
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(event -> {
@@ -250,9 +249,10 @@ public class TimerService implements HasLogger {
         getLogger().info("Adding {} seconds for event {}", secondsToAdd, event);
         domainTimer.addTime(Duration.ofSeconds(secondsToAdd));
 
+        TimerEntity returnTimer = timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+
         // Change scheduled timer
         timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
-        TimerEntity returnTimer = timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
 
         // Save and publish timerEvent
         domainTimer.getAndClearPendingEvents().forEach(domainEvent -> {
@@ -279,8 +279,8 @@ public class TimerService implements HasLogger {
 
         domainTimer.subtractTime(Duration.ofSeconds(command.getSeconds()));
 
-        timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
         TimerEntity returnTimer = timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+        timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(domainEvent -> {
