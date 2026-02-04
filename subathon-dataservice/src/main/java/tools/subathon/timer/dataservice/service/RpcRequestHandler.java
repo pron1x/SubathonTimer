@@ -20,6 +20,9 @@ import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
+import tools.subathon.timer.dataservice.service.exception.InitializationException;
+import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
@@ -87,7 +90,12 @@ public class RpcRequestHandler implements HasLogger {
             }
             case INIT_TIMER -> {
                 InitTimerPayload payload = (InitTimerPayload) request.getPayload();
-                TimerDto result = timerService.initializeTimer(payload.channelId(), payload.channelName());
+                TimerDto result;
+                try {
+                    result = timerService.initializeTimer(payload.channelId(), payload.channelName());
+                } catch (MissingChannelConfigurationException | DuplicateTimerException | InitializationException e) {
+                    yield RpcResponse.error(e.getMessage());
+                }
                 if(result == null) {
                     yield RpcResponse.error("Could not initialize timer for channel " + payload.channelId());
                 }
@@ -101,6 +109,8 @@ public class RpcRequestHandler implements HasLogger {
                     result = timerService.startTimer(payload.channelId(), event);
                 } catch (MissingTimerException e) {
                     yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                } catch (MissingChannelConfigurationException e) {
+                    yield RpcResponse.error(e.getMessage());
                 }
                 if(result == null) {
                     yield RpcResponse.error("Could not start timer for channel " + payload.channelId());

@@ -14,6 +14,9 @@ import tools.subathon.timer.datamodel.SubathonTipEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.SubTier;
 import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorService;
+import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
+import tools.subathon.timer.dataservice.service.exception.InitializationException;
+import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
@@ -82,31 +85,26 @@ public class TimerService implements HasLogger {
         }
     }
 
-    public TimerDto initializeTimer(String channelId, String channelName) {
-        // Create new timer object only if it doesn't exist yet
+    public TimerDto initializeTimer(String channelId, String channelName) throws MissingChannelConfigurationException, DuplicateTimerException, InitializationException {
         if (domainTimers.containsKey(channelId)) {
-            // TODO: Add duplicate timer exception
             getLogger().info("Timer for channel id '{}'already exists.", channelId);
-            return null;
+            throw new DuplicateTimerException(channelId);
         }
         // Make sure bot joined the channel
         if(!channelName.equals(botRpcService.requestChannelJoin(channelName))) {
-            // TODO: Add failed init exception
             getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
-            return null;
+            throw new InitializationException(channelId, "Bot channel join");
         }
 
         // Make sure SEImporter is authenticated with jwt
         Optional<UserConfigurationDto> configOptional = userConfigurationService.getForChannel(channelId);
         if (configOptional.isEmpty()) {
-            // TODO: Add missing config exception
             getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
-            return null;
+            throw new MissingChannelConfigurationException(channelId);
         }
         if (!seImporterRpcService.authenticateWithJwt(configOptional.get().seJwt())) {
-            // TODO: Add failed init exception
             getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
-            return null;
+            throw new InitializationException(channelId, "StreamElements authentication");
         }
 
         Timer domainTimer = Timer.initialize(channelId, channelName);
@@ -119,7 +117,7 @@ public class TimerService implements HasLogger {
         return domainTimer.toDto();
     }
 
-    public TimerDto startTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
+    public TimerDto startTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException, MissingChannelConfigurationException {
         Timer domainTimer = domainTimers.get(channelId);
         if (domainTimer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
@@ -132,9 +130,8 @@ public class TimerService implements HasLogger {
         getLogger().debug("Starting timer");
         Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(channelId);
         if(config.isEmpty()) {
-            // TODO: Add missing config exception
             getLogger().warn("Config for channel id '{}' not found, can not start without valid config!", channelId);
-            return null;
+            throw new MissingChannelConfigurationException(channelId);
         }
 
         domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
