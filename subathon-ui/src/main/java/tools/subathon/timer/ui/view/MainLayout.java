@@ -10,17 +10,16 @@ import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 
+@AnonymousAllowed
 public class MainLayout extends AppLayout {
 
-    private final transient AuthenticationContext authContext;
     private final LoginDialog loginDialog;
 
     public MainLayout(AuthenticationContext authContext) {
-        this.authContext = authContext;
-
         HorizontalLayout navLayout = new HorizontalLayout();
 
         navLayout.setAlignItems(FlexComponent.Alignment.CENTER);

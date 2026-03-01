@@ -1,9 +1,9 @@
 package tools.subathon.timer.dataservice.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.payload.configuration.ChannelConfigPayload;
@@ -34,12 +34,12 @@ import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 @Component
 public class RpcRequestHandler implements HasLogger {
 
-    private final ObjectMapper mapper;
+    private final JsonMapper mapper;
     private final UserConfigurationService userConfigurationService;
     private final TimerService timerService;
 
     @Autowired
-    public RpcRequestHandler(ObjectMapper mapper, UserConfigurationService userConfigurationService, TimerService timerService) {
+    public RpcRequestHandler(JsonMapper mapper, UserConfigurationService userConfigurationService, TimerService timerService) {
         this.mapper = mapper;
         this.userConfigurationService = userConfigurationService;
         this.timerService = timerService;

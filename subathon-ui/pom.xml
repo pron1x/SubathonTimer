@@ -12,7 +12,7 @@
     <artifactId>subathon-ui</artifactId>
 
     <properties>
-        <vaadin.version>24.9.9</vaadin.version>
+        <vaadin.version>25.0.6</vaadin.version>
     </properties>
 
     <dependencies>
@@ -20,6 +20,11 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
             <version>${vaadin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-dev</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tools.subathon</groupId>
@@ -34,11 +39,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit-test</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>tools.subathon</groupId>

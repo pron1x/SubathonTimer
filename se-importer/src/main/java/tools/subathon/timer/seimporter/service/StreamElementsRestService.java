@@ -1,11 +1,11 @@
 package tools.subathon.timer.seimporter.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class StreamElementsRestService {
@@ -14,12 +14,12 @@ public class StreamElementsRestService {
     private final String CHANNELS_ENDPOINT = "/channels";
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @Autowired
-    public StreamElementsRestService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
+    public StreamElementsRestService(RestClient.Builder restClientBuilder, JsonMapper jsonMapper) {
         this.restClient = restClientBuilder.baseUrl(SE_API_URI).build();
-        this.objectMapper = objectMapper;
+        this.jsonMapper = jsonMapper;
     }
 
     public String getTwitchChannelId(String streamElementsId) {
@@ -29,9 +29,9 @@ public class StreamElementsRestService {
                 .retrieve().body(String.class);
 
         try {
-            JsonNode node = objectMapper.readTree(response);
-            return node.get("providerId").asText();
-        } catch (JsonProcessingException e) {
+            JsonNode node = jsonMapper.readTree(response);
+            return node.get("providerId").asString();
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

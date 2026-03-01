@@ -7,8 +7,6 @@ import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
-import elemental.json.Json;
-import elemental.json.JsonNumber;
 
 @JsModule("./src/subathon-timer.ts")
 @Tag("subathon-timer")
@@ -30,20 +28,20 @@ public class SubathonTimer extends Component implements HasLogger {
         long end = timer.endTime() != null ? timer.endTime().toEpochMilli() : 0;
         long update = timer.updateTime() != null ? timer.updateTime().toEpochMilli() : 0;
         String state = timer.state().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
+        getElement().callJsFunction("updateToNewTimerEvent", end, update, state);
     }
 
     private void pushNewTimerEvent(TimerEventDto event) {
         long end = event.currentEndTime().toEpochMilli();
         long update = event.timestamp().toEpochMilli();
         String state = event.currentTimerState().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", Json.create(end), Json.create(update), state);
+        getElement().callJsFunction("updateToNewTimerEvent", end, update, state);
     }
 
     @SuppressWarnings("unused")
     @ClientCallable
-    public JsonNumber getCurrentServerTimestamp() {
-        return Json.create(System.currentTimeMillis());
+    public Long getCurrentServerTimestamp() {
+        return System.currentTimeMillis();
     }
 
 }

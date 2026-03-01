@@ -1,8 +1,8 @@
 package tools.subathon.timer.seimporter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.seimporter.factory.SubathonEventFactory;
@@ -25,7 +25,7 @@ import java.util.List;
 @Service
 public class SocketService implements HasLogger {
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     private final RabbitMessageService messageService;
 
@@ -38,8 +38,8 @@ public class SocketService implements HasLogger {
     private Socket socket;
 
     @Autowired
-    public SocketService(ObjectMapper objectMapper, RabbitMessageService messageService, TwitchIdCacheService twitchIdCacheService) {
-        this.objectMapper = objectMapper;
+    public SocketService(JsonMapper jsonMapper, RabbitMessageService messageService, TwitchIdCacheService twitchIdCacheService) {
+        this.jsonMapper = jsonMapper;
         this.messageService = messageService;
         this.twitchIdCacheService = twitchIdCacheService;
     }
@@ -89,15 +89,6 @@ public class SocketService implements HasLogger {
         getLogger().info("Trying to authenticate with {} tokens.", jwtList.size());
         for (String token : jwtList) {
             connectWithJwt(token);
-//            JSONObject authObject = new JSONObject();
-//            try {
-//                authObject.put("method", "jwt");
-//                authObject.put("token", token);
-//            } catch (JSONException e) {
-//                getLogger().error("Unable to create authentication json object. {}", e.getMessage());
-//                return;
-//            }
-//            socket.emit("authenticate", authObject);
         }
         getLogger().info("sent all authenticate messages.");
     }
@@ -109,11 +100,11 @@ public class SocketService implements HasLogger {
     private void onAuthenticated(Object... e) {
         if (e.length > 0) {
             try {
-                JsonNode node = objectMapper.readTree(e[0].toString());
-                String streamElementsId = node.get("channelId").asText();
+                JsonNode node = jsonMapper.readTree(e[0].toString());
+                String streamElementsId = node.get("channelId").asString();
                 String twitchId = twitchIdCacheService.getTwitchId(streamElementsId);
                 getLogger().info("Authenticated on StreamElements for channel '{}' (Twitch: '{}')", streamElementsId, twitchId);
-            } catch (JsonProcessingException ex) {
+            } catch (JacksonException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -132,13 +123,13 @@ public class SocketService implements HasLogger {
         getLogger().info("Received StreamElements event: {}.", events[0].toString());
         StreamElementsEventModel event;
         try {
-            event = objectMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
+            event = jsonMapper.readValue(events[0].toString(), StreamElementsEventModel.class);
             getLogger().info(event.toString());
             SubathonEvent subathonEvent = SubathonEventFactory.convertToSubathonEvent(event);
             SubathonEventMessage eventMessage = new SubathonEventMessage();
             eventMessage.setChannelId(twitchIdCacheService.getTwitchId(event.getChannel()));
             eventMessage.setSubathonEvent(subathonEvent);
-            messageService.produceMessage(objectMapper.writeValueAsString(eventMessage));
+            messageService.produceMessage(jsonMapper.writeValueAsString(eventMessage));
         } catch (Exception e) {
             getLogger().warn("Unable to map event to event model! Event= {}", events[0], e);
         }
