@@ -11,8 +11,6 @@ bot:
       client-id:
       client-secret:
   subathon:
-    # Expects a comma separated list of channel names to join
-    channels: 
     command:
       prefix: '!'
 

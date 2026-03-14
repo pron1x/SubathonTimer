@@ -1,11 +1,15 @@
 package tools.subathon.timer.bot;
 
 import com.github.twitch4j.TwitchClient;
-import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
-import com.github.twitch4j.common.enums.CommandPermission;
-import com.github.twitch4j.common.events.domain.EventChannel;
-import com.github.twitch4j.common.events.domain.EventUser;
+import com.github.twitch4j.eventsub.EventSubSubscription;
+import com.github.twitch4j.eventsub.EventSubSubscriptionStatus;
+import com.github.twitch4j.eventsub.condition.ChannelChatCondition;
+import com.github.twitch4j.eventsub.domain.chat.Badge;
+import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
+import com.github.twitch4j.eventsub.socket.IEventSubConduit;
+import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import com.github.twitch4j.helix.domain.ChatMessage;
+import com.github.twitch4j.helix.domain.EventSubSubscriptionList;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
@@ -22,7 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Component
 public class SubathonBot implements HasLogger {
@@ -32,9 +36,6 @@ public class SubathonBot implements HasLogger {
     @Value("${bot.twitch.user.id}")
     private String botId;
 
-    @Value("${bot.subathon.channels}")
-    private List<String> channelNames;
-
     @Value("${bot.subathon.command.prefix}")
     private String COMMAND_PREFIX;
 
@@ -42,59 +43,68 @@ public class SubathonBot implements HasLogger {
 
     private final TwitchClient twitchClient;
 
+    private final IEventSubConduit conduit;
+
     @Autowired
-    public SubathonBot(DataserviceRpcService dataserviceRpcService, TwitchClient twitchClient) {
+    public SubathonBot(DataserviceRpcService dataserviceRpcService, TwitchClient twitchClient, IEventSubConduit conduit) {
         this.dataserviceRpcService = dataserviceRpcService;
         this.twitchClient = twitchClient;
+        this.conduit = conduit;
     }
 
     @PostConstruct
     public void init() {
-        getLogger().info("Joining {} channels.", channelNames.size());
-        for(String channel : channelNames) {
-            joinChannel(channel);
-        }
+        getLogger().info("Setting up conduit subscriptions.");
 
-        twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
-            getLogger().trace("Received message. [{}: {}]", event.getUser().getName(), event.getMessage());
-            if (event.getMessage().startsWith(COMMAND_PREFIX) && !botId.equals(event.getUser().getId())) {
-                String[] split = event.getMessage().trim().split(" ");
+        joinChannel("91658662");
+
+        conduit.getEventManager().onEvent(ChannelChatMessageEvent.class, event -> {
+            getLogger().debug("Received channel message from {} in channel {}. Message: {}.", event.getChatterUserName(), event.getBroadcasterUserName(), event.getMessage().getCleanedText());
+            if (event.getMessage().getCleanedText().startsWith(COMMAND_PREFIX) && !botId.equals(event.getChatterUserId())) {
+                String[] split = event.getMessage().getCleanedText().trim().split(" ");
                 String command = split[0].substring(1);
 
                 // !timer command needs at least a subcommand, subcommand args will be checked for the command
-                if ("timer".equals(command) && split.length > 1 && hasPermission(event.getPermissions())) {
+                if ("timer".equals(command) && split.length > 1 && hasPermission(event.getBadges())) {
                     String[] args = Arrays.stream(split).skip(2).toArray(String[]::new);
-                    handleCommand(split[1], event.getChannel(), event.getUser(), args);
+                    handleCommand(split[1], event.getBroadcasterUserId(), event.getChatterUserName(), args);
                 }
             }
         });
     }
 
-    public boolean joinChannel(String channelName) {
-        twitchClient.getChat().joinChannel(channelName);
-        getLogger().info("Joined channel '{}'.", channelName);
-        return twitchClient.getChat().isChannelJoined(channelName);
+    public boolean joinChannel(String channelId) {
+        getLogger().info("Creating chat message subscription for channel '{}'.", channelId);
+
+        if (!getJoinedChannels().contains(channelId)) {
+            Optional<EventSubSubscription> subscription = conduit.register(SubscriptionTypes.CHANNEL_CHAT_MESSAGE, b -> b.broadcasterUserId(channelId).userId(botId).build());
+            return subscription.isPresent();
+        } else {
+            getLogger().info("Subscription for channel '{}' already existed.", channelId);
+            return true;
+        }
     }
 
     public List<String> getJoinedChannels() {
-        return twitchClient.getChat().getChannels().stream().toList();
+        EventSubSubscriptionList subscriptions = twitchClient.getHelix().getEventSubSubscriptions(null, null,SubscriptionTypes.CHANNEL_CHAT_MESSAGE, null, null, null).execute();
+        return subscriptions.getSubscriptions().stream().filter(s -> s.getStatus().equals(EventSubSubscriptionStatus.ENABLED)).map(EventSubSubscription::getCondition).map(c -> (ChannelChatCondition) c).map(ChannelChatCondition::getBroadcasterUserId).toList();
     }
 
-    private void handleCommand(String command, EventChannel eventChannel, EventUser user, String... args) {
-        getLogger().debug("Handling '!timer' command for channel '{} ({})'. Sub command: {}, args: {}", eventChannel.getName(), eventChannel.getId(), command, args);
+    private void handleCommand(String command, String eventChannelId, String userName, String... args) {
+        getLogger().debug("Handling '!timer' command for channel '{}'. Sub command: {}, args: {}", eventChannelId, command, args);
         switch (command) {
             case "start" -> {
-                if(handleStateChangeCommand(eventChannel.getId(), user, false)) {
-                    sendMessageWithHelix(eventChannel.getId(), "Timer started.");
+                if(handleStateChangeCommand(eventChannelId, userName, false)) {
+                    sendMessageWithHelix(eventChannelId, "Timer started.");
                 } else {
-                    sendMessageWithHelix(eventChannel.getId(), "Failed to start the timer. Please try again...");
+                    sendMessageWithHelix(eventChannelId, "Failed to start the timer. Please try again...");
                 }
             }
             case "pause" -> {
-                if(handleStateChangeCommand(eventChannel.getId(), user, true)) {
-                    sendMessageWithHelix(eventChannel.getId(), "Timer paused.");
+                if(handleStateChangeCommand(eventChannelId, userName, true)) {
+                    sendMessageWithHelix(eventChannelId, "Timer paused.");
                 } else {
-                    sendMessageWithHelix(eventChannel.getId(), "Failed to pause the timer. Please try again...");
+                    sendMessageWithHelix(eventChannelId, "Failed to pause the timer. Please try again...");
                 }
             }
             case "add" -> {
@@ -103,13 +113,13 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing add command due to invalid args.");
-                    sendMessageWithHelix(eventChannel.getId(), "Invalid arguments!");
+                    sendMessageWithHelix(eventChannelId, "Invalid arguments!");
                     return;
                 }
-                if(handleTimeChangeCommand(eventChannel.getId(), user, seconds, false)) {
-                    sendMessageWithHelix(eventChannel.getId(), String.format("Added %d seconds to the timer.", seconds));
+                if(handleTimeChangeCommand(eventChannelId, userName, seconds, false)) {
+                    sendMessageWithHelix(eventChannelId, String.format("Added %d seconds to the timer.", seconds));
                 } else {
-                    sendMessageWithHelix(eventChannel.getId(), "Command failed! Please try again...");
+                    sendMessageWithHelix(eventChannelId, "Command failed! Please try again...");
                 }
             }
             case "del" -> {
@@ -118,24 +128,24 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing del command due to invalid args.");
-                    sendMessageWithHelix(eventChannel.getId(), "Invalid arguments!");
+                    sendMessageWithHelix(eventChannelId, "Invalid arguments!");
                     return;
                 }
-                if(handleTimeChangeCommand(eventChannel.getId(), user, seconds, true)) {
-                    sendMessageWithHelix(eventChannel.getId(), String.format("Removed %d seconds from the timer.", seconds));
+                if(handleTimeChangeCommand(eventChannelId, userName, seconds, true)) {
+                    sendMessageWithHelix(eventChannelId, String.format("Removed %d seconds from the timer.", seconds));
                 } else {
-                    sendMessageWithHelix(eventChannel.getId(), "Command failed! Please try again...");
+                    sendMessageWithHelix(eventChannelId, "Command failed! Please try again...");
                 }
             }
-            default -> sendMessageWithHelix(eventChannel.getId(), "I can't do that... NotLikeThis");
+            default -> sendMessageWithHelix(eventChannelId, "I can't do that... NotLikeThis");
         }
     }
 
-    private boolean handleStateChangeCommand(String channelId, EventUser user, boolean isPause) {
+    private boolean handleStateChangeCommand(String channelId, String userName, boolean isPause) {
         getLogger().debug("Handling timer state change command [{}]", isPause ? "pause" : "start");
 
-        SubathonCommandEvent event = isPause ? createCommandEvent(user.getName(), Command.PAUSE) :
-                createCommandEvent(user.getName(), Command.START);
+        SubathonCommandEvent event = isPause ? createCommandEvent(userName, Command.PAUSE) :
+                createCommandEvent(userName, Command.START);
         try {
             RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(channelId, event);
             switch (response) {
@@ -153,10 +163,10 @@ public class SubathonBot implements HasLogger {
         }
     }
 
-    private boolean handleTimeChangeCommand(String channelId, EventUser user, long seconds, boolean isRemove) {
+    private boolean handleTimeChangeCommand(String channelId, String userName, long seconds, boolean isRemove) {
         getLogger().debug("Handling timer time change command [{}]", isRemove ? "del" : "add");
-        SubathonCommandEvent event = isRemove ? createCommandEvent(user.getName(), Command.REMOVE, seconds) :
-                createCommandEvent(user.getName(), Command.ADD, seconds);
+        SubathonCommandEvent event = isRemove ? createCommandEvent(userName, Command.REMOVE, seconds) :
+                createCommandEvent(userName, Command.ADD, seconds);
         try {
             RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(channelId, event);
             switch (response) {
@@ -206,8 +216,8 @@ public class SubathonBot implements HasLogger {
         return event;
     }
 
-    private boolean hasPermission(Set<CommandPermission> permissions) {
-        return permissions.stream().anyMatch(p -> p == CommandPermission.OWNER || p == CommandPermission.MODERATOR);
+    private boolean hasPermission(List<Badge> badges) {
+        return badges.stream().anyMatch(p -> "moderator".equals(p.getSetId()) || "broadcaster".equals(p.getSetId()));
     }
 
     private void sendMessageWithHelix(String channelId, String message) {

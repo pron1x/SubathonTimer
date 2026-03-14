@@ -5,6 +5,14 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.common.util.ThreadUtils;
+import com.github.twitch4j.eventsub.socket.IEventSubConduit;
+import com.github.twitch4j.eventsub.socket.conduit.TwitchConduitSocketPool;
+import com.github.twitch4j.eventsub.socket.conduit.exceptions.ConduitNotFoundException;
+import com.github.twitch4j.eventsub.socket.conduit.exceptions.ConduitResizeException;
+import com.github.twitch4j.eventsub.socket.conduit.exceptions.CreateConduitException;
+import com.github.twitch4j.eventsub.socket.conduit.exceptions.ShardRegistrationException;
+import com.github.twitch4j.eventsub.socket.conduit.exceptions.ShardTimeoutException;
+import com.github.twitch4j.helix.domain.ConduitList;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,12 +47,25 @@ public class TwitchClientConfig implements HasLogger {
                 .withClientSecret(clientSecret)
                 .withDefaultAuthToken(appCredential)
                 .withScheduledThreadPoolExecutor(executor)
-                .withEnableChat(true)
                 .build();
     }
 
     @Bean
     TwitchIdentityProvider twitchIdentityProvider() {
         return new TwitchIdentityProvider(clientId, clientSecret, null);
+    }
+
+    @Bean
+    IEventSubConduit eventSubConduit(TwitchClient twitchClient) throws ShardTimeoutException, ConduitResizeException, CreateConduitException, ConduitNotFoundException, ShardRegistrationException {
+        ConduitList conduitInfo = twitchClient.getHelix().getConduits(null).execute();
+
+        return TwitchConduitSocketPool.create(spec -> {
+            if (!conduitInfo.getConduits().isEmpty()) {
+                spec.conduitId(conduitInfo.getConduits().getFirst().getId());
+            }
+            spec.clientId(clientId);
+            spec.clientSecret(clientSecret);
+            spec.poolShards(2);
+        });
     }
 }
