@@ -5,6 +5,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
+import com.github.twitch4j.helix.domain.ChatMessage;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
@@ -27,6 +28,9 @@ import java.util.Set;
 public class SubathonBot implements HasLogger {
 
     private static final String EVENT_SOURCE = "TwitchChat";
+
+    @Value("${bot.twitch.user.id}")
+    private String botId;
 
     @Value("${bot.subathon.channels}")
     private List<String> channelNames;
@@ -53,7 +57,7 @@ public class SubathonBot implements HasLogger {
 
         twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
             getLogger().trace("Received message. [{}: {}]", event.getUser().getName(), event.getMessage());
-            if (event.getMessage().startsWith(COMMAND_PREFIX)) {
+            if (event.getMessage().startsWith(COMMAND_PREFIX) && !botId.equals(event.getUser().getId())) {
                 String[] split = event.getMessage().trim().split(" ");
                 String command = split[0].substring(1);
 
@@ -81,16 +85,16 @@ public class SubathonBot implements HasLogger {
         switch (command) {
             case "start" -> {
                 if(handleStateChangeCommand(eventChannel.getId(), user, false)) {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Timer started.");
+                    sendMessageWithHelix(eventChannel.getId(), "Timer started.");
                 } else {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Failed to start the timer. Please try again...");
+                    sendMessageWithHelix(eventChannel.getId(), "Failed to start the timer. Please try again...");
                 }
             }
             case "pause" -> {
                 if(handleStateChangeCommand(eventChannel.getId(), user, true)) {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Timer paused.");
+                    sendMessageWithHelix(eventChannel.getId(), "Timer paused.");
                 } else {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Failed to pause the timer. Please try again...");
+                    sendMessageWithHelix(eventChannel.getId(), "Failed to pause the timer. Please try again...");
                 }
             }
             case "add" -> {
@@ -99,13 +103,13 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing add command due to invalid args.");
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
+                    sendMessageWithHelix(eventChannel.getId(), "Invalid arguments!");
                     return;
                 }
                 if(handleTimeChangeCommand(eventChannel.getId(), user, seconds, false)) {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Added %d seconds to the timer.", seconds));
+                    sendMessageWithHelix(eventChannel.getId(), String.format("Added %d seconds to the timer.", seconds));
                 } else {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Command failed! Please try again...");
+                    sendMessageWithHelix(eventChannel.getId(), "Command failed! Please try again...");
                 }
             }
             case "del" -> {
@@ -114,15 +118,16 @@ public class SubathonBot implements HasLogger {
                     seconds = parseArgsToSeconds(args);
                 } catch (IllegalArgumentException e) {
                     getLogger().info("Not executing del command due to invalid args.");
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Invalid arguments!");
+                    sendMessageWithHelix(eventChannel.getId(), "Invalid arguments!");
                     return;
                 }
                 if(handleTimeChangeCommand(eventChannel.getId(), user, seconds, true)) {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), String.format("Removed %d seconds from the timer.", seconds));
+                    sendMessageWithHelix(eventChannel.getId(), String.format("Removed %d seconds from the timer.", seconds));
                 } else {
-                    twitchClient.getChat().sendMessage(eventChannel.getName(), "Command failed! Please try again...");
+                    sendMessageWithHelix(eventChannel.getId(), "Command failed! Please try again...");
                 }
             }
+            default -> sendMessageWithHelix(eventChannel.getId(), "I can't do that... NotLikeThis");
         }
     }
 
@@ -203,6 +208,11 @@ public class SubathonBot implements HasLogger {
 
     private boolean hasPermission(Set<CommandPermission> permissions) {
         return permissions.stream().anyMatch(p -> p == CommandPermission.OWNER || p == CommandPermission.MODERATOR);
+    }
+
+    private void sendMessageWithHelix(String channelId, String message) {
+        ChatMessage msg = ChatMessage.builder().senderId(botId).broadcasterId(channelId).message(message).build();
+        twitchClient.getHelix().sendChatMessage(null, msg).execute();
     }
 
 }

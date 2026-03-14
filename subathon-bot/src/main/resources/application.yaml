@@ -5,8 +5,11 @@ spring:
 
 bot:
   twitch:
+    user:
+      id:
     oauth:
-      token: ${TWITCH_OAUTH_TOKEN}
+      client-id:
+      client-secret:
   subathon:
     # Expects a comma separated list of channel names to join
     channels: 
