@@ -20,6 +20,7 @@ import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+import tools.subathon.timer.dataservice.data.domain.exception.IllegalTimerStateException;
 import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
 import tools.subathon.timer.dataservice.service.exception.InitializationException;
 import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
@@ -125,6 +126,8 @@ public class RpcRequestHandler implements HasLogger {
                     result = timerService.pauseTimer(payload.channelId(), event);
                 } catch (MissingTimerException e) {
                     yield RpcResponse.error("No timer for channel " + e.getChannelId() + "found. Cannot " + e.getAction() + " it.");
+                } catch (IllegalTimerStateException e) {
+                    yield RpcResponse.error("Could not pause timer!");
                 }
                 if(result == null) {
                     yield RpcResponse.error("Could not pause timer for channel " + payload.channelId());

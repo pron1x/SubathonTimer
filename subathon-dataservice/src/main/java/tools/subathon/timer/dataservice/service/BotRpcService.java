@@ -23,9 +23,9 @@ public class BotRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public String requestChannelJoin(String channelName) {
+    public String requestChannelJoin(String channelId) {
         RpcRequest<JoinChannelPayload> request = new RpcRequest<>();
-        JoinChannelPayload payload = new JoinChannelPayload(channelName);
+        JoinChannelPayload payload = new JoinChannelPayload(channelId);
         request.setPayload(payload);
         request.setCommand(RpcCommand.JOIN_CHANNEL);
         RpcResponse<List<String>> response = sendChannelRpcRequest(request);

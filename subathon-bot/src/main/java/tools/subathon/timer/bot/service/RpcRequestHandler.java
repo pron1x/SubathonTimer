@@ -31,10 +31,10 @@ public class RpcRequestHandler implements HasLogger {
             case null -> RpcResponse.error("Request command is null.");
             case JOIN_CHANNEL -> {
                 JoinChannelPayload payload = (JoinChannelPayload) request.getPayload();
-                if(twitchBot.joinChannel(payload.channelName())) {
-                    yield RpcResponse.ok(List.of(payload.channelName()));
+                if(twitchBot.joinChannel(payload.channelId())) {
+                    yield RpcResponse.ok(List.of(payload.channelId()));
                 } else {
-                    yield RpcResponse.error("Could not join channel " + payload.channelName());
+                    yield RpcResponse.error("Could not join channel " + payload.channelId());
                 }
             }
             case GET_JOINED_CHANNELS ->
