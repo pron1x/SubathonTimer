@@ -164,6 +164,10 @@ public class TimerService implements HasLogger {
         }
 
         getLogger().debug("Pausing timer");
+        if(domainTimer.isPaused() || !domainTimer.isActive()) {
+            getLogger().info("Timer for channel id '{}' not active or already paused, not able to pause it!", channelId);
+            return null;
+        }
         domainTimer.pause();
 
         TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
@@ -187,6 +191,10 @@ public class TimerService implements HasLogger {
         }
         getLogger().debug("Resuming timer!");
 
+        if(!domainTimer.isPaused() || !domainTimer.isActive()) {
+            getLogger().info("Timer for channel id '{}' not active or not paused, not able to resume it!", channelId);
+            return null;
+        }
         domainTimer.resume();
         TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
 
