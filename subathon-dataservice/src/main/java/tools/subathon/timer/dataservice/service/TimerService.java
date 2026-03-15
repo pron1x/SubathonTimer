@@ -91,7 +91,7 @@ public class TimerService implements HasLogger {
             throw new DuplicateTimerException(channelId);
         }
         // Make sure bot joined the channel
-        if(!channelName.equals(botRpcService.requestChannelJoin(channelId))) {
+        if(!channelName.equals(botRpcService.requestMessageEventSubscription(channelId))) {
             getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
             throw new InitializationException(channelId, "Bot channel join");
         }

@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.rpc.payload.channel.ChannelPayload;
-import tools.subathon.rpc.payload.channel.JoinChannelPayload;
+import tools.subathon.rpc.payload.channel.ChannelEventSubscriptionPayload;
+import tools.subathon.rpc.payload.channel.CreateMessageEventSubscriptionPayload;
 import tools.subathon.timer.bot.SubathonBot;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
@@ -25,20 +25,20 @@ public class RpcRequestHandler implements HasLogger {
     }
 
     @RabbitListener(queues = CHANNEL_MANAGEMENT_QUEUE)
-    public RpcResponse<List<String>> joinChannel(RpcRequest<ChannelPayload> request) {
+    public RpcResponse<List<String>> handleChannelManagementRequest(RpcRequest<ChannelEventSubscriptionPayload> request) {
         getLogger().info("Handling channel management request.");
         return switch(request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
-            case JOIN_CHANNEL -> {
-                JoinChannelPayload payload = (JoinChannelPayload) request.getPayload();
-                if(twitchBot.joinChannel(payload.channelId())) {
+            case SUBSCRIBE_CHANNEL_MESSAGES -> {
+                CreateMessageEventSubscriptionPayload payload = (CreateMessageEventSubscriptionPayload) request.getPayload();
+                if(twitchBot.subscribeToChannelMessages(payload.channelId())) {
                     yield RpcResponse.ok(List.of(payload.channelId()));
                 } else {
                     yield RpcResponse.error("Could not join channel " + payload.channelId());
                 }
             }
-            case GET_JOINED_CHANNELS ->
-                RpcResponse.ok(twitchBot.getJoinedChannels());
+            case GET_MESSAGE_SUBSCRIBED_CHANNELS ->
+                RpcResponse.ok(twitchBot.getMessageSubscriptionChannelIds());
             default -> RpcResponse.error("Request command is not available for this queue.");
         };
     }

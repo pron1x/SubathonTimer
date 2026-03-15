@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import tools.subathon.rpc.RpcCommand;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.rpc.payload.channel.ChannelPayload;
-import tools.subathon.rpc.payload.channel.JoinChannelPayload;
+import tools.subathon.rpc.payload.channel.ChannelEventSubscriptionPayload;
+import tools.subathon.rpc.payload.channel.CreateMessageEventSubscriptionPayload;
 
 import java.util.List;
 
@@ -23,11 +23,11 @@ public class BotRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public String requestChannelJoin(String channelId) {
-        RpcRequest<JoinChannelPayload> request = new RpcRequest<>();
-        JoinChannelPayload payload = new JoinChannelPayload(channelId);
+    public String requestMessageEventSubscription(String channelId) {
+        RpcRequest<CreateMessageEventSubscriptionPayload> request = new RpcRequest<>();
+        CreateMessageEventSubscriptionPayload payload = new CreateMessageEventSubscriptionPayload(channelId);
         request.setPayload(payload);
-        request.setCommand(RpcCommand.JOIN_CHANNEL);
+        request.setCommand(RpcCommand.SUBSCRIBE_CHANNEL_MESSAGES);
         RpcResponse<List<String>> response = sendChannelRpcRequest(request);
         if(response instanceof RpcResponse.Success<List<String>>(List<String> body)) {
             return body.getFirst();
@@ -36,7 +36,7 @@ public class BotRpcService {
         }
     }
 
-    private RpcResponse<List<String>> sendChannelRpcRequest(RpcRequest<? extends ChannelPayload> request) {
+    private RpcResponse<List<String>> sendChannelRpcRequest(RpcRequest<? extends ChannelEventSubscriptionPayload> request) {
         RpcResponse<List<String>> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, CHANNEL_MANAGEMENT_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
         if(response == null) {

@@ -56,7 +56,7 @@ public class SubathonBot implements HasLogger {
     public void init() {
         getLogger().info("Setting up conduit subscriptions.");
 
-        joinChannel("91658662");
+        subscribeToChannelMessages("91658662");
 
         conduit.getEventManager().onEvent(ChannelChatMessageEvent.class, event -> {
             getLogger().debug("Received channel message from {} in channel {}. Message: {}.", event.getChatterUserName(), event.getBroadcasterUserName(), event.getMessage().getCleanedText());
@@ -73,10 +73,10 @@ public class SubathonBot implements HasLogger {
         });
     }
 
-    public boolean joinChannel(String channelId) {
+    public boolean subscribeToChannelMessages(String channelId) {
         getLogger().info("Creating chat message subscription for channel '{}'.", channelId);
 
-        if (!getJoinedChannels().contains(channelId)) {
+        if (!getMessageSubscriptionChannelIds().contains(channelId)) {
             Optional<EventSubSubscription> subscription = conduit.register(SubscriptionTypes.CHANNEL_CHAT_MESSAGE, b -> b.broadcasterUserId(channelId).userId(botId).build());
             return subscription.isPresent();
         } else {
@@ -85,7 +85,7 @@ public class SubathonBot implements HasLogger {
         }
     }
 
-    public List<String> getJoinedChannels() {
+    public List<String> getMessageSubscriptionChannelIds() {
         EventSubSubscriptionList subscriptions = twitchClient.getHelix().getEventSubSubscriptions(null, null,SubscriptionTypes.CHANNEL_CHAT_MESSAGE, null, null, null).execute();
         return subscriptions.getSubscriptions().stream().filter(s -> s.getStatus().equals(EventSubSubscriptionStatus.ENABLED)).map(EventSubSubscription::getCondition).map(c -> (ChannelChatCondition) c).map(ChannelChatCondition::getBroadcasterUserId).toList();
     }
