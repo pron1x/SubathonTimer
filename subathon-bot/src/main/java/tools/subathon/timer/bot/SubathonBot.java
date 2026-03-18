@@ -3,11 +3,13 @@ package tools.subathon.timer.bot;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
+import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
 import com.github.twitch4j.eventsub.socket.IEventSubConduit;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionType;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import tools.subathon.timer.bot.handlers.ChannelChatMessageEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelFollowEventHandler;
+import tools.subathon.timer.bot.handlers.ChannelRaidEventHandler;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +33,14 @@ public class SubathonBot implements HasLogger {
 
     private final ChannelChatMessageEventHandler chatMessageEventHandler;
     private final ChannelFollowEventHandler followEventHandler;
+    private final ChannelRaidEventHandler raidEventHandler;
 
     @Autowired
-    public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler, ChannelFollowEventHandler followEventHandler) {
+    public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler, ChannelFollowEventHandler followEventHandler, ChannelRaidEventHandler raidEventHandler) {
         this.chatMessageEventHandler = chatMessageEventHandler;
         this.conduit = conduit;
         this.followEventHandler = followEventHandler;
+        this.raidEventHandler = raidEventHandler;
     }
 
     @PostConstruct
@@ -44,6 +48,7 @@ public class SubathonBot implements HasLogger {
         getLogger().info("Setting up conduit event handlers.");
         conduit.getEventManager().onEvent(ChannelChatMessageEvent.class, chatMessageEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelFollowEvent.class, followEventHandler::handle);
+        conduit.getEventManager().onEvent(ChannelRaidEvent.class, raidEventHandler::handle);
     }
 
     public Optional<EventSubSubscription> subscribeToChannelMessages(String broadcasterUserId) {
@@ -69,6 +74,19 @@ public class SubathonBot implements HasLogger {
         subscription = conduit.register(SubscriptionTypes.CHANNEL_FOLLOW_V2,
                 b -> b.broadcasterUserId(broadcasterUserId).moderatorUserId(broadcasterUserId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
+        return subscription;
+    }
+
+    public Optional<EventSubSubscription> subscribeToRaidEvents(String broadcasterUserId) {
+        getLogger().debug("Creating raid event subscription for broadcaster user id '{}'.", broadcasterUserId);
+        Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_RAID);
+        if (subscription.isPresent()) {
+            getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
+            return subscription;
+        }
+        subscription = conduit.register(SubscriptionTypes.CHANNEL_RAID,
+                b -> b.toBroadcasterUserId(broadcasterUserId).build());
+        subscription.ifPresent(s ->  subscriptions.get(broadcasterUserId).add(s));
         return subscription;
     }
 
