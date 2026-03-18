@@ -7,9 +7,9 @@ import tools.subathon.rpc.RpcCommand;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.payload.channel.ChannelEventSubscriptionPayload;
+import tools.subathon.rpc.payload.channel.CreateChannelEventsSubscriptionPayload;
 import tools.subathon.rpc.payload.channel.CreateMessageEventSubscriptionPayload;
-
-import java.util.List;
+import tools.subathon.rpc.payload.response.BatchResponse;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
@@ -23,21 +23,38 @@ public class BotRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public String requestMessageEventSubscription(String channelId) {
+    public BatchResponse requestMessageEventSubscription(String channelId) {
         RpcRequest<CreateMessageEventSubscriptionPayload> request = new RpcRequest<>();
         CreateMessageEventSubscriptionPayload payload = new CreateMessageEventSubscriptionPayload(channelId);
         request.setPayload(payload);
         request.setCommand(RpcCommand.SUBSCRIBE_CHANNEL_MESSAGES);
-        RpcResponse<List<String>> response = sendChannelRpcRequest(request);
-        if(response instanceof RpcResponse.Success<List<String>>(List<String> body)) {
-            return body.getFirst();
+        RpcResponse<BatchResponse> response = sendChannelRpcRequest(request);
+        if (response instanceof RpcResponse.Success<BatchResponse>(BatchResponse body)) {
+            return body;
+        } else if (response instanceof RpcResponse.Failure<BatchResponse>) {
+            throw new RuntimeException("Error trying to subscribe to event messages!");
         } else {
-            return null;
+            throw new RuntimeException("Unexpected response type, this should not happen!");
         }
     }
 
-    private RpcResponse<List<String>> sendChannelRpcRequest(RpcRequest<? extends ChannelEventSubscriptionPayload> request) {
-        RpcResponse<List<String>> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, CHANNEL_MANAGEMENT_ROUTING_KEY, request,
+    public BatchResponse requestAllEventSubscriptions(String broadcasterUserId) {
+        RpcRequest<CreateChannelEventsSubscriptionPayload> request = new RpcRequest<>();
+        CreateChannelEventsSubscriptionPayload payload = new CreateChannelEventsSubscriptionPayload(broadcasterUserId);
+        request.setPayload(payload);
+        request.setCommand(RpcCommand.SUBSCRIBE_CHANNEL_EVENTS);
+        RpcResponse<BatchResponse> response = sendChannelRpcRequest(request);
+        if (response instanceof RpcResponse.Success<BatchResponse>(BatchResponse body)) {
+            return body;
+        } else if (response instanceof RpcResponse.Failure<BatchResponse>) {
+            throw new RuntimeException("Error trying to subscribe to all messages!");
+        } else {
+            throw new RuntimeException("Unexpected response type, this should not happen!");
+        }
+    }
+
+    private RpcResponse<BatchResponse> sendChannelRpcRequest(RpcRequest<? extends ChannelEventSubscriptionPayload> request) {
+        RpcResponse<BatchResponse> response = rabbitTemplate.convertSendAndReceiveAsType(EXCHANGE_NAME, CHANNEL_MANAGEMENT_ROUTING_KEY, request,
                 new ParameterizedTypeReference<>() {});
         if(response == null) {
             return RpcResponse.timeout();

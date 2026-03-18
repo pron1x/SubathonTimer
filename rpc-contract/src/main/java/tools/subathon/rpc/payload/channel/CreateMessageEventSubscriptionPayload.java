@@ -1,4 +1,4 @@
 package tools.subathon.rpc.payload.channel;
 
-public record CreateMessageEventSubscriptionPayload(String channelId) implements ChannelEventSubscriptionPayload {
+public record CreateMessageEventSubscriptionPayload(String broadcasterUserId) implements ChannelEventSubscriptionPayload {
 }

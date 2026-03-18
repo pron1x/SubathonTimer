@@ -1,16 +1,22 @@
 package tools.subathon.timer.bot.service;
 
+import com.github.twitch4j.eventsub.EventSubSubscription;
+import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.rpc.payload.channel.ChannelEventSubscriptionPayload;
+import tools.subathon.rpc.payload.channel.CreateChannelEventsSubscriptionPayload;
 import tools.subathon.rpc.payload.channel.CreateMessageEventSubscriptionPayload;
+import tools.subathon.rpc.payload.response.BatchResponse;
 import tools.subathon.timer.bot.SubathonBot;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_QUEUE;
 
@@ -25,21 +31,42 @@ public class RpcRequestHandler implements HasLogger {
     }
 
     @RabbitListener(queues = CHANNEL_MANAGEMENT_QUEUE)
-    public RpcResponse<List<String>> handleChannelManagementRequest(RpcRequest<ChannelEventSubscriptionPayload> request) {
+    public RpcResponse<BatchResponse> handleChannelManagementRequest(RpcRequest<ChannelEventSubscriptionPayload> request) {
         getLogger().info("Handling channel management request.");
         return switch(request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
             case SUBSCRIBE_CHANNEL_MESSAGES -> {
                 CreateMessageEventSubscriptionPayload payload = (CreateMessageEventSubscriptionPayload) request.getPayload();
-                if(twitchBot.subscribeToChannelMessages(payload.channelId())) {
-                    yield RpcResponse.ok(List.of(payload.channelId()));
+                if(twitchBot.subscribeToChannelMessages(payload.broadcasterUserId()).isPresent()) {
+                    yield RpcResponse.ok(new BatchResponse(BatchResponse.BatchStatus.SUCCESS, List.of(new BatchResponse.ItemResult("", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.SUCCESS, null))));
                 } else {
-                    yield RpcResponse.error("Could not join channel " + payload.channelId());
+                    yield RpcResponse.error("Could not join channel " + payload.broadcasterUserId());
                 }
             }
             case GET_MESSAGE_SUBSCRIBED_CHANNELS ->
-                RpcResponse.ok(twitchBot.getMessageSubscriptionChannelIds());
+                RpcResponse.error("Deprecated!");
+            case SUBSCRIBE_CHANNEL_EVENTS -> {
+                CreateChannelEventsSubscriptionPayload payload = (CreateChannelEventsSubscriptionPayload) request.getPayload();
+                yield createAllSubscriptions(payload.broadcasterUserId());
+            }
             default -> RpcResponse.error("Request command is not available for this queue.");
         };
     }
+
+    private RpcResponse<BatchResponse> createAllSubscriptions(String broadcasterUserId) {
+        List<BatchResponse.ItemResult> itemResults = new ArrayList<>();
+        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_FOLLOW_V2.getName(), broadcasterUserId, twitchBot.subscribeToFollowEvents(broadcasterUserId)));
+
+        BatchResponse.BatchStatus status = itemResults.stream().allMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.SUCCESS :
+            itemResults.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.FAILED) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;
+
+        return RpcResponse.ok(new BatchResponse(status, itemResults));
+    }
+
+    private BatchResponse.ItemResult subscriptionToItemResult(String subscriptionName, String broadcasterUserId, Optional<EventSubSubscription> subscription) {
+        return new BatchResponse.ItemResult(subscriptionName, broadcasterUserId,
+                subscription.isPresent() ? BatchResponse.ItemResult.Status.SUCCESS : BatchResponse.ItemResult.Status.FAILED,
+                subscription.isPresent() ? null : "Subscription failed");
+    }
+
 }

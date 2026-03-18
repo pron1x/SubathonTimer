@@ -125,7 +125,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
             return switch (response) {
                 case RpcResponse.Success<TimerDto> success -> success.body().state() == expectedState;
                 case RpcResponse.Failure<TimerDto> error -> {
-                    getLogger().error("Error while executing state change command for channelId {}: {}", broadcasterUserId, error.errorMessage());
+                    getLogger().error("Error while executing state change command for broadcasterUserId {}: {}", broadcasterUserId, error.errorMessage());
                     yield false;
                 }
             };
@@ -142,7 +142,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
             return switch (response) {
                 case RpcResponse.Success<TimerDto> success -> true;
                 case RpcResponse.Failure<TimerDto> error -> {
-                    getLogger().warn("Error while executing time change command for channelId {}: {}", broadcasterUserId, error.errorMessage());
+                    getLogger().warn("Error while executing time change command for broadcasterUserId {}: {}", broadcasterUserId, error.errorMessage());
                     yield false;
                 }
             };

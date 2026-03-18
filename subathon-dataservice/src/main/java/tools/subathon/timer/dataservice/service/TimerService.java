@@ -1,5 +1,6 @@
 package tools.subathon.timer.dataservice.service;
 
+import tools.subathon.rpc.payload.response.BatchResponse;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
 import tools.subathon.timer.dataservice.data.domain.TimerEvent;
@@ -36,7 +37,6 @@ import static tools.subathon.timer.datamodel.enums.TimerState.ENDED;
 public class TimerService implements HasLogger {
 
     private final BotRpcService botRpcService;
-    private final SeImporterRpcService seImporterRpcService;
     private final TimerRepository timerRepository;
     private final TimerEventService timerEventService;
     private final UserConfigurationService userConfigurationService;
@@ -52,9 +52,8 @@ public class TimerService implements HasLogger {
 
 
     @Autowired
-    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper, BotRpcService botRpcService, SeImporterRpcService seImporterRpcService) {
+    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper, BotRpcService botRpcService) {
         this.botRpcService = botRpcService;
-        this.seImporterRpcService = seImporterRpcService;
         this.timerRepository = timerRepository;
         this.timerEventService = timerEventService;
         this.userConfigurationService = userConfigurationService;
@@ -70,6 +69,13 @@ public class TimerService implements HasLogger {
         // This will check if a timer exists and schedule the end time for it
         for (TimerEntity timerEntity : timerList) {
             Timer domainTimer = Timer.fromDto(mapper.map(timerEntity, TimerDto.class));
+            try {
+                initializeTwitchMessageSubscription(domainTimer.getChannelId());
+                initializeAllTwitchEventSubscriptions(domainTimer.getChannelId());
+            } catch (InitializationException e) {
+                getLogger().warn("Could not initialize twitch event subscriptions! Skipping this timer!");
+                continue;
+            }
             domainTimers.put(domainTimer.getChannelId(), domainTimer);
 
             if (domainTimer.isActive()) {
@@ -85,27 +91,56 @@ public class TimerService implements HasLogger {
         }
     }
 
+    private void initializeTwitchMessageSubscription(String broadcasterUserId) throws InitializationException {
+        BatchResponse response;
+        for (int tries = 0; tries < 3; tries++) {
+            try {
+                response = botRpcService.requestMessageEventSubscription(broadcasterUserId);
+            } catch (RuntimeException e) {
+                getLogger().error("Failed to get answer from RPC for broadcaster user id '{}', unsure if subscribed to messages! Trying again...", broadcasterUserId, e);
+                continue;
+            }
+            if (response.batchStatus() == BatchResponse.BatchStatus.SUCCESS) {
+                getLogger().info("Subscribed to messages for broadcaster user id '{}'", broadcasterUserId);
+                return;
+            } else {
+                getLogger().info("Subscribing to message events for broadcaster user id '{}' returned status '{}', trying again...", broadcasterUserId, response.batchStatus());
+            }
+        }
+        getLogger().warn("Failed to subscribe to message events for broadcaster user id '{}', after multiple tries! Bot might not work properly for this channel!", broadcasterUserId);
+        throw new InitializationException(broadcasterUserId, "Message subscription");
+    }
+
+    private void initializeAllTwitchEventSubscriptions(String broadcasterUserId) throws InitializationException {
+        BatchResponse response;
+        for (int tries = 0; tries < 3; tries++) {
+            try {
+                response = botRpcService.requestAllEventSubscriptions(broadcasterUserId);
+            } catch (RuntimeException e) {
+                getLogger().error("Failed to get answer from RPC for broadcaster user id '{}', unsure if subscribed to events! Trying again...", broadcasterUserId, e);
+                continue;
+            }
+            if (response.batchStatus() == BatchResponse.BatchStatus.SUCCESS) {
+                getLogger().info("Subscribed to events for broadcaster user id '{}'", broadcasterUserId);
+                return;
+            } else {
+                getLogger().info("Subscribing to events for broadcaster user id '{}' returned status '{}', trying again...", broadcasterUserId, response.batchStatus());
+            }
+        }
+        getLogger().warn("Failed to subscribe to events for broadcaster user id '{}', after multiple tries! Bot might not work properly for this channel!", broadcasterUserId);
+        throw new InitializationException(broadcasterUserId, "Event subscription");
+    }
+
     public TimerDto initializeTimer(String channelId, String channelName) throws MissingChannelConfigurationException, DuplicateTimerException, InitializationException {
         if (domainTimers.containsKey(channelId)) {
             getLogger().info("Timer for channel id '{}'already exists.", channelId);
             throw new DuplicateTimerException(channelId);
         }
-        // Make sure bot joined the channel
-        if(!channelName.equals(botRpcService.requestMessageEventSubscription(channelId))) {
-            getLogger().warn("Bot is not in channel '{}' ('{}'), cannot initialize timer!", channelName, channelId);
-            throw new InitializationException(channelId, "Bot channel join");
-        }
+        // Make sure messages are subscribed to
+        initializeTwitchMessageSubscription(channelId);
 
-        // Make sure SEImporter is authenticated with jwt
-        Optional<UserConfigurationDto> configOptional = userConfigurationService.getForChannel(channelId);
-        if (configOptional.isEmpty()) {
-            getLogger().warn("No configuration for channel '{}' ('{}') found, cannot authenticate to StreamElements!", channelName, channelId);
-            throw new MissingChannelConfigurationException(channelId);
-        }
-        if (!seImporterRpcService.authenticateWithJwt(configOptional.get().seJwt())) {
-            getLogger().warn("Could not authenticate channel '{}' ('{}') with provided jwt!", channelName, channelId);
-            throw new InitializationException(channelId, "StreamElements authentication");
-        }
+        // Make sure all events are subscribed to
+        initializeAllTwitchEventSubscriptions(channelId);
 
         Timer domainTimer = Timer.initialize(channelId, channelName);
 
