@@ -16,7 +16,7 @@ spring:
             scope:
               - channel:bot
               - moderator:read:followers
-              #- bits:read
+              - bits:read
               #- channel:read:subscriptions
         provider:
           twitch:

@@ -1,9 +1,11 @@
 package tools.subathon.timer.bot.factories;
 
+import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
 import com.github.twitch4j.eventsub.events.EventSubChannelFromToEvent;
 import com.github.twitch4j.eventsub.events.EventSubUserChannelEvent;
+import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.datamodel.SubathonFollowerEvent;
@@ -24,6 +26,7 @@ public class SubathonEventMessageFactory {
         eventMessage.setChannelId(event.getBroadcasterUserId());
         SubathonEvent subathonEvent = switch (event) {
             case ChannelFollowEvent followEvent -> createSubathonFollowerEvent(followEvent);
+            case ChannelBitsUseEvent bitsEvent -> createSubathonCheerEvent(bitsEvent);
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
         };
 
@@ -59,5 +62,15 @@ public class SubathonEventMessageFactory {
         followerEvent.setUsername(event.getUserName());
 
         return followerEvent;
+    }
+
+    private static SubathonEvent createSubathonCheerEvent(ChannelBitsUseEvent event) {
+        SubathonBitCheerEvent cheerEvent = new SubathonBitCheerEvent();
+        cheerEvent.setSource(SOURCE);
+        cheerEvent.setTimestamp(Instant.now());
+        cheerEvent.setUsername(event.getUserName());
+        cheerEvent.setAmount(event.getBits());
+
+        return cheerEvent;
     }
 }
