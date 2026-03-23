@@ -1,8 +1,11 @@
 package tools.subathon.timer.bot.factories;
 
+import com.github.twitch4j.common.enums.SubscriptionPlan;
 import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.eventsub.events.EventSubChannelFromToEvent;
 import com.github.twitch4j.eventsub.events.EventSubUserChannelEvent;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
@@ -10,6 +13,8 @@ import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.datamodel.SubathonFollowerEvent;
 import tools.subathon.timer.datamodel.SubathonRaidEvent;
+import tools.subathon.timer.datamodel.SubathonSubEvent;
+import tools.subathon.timer.datamodel.enums.SubTier;
 
 import java.time.Instant;
 
@@ -27,6 +32,8 @@ public class SubathonEventMessageFactory {
         SubathonEvent subathonEvent = switch (event) {
             case ChannelFollowEvent followEvent -> createSubathonFollowerEvent(followEvent);
             case ChannelBitsUseEvent bitsEvent -> createSubathonCheerEvent(bitsEvent);
+            case ChannelSubscribeEvent subscribeEvent -> createSubathonSubscribeEvent(subscribeEvent);
+            case ChannelSubscriptionMessageEvent resubscribeEvent -> createSubathonSubscribeEvent(resubscribeEvent);
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
         };
 
@@ -72,5 +79,37 @@ public class SubathonEventMessageFactory {
         cheerEvent.setAmount(event.getBits());
 
         return cheerEvent;
+    }
+
+    private static SubathonSubEvent createSubathonSubscribeEvent(ChannelSubscribeEvent event) {
+        SubathonSubEvent subEvent = new SubathonSubEvent();
+        subEvent.setSource(SOURCE);
+        subEvent.setTimestamp(Instant.now());
+        subEvent.setUsername(event.getUserName());
+        subEvent.setGifted(event.isGift());
+        subEvent.setTier(planToTier(event.getTier()));
+
+        return subEvent;
+    }
+
+    private static SubathonSubEvent createSubathonSubscribeEvent(ChannelSubscriptionMessageEvent event) {
+        SubathonSubEvent subEvent = new SubathonSubEvent();
+        subEvent.setSource(SOURCE);
+        subEvent.setTimestamp(Instant.now());
+        subEvent.setUsername(event.getUserName());
+        subEvent.setGifted(false);
+        subEvent.setTier(planToTier(event.getTier()));
+
+        return subEvent;
+    }
+
+    private static SubTier planToTier(SubscriptionPlan plan) {
+        return switch (plan) {
+            case NONE -> throw new IllegalArgumentException("Plan is NONE");
+            case TWITCH_PRIME -> SubTier.PRIME;
+            case TIER1 -> SubTier.TIER_1;
+            case TIER2 -> SubTier.TIER_2;
+            case TIER3 -> SubTier.TIER_3;
+        };
     }
 }

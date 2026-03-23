@@ -5,6 +5,8 @@ import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.eventsub.socket.IEventSubConduit;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionType;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
@@ -12,6 +14,7 @@ import tools.subathon.timer.bot.handlers.ChannelBitsUseEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelChatMessageEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelFollowEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelRaidEventHandler;
+import tools.subathon.timer.bot.handlers.ChannelSubscriptionEventHandler;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +40,18 @@ public class SubathonBot implements HasLogger {
     private final ChannelFollowEventHandler followEventHandler;
     private final ChannelRaidEventHandler raidEventHandler;
     private final ChannelBitsUseEventHandler bitsEventHandler;
+    private final ChannelSubscriptionEventHandler subscriptionEventHandler;
 
     @Autowired
-    public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler, ChannelFollowEventHandler followEventHandler, ChannelRaidEventHandler raidEventHandler, ChannelBitsUseEventHandler bitsEventHandler) {
+    public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler,
+                       ChannelFollowEventHandler followEventHandler, ChannelRaidEventHandler raidEventHandler,
+                       ChannelBitsUseEventHandler bitsEventHandler, ChannelSubscriptionEventHandler subscriptionEventHandler) {
         this.chatMessageEventHandler = chatMessageEventHandler;
         this.conduit = conduit;
         this.followEventHandler = followEventHandler;
         this.raidEventHandler = raidEventHandler;
         this.bitsEventHandler = bitsEventHandler;
+        this.subscriptionEventHandler = subscriptionEventHandler;
     }
 
     @PostConstruct
@@ -54,6 +61,8 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelFollowEvent.class, followEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelRaidEvent.class, raidEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelBitsUseEvent.class, bitsEventHandler::handle);
+        conduit.getEventManager().onEvent(ChannelSubscribeEvent.class, subscriptionEventHandler::handle);
+        conduit.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, subscriptionEventHandler::handle);
     }
 
     public Optional<EventSubSubscription> subscribeToChannelMessages(String broadcasterUserId) {
@@ -103,6 +112,32 @@ public class SubathonBot implements HasLogger {
             return subscription;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_BITS_USE,
+                b -> b.broadcasterUserId(broadcasterUserId).build());
+        subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
+        return subscription;
+    }
+
+    public Optional<EventSubSubscription> subscribeToSubscriptionEvents(String broadcasterUserId) {
+        getLogger().debug("Creating subscription event subscription for broadcaster user id '{}'.", broadcasterUserId);
+        Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_SUBSCRIBE);
+        if (subscription.isPresent()) {
+            getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
+            return subscription;
+        }
+        subscription = conduit.register(SubscriptionTypes.CHANNEL_SUBSCRIBE,
+                b -> b.broadcasterUserId(broadcasterUserId).build());
+        subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
+        return subscription;
+    }
+
+    public Optional<EventSubSubscription> subscribeToResubscriptionEvents(String broadcasterUserId) {
+        getLogger().debug("Creating resubscription event subscription for broadcaster user id '{}'.", broadcasterUserId);
+        Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE);
+        if (subscription.isPresent()) {
+            getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
+            return subscription;
+        }
+        subscription = conduit.register(SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE,
                 b -> b.broadcasterUserId(broadcasterUserId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
         return subscription;
