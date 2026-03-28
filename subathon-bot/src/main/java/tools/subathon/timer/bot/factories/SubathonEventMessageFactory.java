@@ -65,7 +65,7 @@ public class SubathonEventMessageFactory {
         return raidEvent;
     }
 
-    public static SubathonFollowerEvent createSubathonFollowerEvent(ChannelFollowEvent event) {
+    private static SubathonFollowerEvent createSubathonFollowerEvent(ChannelFollowEvent event) {
         SubathonFollowerEvent followerEvent = new SubathonFollowerEvent();
         followerEvent.setSource(SOURCE);
         followerEvent.setTimestamp(event.getFollowedAt());
