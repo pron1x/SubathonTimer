@@ -61,6 +61,7 @@ public class RpcRequestHandler implements HasLogger {
 
         itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIBE.getName(), broadcasterUserId, twitchBot.subscribeToSubscriptionEvents(broadcasterUserId)));
         itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE.getName(), broadcasterUserId, twitchBot.subscribeToResubscriptionEvents(broadcasterUserId)));
+        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT.getName(), broadcasterUserId, twitchBot.subscribeToSubscriptionGiftEvents(broadcasterUserId)));
 
         BatchResponse.BatchStatus status = itemResults.stream().allMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.SUCCESS :
             itemResults.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.FAILED) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;

@@ -6,6 +6,7 @@ import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
 import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscriptionGiftEvent;
 import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.eventsub.socket.IEventSubConduit;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionType;
@@ -63,6 +64,7 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelBitsUseEvent.class, bitsEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelSubscribeEvent.class, subscriptionEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, subscriptionEventHandler::handle);
+        conduit.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class, subscriptionEventHandler::handle);
     }
 
     public Optional<EventSubSubscription> subscribeToChannelMessages(String broadcasterUserId) {
@@ -138,6 +140,19 @@ public class SubathonBot implements HasLogger {
             return subscription;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE,
+                b -> b.broadcasterUserId(broadcasterUserId).build());
+        subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
+        return subscription;
+    }
+
+    public Optional<EventSubSubscription> subscribeToSubscriptionGiftEvents(String broadcasterUserId) {
+        getLogger().debug("Creating subscription gift event subscription for broadcaster user id '{}'.", broadcasterUserId);
+        Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT);
+        if (subscription.isPresent()) {
+            getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
+            return subscription;
+        }
+        subscription = conduit.register(SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT,
                 b -> b.broadcasterUserId(broadcasterUserId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
         return subscription;

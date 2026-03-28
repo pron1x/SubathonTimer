@@ -5,10 +5,12 @@ import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
 import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
+import com.github.twitch4j.eventsub.events.ChannelSubscriptionGiftEvent;
 import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.eventsub.events.EventSubChannelFromToEvent;
 import com.github.twitch4j.eventsub.events.EventSubUserChannelEvent;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
+import tools.subathon.timer.datamodel.SubathonCommunityGiftEvent;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.datamodel.SubathonFollowerEvent;
@@ -34,6 +36,7 @@ public class SubathonEventMessageFactory {
             case ChannelBitsUseEvent bitsEvent -> createSubathonCheerEvent(bitsEvent);
             case ChannelSubscribeEvent subscribeEvent -> createSubathonSubscribeEvent(subscribeEvent);
             case ChannelSubscriptionMessageEvent resubscribeEvent -> createSubathonSubscribeEvent(resubscribeEvent);
+            case ChannelSubscriptionGiftEvent subGiftEvent -> createSubathonSubscriptionGiftEvent(subGiftEvent);
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
         };
 
@@ -101,6 +104,17 @@ public class SubathonEventMessageFactory {
         subEvent.setTier(planToTier(event.getTier()));
 
         return subEvent;
+    }
+
+    private static SubathonCommunityGiftEvent createSubathonSubscriptionGiftEvent(ChannelSubscriptionGiftEvent event) {
+        SubathonCommunityGiftEvent giftEvent = new SubathonCommunityGiftEvent();
+        giftEvent.setSource(SOURCE);
+        giftEvent.setTimestamp(Instant.now());
+        giftEvent.setUsername(event.getUserName());
+        giftEvent.setAmount(event.getTotal());
+        giftEvent.setTier(planToTier(event.getTier()));
+
+        return giftEvent;
     }
 
     private static SubTier planToTier(SubscriptionPlan plan) {
