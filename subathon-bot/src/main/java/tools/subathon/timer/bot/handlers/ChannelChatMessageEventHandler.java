@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.timer.bot.command.CommandUtils;
+import tools.subathon.timer.bot.util.CommandUtils;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.bot.service.TwitchChatService;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;

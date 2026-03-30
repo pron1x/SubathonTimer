@@ -1,4 +1,4 @@
-package tools.subathon.timer.bot.command;
+package tools.subathon.timer.bot.util;
 
 import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
