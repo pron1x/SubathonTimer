@@ -53,14 +53,18 @@ class SubathonTimer extends LitElement {
     }
 
     createTimeLeftString(milliseconds: number): string {
-        return milliseconds < 0 ? "SUBATHON ENDED!" : millisToTimeString(milliseconds);
+        if (milliseconds === -Infinity) {
+            return "SUBATHON ENDED!";
+        } else {
+            return millisToTimeString(milliseconds < 0 ? 0 : milliseconds);
+        }
     }
 
     calculateTimeLeft(): number {
         if(!this._endTime) {
             return 0;
-        } else if(this._timerState === STATE_ENDED) {
-            return -1;
+        } else if (this._timerState === STATE_ENDED) {
+            return Number.NEGATIVE_INFINITY;
         } else if (this._timerState === STATE_INITIALIZED) {
             return (this._endTime - this._lastUpdateTime);
         } else if (this._timerState === STATE_PAUSED) {
