@@ -34,6 +34,9 @@ class TemplateParserTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> TemplateParser.builder().withTemplate("Template with duplicate {amount} placeholder {amount}").build());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TemplateParser.builder().withTemplate("Template with adjacent {amount}{user} placeholders").build());
     }
 
     @Test

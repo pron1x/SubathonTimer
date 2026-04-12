@@ -95,7 +95,6 @@ public final class TemplateParser {
             Set<String> seenPlaceholders = new HashSet<>();
             Set<String> allowedPlaceholders = Set.of("user", "amount");
 
-            // TODO: Make sure there is one Literal between placeholders. Otherwise parsing will fail
             int i = 0;
             while (i < template.length()) {
                 int start = template.indexOf("{", i);
@@ -136,6 +135,12 @@ public final class TemplateParser {
 
             if (segments.stream().filter(Segment::isPlaceholder).noneMatch(p -> ((Placeholder) p).name.equals("amount"))) {
                 throw new IllegalArgumentException("Template must contain at least 'amount' placeholder: " + template);
+            }
+
+            for (int j = 1; j < segments.size(); j++) {
+                if (segments.get(j).isPlaceholder() && segments.get(j - 1).isPlaceholder()) {
+                    throw new IllegalArgumentException("Template cannot contain adjacent placeholders: " + template);
+                }
             }
 
             return new TemplateParser(segments);
