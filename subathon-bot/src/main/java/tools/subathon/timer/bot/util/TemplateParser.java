@@ -42,7 +42,7 @@ public final class TemplateParser {
 
             if (seg instanceof Literal(String text)) {
                 int index = message.indexOf(text, cursor);
-                if (index == -1) {
+                if (index == -1 || index != cursor) {
                     return ParseResult.failure("Literal '" + text + "' not found at expected position");
                 }
                 cursor = index + text.length();
@@ -73,6 +73,12 @@ public final class TemplateParser {
 
                 values.put(name, rawValue);
                 cursor = varEnd;
+            }
+        }
+        Segment lastSegment = segments.getLast();
+        if (lastSegment instanceof Literal(String text)) {
+            if (cursor + text.length() < message.length()) {
+                return ParseResult.failure("Did not parse whole message, text remaining after last literal!");
             }
         }
 
