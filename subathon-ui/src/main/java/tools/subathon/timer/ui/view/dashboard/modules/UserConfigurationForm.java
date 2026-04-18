@@ -39,6 +39,8 @@ public class UserConfigurationForm extends VerticalLayout {
     private final IntegerField bitsSeconds;
     private final IntegerField currencySeconds;
     private final IntegerField initialSeconds;
+    private final TextField donationTemplatePattern;
+    private final TextField donationTemplateUser;
     private final Button saveButton;
 
     public UserConfigurationForm() {
@@ -57,6 +59,11 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds = new IntegerField("per 100 bits");
         currencySeconds = new IntegerField("per EUR/USD");
         initialSeconds = new IntegerField("Starting Time (seconds)");
+        donationTemplatePattern = new TextField("Donation message pattern");
+        donationTemplateUser = new TextField("Donation message bot name");
+
+        donationTemplatePattern.setHelperText("Use {user} and {amount} as placeholders.");
+        donationTemplatePattern.setTooltipText("You can also copy the message template from the donation provider and adjust the placeholders as needed. If possible, make the currency static.");
         saveButton = new Button("Save");
         initInternal();
     }
@@ -131,7 +138,16 @@ public class UserConfigurationForm extends VerticalLayout {
 
         FormLayout.FormRow row7 = new FormLayout.FormRow();
         row7.add(initialSeconds, 2);
-        configForm.add(row1, subheader1, row2, row3, row4, row5, row6, subheader2, row7);
+
+        Span donationMessageHeader = new Span("Configure the donation message template");
+        donationMessageHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
+        FormLayout.FormRow subheader3 = new FormLayout.FormRow();
+        subheader3.add(donationMessageHeader, 2);
+
+        FormLayout.FormRow row8 = new FormLayout.FormRow();
+        row8.add(donationTemplatePattern, donationTemplateUser);
+
+        configForm.add(row1, subheader1, row2, row3, row4, row5, row6, subheader2, row7, subheader3, row8);
         Div wrapper = new Div(configForm);
         wrapper.setSizeFull();
         wrapper.getStyle()
@@ -173,6 +189,8 @@ public class UserConfigurationForm extends VerticalLayout {
         binder.bind(bitsSeconds, "bitsSeconds");
         binder.bind(currencySeconds, "currencySeconds");
         binder.bind(initialSeconds, "initialSeconds");
+        binder.bind(donationTemplatePattern, "donationTemplatePattern");
+        binder.bind(donationTemplateUser, "donationTemplateUser");
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {

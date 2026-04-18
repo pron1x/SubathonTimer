@@ -72,7 +72,7 @@ public class DashboardView extends VerticalLayout {
             userConfigurationModel = new UserConfigurationDto(null, null, null,
                     null, null, null,
                     null, null, null,
-                    null, null, null, null, null);
+                    null, null, null, null, null, null, null);
         }
 
         initTimerButton = new Button("Initialize a new timer");

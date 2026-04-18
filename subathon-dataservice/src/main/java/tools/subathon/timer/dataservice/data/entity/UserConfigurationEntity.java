@@ -47,6 +47,12 @@ public class UserConfigurationEntity extends BaseEntity {
     @Column(name = "initial_seconds")
     private Integer initialSeconds;
 
+    @Column(name = "donation_template_pattern")
+    private String donationTemplatePattern;
+
+    @Column(name = "donation_template_user")
+    private String donationTemplateUser;
+
     public String getChannelId() {
         return channelId;
     }
@@ -149,5 +155,21 @@ public class UserConfigurationEntity extends BaseEntity {
 
     public void setInitialSeconds(Integer initialSeconds) {
         this.initialSeconds = initialSeconds;
+    }
+
+    public String getDonationTemplatePattern() {
+        return donationTemplatePattern;
+    }
+
+    public void setDonationTemplatePattern(String donationTemplatePattern) {
+        this.donationTemplatePattern = donationTemplatePattern;
+    }
+
+    public String getDonationTemplateUser() {
+        return donationTemplateUser;
+    }
+
+    public void setDonationTemplateUser(String donationTemplateUser) {
+        this.donationTemplateUser = donationTemplateUser;
     }
 }

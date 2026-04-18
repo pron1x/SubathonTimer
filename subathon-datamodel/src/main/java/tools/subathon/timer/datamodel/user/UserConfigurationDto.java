@@ -14,7 +14,9 @@ public record UserConfigurationDto(
         Integer tier3GiftSeconds,
         Integer currencySeconds,
         Integer bitsSeconds,
-        Integer initialSeconds
+        Integer initialSeconds,
+        String donationTemplatePattern,
+        String donationTemplateUser
 ) {
     public static UserConfigurationDto withChannelId(UserConfigurationDto userConfigurationModel, String channelId) {
         return new UserConfigurationDto(
@@ -31,7 +33,9 @@ public record UserConfigurationDto(
                 userConfigurationModel.tier3GiftSeconds(),
                 userConfigurationModel.currencySeconds(),
                 userConfigurationModel.bitsSeconds(),
-                userConfigurationModel.initialSeconds()
+                userConfigurationModel.initialSeconds(),
+                userConfigurationModel.donationTemplatePattern(),
+                userConfigurationModel.donationTemplateUser()
         );
     }
 }
