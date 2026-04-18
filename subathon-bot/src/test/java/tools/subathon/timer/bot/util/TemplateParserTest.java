@@ -1,6 +1,11 @@
 package tools.subathon.timer.bot.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,147 +16,89 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TemplateParserTest {
 
     @Test
-    void templateParser_builderThrowsIllegalArgumentException() {
+    void builderThrowsIllegalArgumentExceptionOnNoTemplate() {
         assertThrows(IllegalArgumentException.class,
                 () -> TemplateParser.builder().build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with no placeholder").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with unclosed {user placeholder").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with illegal {unknown} placeholder").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with {user} but no amount placeholder}").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with duplicate {user} placeholder {user}").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with duplicate {amount} placeholder {amount}").build());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateParser.builder().withTemplate("Template with adjacent {amount}{user} placeholders").build());
     }
 
-    @Test
-    void templateParser_buildsAndParsesAmount() {
-        String amount = "{amount}";
-        String amountString = "111";
+    @ParameterizedTest(name = "Invalid template: {0}")
+    @MethodSource("provideInvalidTemplates")
+    void builderThrowsIllegalArgumentException(String invalidTemplate) {
+        assertThrows(IllegalArgumentException.class,
+                () -> TemplateParser.builder().withTemplate(invalidTemplate).build());
+    }
 
-        TemplateParser parserOne = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(amount).build());
-        TemplateParser.ParseResult resultOne = parserOne.parse(amountString);
-
-        assertTrue(resultOne.success());
-        assertEquals(1, resultOne.values().size());
-        assertTrue(resultOne.values().containsKey("amount"));
-        assertEquals(amountString, resultOne.values().get("amount"));
-
-        String template = "This simple template contains {amount} eggs.";
-        String text = "This simple template contains 12 eggs.";
-
+    @ParameterizedTest(name = "Parse template: {0} -> {1}")
+    @MethodSource("provideAmountParsingTestCases")
+    void buildsAndParsesAmount(String template, String text, String expectedAmount) {
         TemplateParser parser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(template).build());
-
         TemplateParser.ParseResult result = parser.parse(text);
 
         assertTrue(result.success());
         assertEquals(1, result.values().size());
         assertTrue(result.values().containsKey("amount"));
-        assertEquals("12", result.values().get("amount"));
+        assertEquals(expectedAmount, result.values().get("amount"));
     }
 
-    @Test
-    void templateParser_buildsAndParsesAmountAndUser() {
-        String justPlaceholders = "{user} {amount}";
-        String justPlaceholdersText = "testuser 123111";
-
-        TemplateParser parserOne = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(justPlaceholders).build());
-        TemplateParser.ParseResult resultOne = parserOne.parse(justPlaceholdersText);
-
-        assertTrue(resultOne.success());
-        assertEquals(2, resultOne.values().size());
-        assertEquals("testuser", resultOne.values().get("user"));
-        assertEquals("123111", resultOne.values().get("amount"));
-
-        String template = "This simple template contains a {user} and {amount} of something.";
-        String text = "This simple template contains a testuser and 123111 of something.";
-
+    @ParameterizedTest(name = "Parse template with user and amount: {0}")
+    @MethodSource("provideAmountAndUserParsingTestCases")
+    void buildsAndParsesAmountAndUser(String template, String text, String expectedUser, String expectedAmount) {
         TemplateParser parser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(template).build());
         TemplateParser.ParseResult result = parser.parse(text);
 
         assertTrue(result.success());
         assertEquals(2, result.values().size());
-        assertEquals("testuser", result.values().get("user"));
-        assertEquals("123111", result.values().get("amount"));
-
-        String repeatingLiterals = "ttt{user}ttt{amount}ttt";
-        String placeholderTextDifferentFromLiteral = "ttt456ttt123ttt";
-
-        TemplateParser repeatingLiteralParser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(repeatingLiterals).build());
-        TemplateParser.ParseResult repeatingLiteralResult = repeatingLiteralParser.parse(placeholderTextDifferentFromLiteral);
-
-        assertTrue(repeatingLiteralResult.success());
-        assertEquals(2, repeatingLiteralResult.values().size());
-        assertEquals("456", repeatingLiteralResult.values().get("user"));
-        assertEquals("123", repeatingLiteralResult.values().get("amount"));
-
-        String placeholderAtEnd = "abc{user} and {amount}";
-        String placeholderAtEndText = "abcGigatron and 3";
-
-        TemplateParser placeholderAtEndParser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(placeholderAtEnd).build());
-        TemplateParser.ParseResult placeholderAtEndResult = placeholderAtEndParser.parse(placeholderAtEndText);
-
-        assertTrue(placeholderAtEndResult.success());
-        assertEquals(2, placeholderAtEndResult.values().size());
-        assertEquals("Gigatron", placeholderAtEndResult.values().get("user"));
-        assertEquals("3", placeholderAtEndResult.values().get("amount"));
+        assertEquals(expectedUser, result.values().get("user"));
+        assertEquals(expectedAmount, result.values().get("amount"));
     }
 
-    @Test
-    void templateParser_buildsButFailsParsing() {
-        String validTemplate = "A {user} someText {amount}.";
+    @ParameterizedTest(name = "Parse text failure - {2}")
+    @MethodSource("provideParsingFailureTestCases")
+    void buildsButFailsParsing(String template, String text, String expectedError) {
+        TemplateParser parser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(template).build());
+        TemplateParser.ParseResult result = parser.parse(text);
 
-        TemplateParser parser = assertDoesNotThrow(() -> TemplateParser.builder().withTemplate(validTemplate).build());
+        assertFalse(result.success());
+        assertEquals(expectedError, result.errorMessage());
+    }
 
-        String missingUser = "A  someText 123.";
-        TemplateParser.ParseResult missingUserResult = parser.parse(missingUser);
+    static Stream<Arguments> provideInvalidTemplates() {
+        return Stream.of(
+                Arguments.of(""),
+                Arguments.of("Template with no placeholder"),
+                Arguments.of("Template with unclosed {user placeholder"),
+                Arguments.of("Template with illegal {unknown} placeholder"),
+                Arguments.of("Template with {user} but no amount placeholder}"),
+                Arguments.of("Template with duplicate {user} placeholder {user}"),
+                Arguments.of("Template with duplicate {amount} placeholder {amount}"),
+                Arguments.of("Template with adjacent {amount}{user} placeholders")
+        );
+    }
 
-        assertFalse(missingUserResult.success());
-        assertEquals("Placeholder 'user' is empty", missingUserResult.errorMessage());
+    static Stream<Arguments> provideAmountParsingTestCases() {
+        return Stream.of(
+                Arguments.of("{amount}", "111", "111"),
+                Arguments.of("This simple template contains {amount} eggs.", "This simple template contains 12 eggs.", "12")
+        );
+    }
 
-        String textContinues = "A testuser someText 123. some more text.";
+    static Stream<Arguments> provideAmountAndUserParsingTestCases() {
+        return Stream.of(
+                Arguments.of("{user} {amount}", "testuser 123111", "testuser", "123111"),
+                Arguments.of("This simple template contains a {user} and {amount} of something.", "This simple template contains a testuser and 123111 of something.", "testuser", "123111"),
+                Arguments.of("ttt{user}ttt{amount}ttt", "ttt456ttt123ttt", "456", "123"),
+                Arguments.of("abc{user} and {amount}", "abcGigatron and 3", "Gigatron", "3")
+        );
+    }
 
-        TemplateParser.ParseResult textContinuesResult = parser.parse(textContinues);
-
-        assertFalse(textContinuesResult.success());
-        assertEquals("Did not parse whole message, text remaining after last literal!",  textContinuesResult.errorMessage());
-
-        String textMissingLastLiteral = "A testuser someText 123";
-
-        TemplateParser.ParseResult textMissingLastLiteralResult = parser.parse(textMissingLastLiteral);
-
-        assertFalse(textMissingLastLiteralResult.success());
-        assertEquals("Missing anchor '.' for placeholder 'amount'",  textMissingLastLiteralResult.errorMessage());
-
-        String unexpectedFirstLiteral = "Banana testuser someText 123.";
-
-        TemplateParser.ParseResult unexpectedFirstLiteralResult = parser.parse(unexpectedFirstLiteral);
-
-        assertFalse(unexpectedFirstLiteralResult.success());
-        assertEquals("Literal 'A ' not found at expected position", unexpectedFirstLiteralResult.errorMessage());
-
-        String extraLiteralAtStart = "bbb A testuser someText 123";
-
-        TemplateParser.ParseResult extraLiteralAtStartResult = parser.parse(extraLiteralAtStart);
-
-        assertFalse(extraLiteralAtStartResult.success());
-        assertEquals("Literal 'A ' not found at expected position", extraLiteralAtStartResult.errorMessage());
+    static Stream<Arguments> provideParsingFailureTestCases() {
+        return Stream.of(
+                Arguments.of("A {user} someText {amount}.", "A  someText 123.", "Placeholder 'user' is empty"),
+                Arguments.of("A {user} someText {amount}.", "A testuser someText 123. some more text.", "Did not parse whole message, text remaining after last literal!"),
+                Arguments.of("A {user} someText {amount}.", "A testuser someText 123", "Missing anchor '.' for placeholder 'amount'"),
+                Arguments.of("A {user} someText {amount}.", "Banana testuser someText 123.", "Literal 'A ' not found at expected position"),
+                Arguments.of("A {user} someText {amount}.", "bbb A testuser someText 123", "Literal 'A ' not found at expected position")
+        );
     }
 
 }
