@@ -14,8 +14,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+import tools.subathon.timer.util.TemplateParser;
 
 import java.util.Objects;
 
@@ -189,7 +191,16 @@ public class UserConfigurationForm extends VerticalLayout {
         binder.bind(bitsSeconds, "bitsSeconds");
         binder.bind(currencySeconds, "currencySeconds");
         binder.bind(initialSeconds, "initialSeconds");
-        binder.bind(donationTemplatePattern, "donationTemplatePattern");
+        binder.forField(donationTemplatePattern)
+                        .withValidator(pattern -> {
+                            try {
+                                TemplateParser.builder().withTemplate(pattern).build();
+                                return true;
+                            } catch (IllegalArgumentException ex) {
+                                return false;
+                            }
+                        }, "Invalid template! Only {amount} and {user} placeholders are allowed, they must have at least on character between them.")
+                .bind("donationTemplatePattern");
         binder.bind(donationTemplateUser, "donationTemplateUser");
     }
 
