@@ -39,13 +39,18 @@ public class UserConfigurationService {
 
     private final UserConfigurationRepository userConfigurationRepository;
 
-    public UserConfigurationService(ModelMapper modelMapper, UserConfigurationRepository userConfigurationRepository) {
+    private final BotRpcService botRpcService;
+
+    public UserConfigurationService(ModelMapper modelMapper, UserConfigurationRepository userConfigurationRepository, BotRpcService botRpcService) {
         this.modelMapper = modelMapper;
         this.userConfigurationRepository = userConfigurationRepository;
+        this.botRpcService = botRpcService;
     }
 
     public UserConfigurationDto save(UserConfigurationDto userConfigurationModel) {
-        return modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationDto.class);
+        UserConfigurationDto config = modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationDto.class);
+        botRpcService.requestMessageEventSubscription(config.channelId(), config.donationTemplatePattern(), config.donationTemplateUser());
+        return config;
     }
 
     public Optional<UserConfigurationDto> getForChannel(String channelId) {

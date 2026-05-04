@@ -14,7 +14,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.util.TemplateParser;
