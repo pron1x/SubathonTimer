@@ -17,7 +17,7 @@ spring:
               - channel:bot
               - moderator:read:followers
               - bits:read
-              #- channel:read:subscriptions
+              - channel:read:subscriptions
         provider:
           twitch:
             authorization-uri: 'https://id.twitch.tv/oauth2/authorize'
