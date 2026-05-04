@@ -1,4 +1,4 @@
-package tools.subathon.timer.bot.util;
+package tools.subathon.timer.util;
 
 import org.jspecify.annotations.NonNull;
 

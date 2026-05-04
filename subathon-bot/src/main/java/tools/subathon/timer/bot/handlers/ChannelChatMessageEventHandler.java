@@ -11,12 +11,12 @@ import tools.subathon.timer.bot.service.RabbitMessageService;
 import tools.subathon.timer.bot.util.CommandUtils;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.bot.service.TwitchChatService;
-import tools.subathon.timer.bot.util.TemplateParser;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.util.Tuple;
+import tools.subathon.timer.util.TemplateParser;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.util.Arrays;
