@@ -16,6 +16,7 @@ import tools.subathon.timer.datamodel.SubathonEventMessage;
 import tools.subathon.timer.datamodel.SubathonFollowerEvent;
 import tools.subathon.timer.datamodel.SubathonRaidEvent;
 import tools.subathon.timer.datamodel.SubathonSubEvent;
+import tools.subathon.timer.datamodel.SubathonTipEvent;
 import tools.subathon.timer.datamodel.enums.SubTier;
 
 import java.time.Instant;
@@ -52,6 +53,19 @@ public class SubathonEventMessageFactory {
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
         };
         eventMessage.setSubathonEvent(subathonEvent);
+        return eventMessage;
+    }
+
+    public static SubathonEventMessage createSubathonDonationEventMessage(String broadcasterId, double amount, String user) {
+        SubathonTipEvent tipEvent = new SubathonTipEvent();
+        tipEvent.setSource(SOURCE);
+        tipEvent.setTimestamp(Instant.now());
+        tipEvent.setAmount(amount);
+        tipEvent.setUsername(user);
+
+        SubathonEventMessage eventMessage = new SubathonEventMessage();
+        eventMessage.setChannelId(broadcasterId);
+        eventMessage.setSubathonEvent(tipEvent);
         return eventMessage;
     }
 

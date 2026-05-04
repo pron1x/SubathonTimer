@@ -67,6 +67,16 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class, subscriptionEventHandler::handle);
     }
 
+    public boolean subscribeToDonationMessages(String broadcasterUserId, String parserTemplate, String messageUser) {
+        try {
+            chatMessageEventHandler.registerNewDonationMessageParser(broadcasterUserId, parserTemplate, messageUser);
+        } catch (IllegalArgumentException ex) {
+            getLogger().info("Failed to create donation message parser for broadcaster user id '{}'. Error: {}", broadcasterUserId, ex.getMessage());
+            return false;
+        }
+        return true;
+    }
+
     public Optional<EventSubSubscription> subscribeToChannelMessages(String broadcasterUserId) {
         getLogger().debug("Creating chat message subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_CHAT_MESSAGE);

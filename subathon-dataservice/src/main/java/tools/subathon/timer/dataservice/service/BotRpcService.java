@@ -11,6 +11,8 @@ import tools.subathon.rpc.payload.channel.CreateChannelEventsSubscriptionPayload
 import tools.subathon.rpc.payload.channel.CreateMessageEventSubscriptionPayload;
 import tools.subathon.rpc.payload.response.BatchResponse;
 
+import java.util.Optional;
+
 import static tools.subathon.timer.util.GlobalRabbitMQ.CHANNEL_MANAGEMENT_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 
@@ -23,9 +25,9 @@ public class BotRpcService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public BatchResponse requestMessageEventSubscription(String channelId) {
+    public BatchResponse requestMessageEventSubscription(String channelId, String donationTemplatePattern, String donationTemplateUser) {
         RpcRequest<CreateMessageEventSubscriptionPayload> request = new RpcRequest<>();
-        CreateMessageEventSubscriptionPayload payload = new CreateMessageEventSubscriptionPayload(channelId);
+        CreateMessageEventSubscriptionPayload payload = new CreateMessageEventSubscriptionPayload(channelId, Optional.of(donationTemplatePattern), Optional.of(donationTemplateUser));
         request.setPayload(payload);
         request.setCommand(RpcCommand.SUBSCRIBE_CHANNEL_MESSAGES);
         RpcResponse<BatchResponse> response = sendChannelRpcRequest(request);

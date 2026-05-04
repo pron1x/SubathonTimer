@@ -37,11 +37,25 @@ public class RpcRequestHandler implements HasLogger {
             case null -> RpcResponse.error("Request command is null.");
             case SUBSCRIBE_CHANNEL_MESSAGES -> {
                 CreateMessageEventSubscriptionPayload payload = (CreateMessageEventSubscriptionPayload) request.getPayload();
+                List<BatchResponse.ItemResult> results = new ArrayList<>();
+
                 if(twitchBot.subscribeToChannelMessages(payload.broadcasterUserId()).isPresent()) {
-                    yield RpcResponse.ok(new BatchResponse(BatchResponse.BatchStatus.SUCCESS, List.of(new BatchResponse.ItemResult("", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.SUCCESS, null))));
+                    results.add(new BatchResponse.ItemResult("channelMessageSubscription", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.SUCCESS, null));
                 } else {
-                    yield RpcResponse.error("Could not join channel " + payload.broadcasterUserId());
+                    results.add(new BatchResponse.ItemResult("channelMessageSubscription", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.FAILED, "Failed to subscribe to channel messages"));
                 }
+                payload.donationMessageTemplate().ifPresent(template -> {
+                    if (payload.donationMessageUser().isEmpty()) {
+                        results.add(new BatchResponse.ItemResult("donationMessageSubscription", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.FAILED, "Donation message user is required when donation message template is provided"));
+                    } else if (twitchBot.subscribeToDonationMessages(payload.broadcasterUserId(), template, payload.donationMessageUser().get())) {
+                            results.add(new BatchResponse.ItemResult("donationMessageSubscription", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.SUCCESS, null));
+                    } else {
+                        results.add(new BatchResponse.ItemResult("donationMessageSubscription", payload.broadcasterUserId(), BatchResponse.ItemResult.Status.FAILED, "Failed to subscribe to donation messages"));
+                    }
+                });
+                BatchResponse.BatchStatus status = results.stream().allMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.SUCCESS :
+                        results.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;
+                yield RpcResponse.ok(new BatchResponse(status, results));
             }
             case GET_MESSAGE_SUBSCRIBED_CHANNELS ->
                 RpcResponse.error("Deprecated!");
@@ -64,7 +78,7 @@ public class RpcRequestHandler implements HasLogger {
         itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT.getName(), broadcasterUserId, twitchBot.subscribeToSubscriptionGiftEvents(broadcasterUserId)));
 
         BatchResponse.BatchStatus status = itemResults.stream().allMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.SUCCESS :
-            itemResults.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.FAILED) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;
+            itemResults.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;
 
         return RpcResponse.ok(new BatchResponse(status, itemResults));
     }

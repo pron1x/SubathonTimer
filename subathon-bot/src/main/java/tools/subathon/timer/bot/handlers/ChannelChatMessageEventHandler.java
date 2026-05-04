@@ -6,17 +6,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
+import tools.subathon.timer.bot.factories.SubathonEventMessageFactory;
+import tools.subathon.timer.bot.service.RabbitMessageService;
 import tools.subathon.timer.bot.util.CommandUtils;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.bot.service.TwitchChatService;
+import tools.subathon.timer.bot.util.TemplateParser;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.datamodel.enums.TimerState;
+import tools.subathon.timer.util.Tuple;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ChannelChatMessageEventHandler implements HasLogger {
@@ -28,23 +34,48 @@ public class ChannelChatMessageEventHandler implements HasLogger {
     private final static String COMMAND_DEL = "del";
 
     private final static List<String> TIMER_COMMANDS = List.of(COMMAND_START, COMMAND_PAUSE, COMMAND_ADD, COMMAND_DEL);
+    private final Map<String, Tuple<String, TemplateParser>> donationMessageParsers = new HashMap<>();
 
     @Value("${bot.subathon.command.prefix}")
     private String commandPrefix;
 
     private final TwitchChatService twitchChatService;
     private final DataserviceRpcService dataserviceRpcService;
+    private final RabbitMessageService rabbitMessageService;
 
     @Autowired
-    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, DataserviceRpcService dataserviceRpcService) {
+    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, DataserviceRpcService dataserviceRpcService, RabbitMessageService rabbitMessageService) {
         this.twitchChatService = twitchChatService;
         this.dataserviceRpcService = dataserviceRpcService;
+        this.rabbitMessageService = rabbitMessageService;
     }
 
     public void handle(ChannelChatMessageEvent event) {
         getLogger().trace("Received channel message from {} in channel {}. Message: {}.", event.getChatterUserName(), event.getBroadcasterUserName(), event.getMessage().getCleanedText());
         if (isCommandMessage(event) && !twitchChatService.isChatterOwnBot(event.getChatterUserId()) && hasPermission(event.getBadges())) {
             processCommand(event);
+        } else if (donationMessageParsers.containsKey(event.getBroadcasterUserId())
+                && donationMessageParsers.get(event.getBroadcasterUserId()).left().equalsIgnoreCase(event.getChatterUserName())) {
+            processDonationMessage(event);
+        }
+    }
+
+    private void processDonationMessage(ChannelChatMessageEvent event) {
+        TemplateParser parser = donationMessageParsers.get(event.getBroadcasterUserId()).right();
+        TemplateParser.ParseResult result = parser.parse(event.getMessage().getCleanedText());
+
+        if (result.success()) {
+            String amountString = result.values().get("amount");
+            String userString = result.values().get("user");
+            double amount;
+
+            try {
+                amount = Double.parseDouble(amountString);
+            } catch (NumberFormatException | NullPointerException e) {
+                getLogger().info("Failed to parse donation amount'{}' for broadcasterUserId '{}'", amountString, event.getBroadcasterUserId());
+                return;
+            }
+            rabbitMessageService.produceMessage(SubathonEventMessageFactory.createSubathonDonationEventMessage(event.getBroadcasterUserId(), amount, userString));
         }
     }
 
@@ -158,6 +189,10 @@ public class ChannelChatMessageEventHandler implements HasLogger {
 
     private boolean hasPermission(List<Badge> badges) {
         return badges.stream().anyMatch(p -> "moderator".equals(p.getSetId()) || "broadcaster".equals(p.getSetId()));
+    }
+
+    public void registerNewDonationMessageParser(String broadcasterUserId, String parserTemplate, String messageUser) {
+        donationMessageParsers.put(broadcasterUserId, new Tuple<>(messageUser, TemplateParser.builder().withTemplate(parserTemplate).build()));
     }
 
 }

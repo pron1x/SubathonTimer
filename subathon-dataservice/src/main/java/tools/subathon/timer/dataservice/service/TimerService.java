@@ -93,9 +93,12 @@ public class TimerService implements HasLogger {
 
     private void initializeTwitchMessageSubscription(String broadcasterUserId) throws InitializationException {
         BatchResponse response;
+        Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(broadcasterUserId);
+        String donationTemplatePattern = config.map(UserConfigurationDto::donationTemplatePattern).orElse(null);
+        String donationTemplateUser = config.map(UserConfigurationDto::donationTemplateUser).orElse(null);
         for (int tries = 0; tries < 3; tries++) {
             try {
-                response = botRpcService.requestMessageEventSubscription(broadcasterUserId);
+                response = botRpcService.requestMessageEventSubscription(broadcasterUserId, donationTemplatePattern, donationTemplateUser);
             } catch (RuntimeException e) {
                 getLogger().error("Failed to get answer from RPC for broadcaster user id '{}', unsure if subscribed to messages! Trying again...", broadcasterUserId, e);
                 continue;
