@@ -11,9 +11,6 @@ public class UserConfigurationEntity extends BaseEntity {
     @Column(name = "channel_id", nullable = false, unique = true, length = 30)
     private String channelId;
 
-    @Column(name = "se_jwt", length = 30)
-    private String seJwt;
-
     @Column(name = "follower_seconds")
     private Integer followerSeconds;
 
@@ -59,14 +56,6 @@ public class UserConfigurationEntity extends BaseEntity {
 
     public void setChannelId(String channelId) {
         this.channelId = channelId;
-    }
-
-    public String getSeJwt() {
-        return seJwt;
-    }
-
-    public void setSeJwt(String seJwt) {
-        this.seJwt = seJwt;
     }
 
     public Integer getFollowerSeconds() {
