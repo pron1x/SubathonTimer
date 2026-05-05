@@ -63,8 +63,8 @@ public class UserConfigurationForm extends VerticalLayout {
         donationTemplatePattern = new TextField("Donation message pattern");
         donationTemplateUser = new TextField("Donation message bot name");
 
-        donationTemplatePattern.setHelperText("Use {user} and {amount} as placeholders.");
-        donationTemplatePattern.setTooltipText("You can also copy the message template from the donation provider and adjust the placeholders as needed. If possible, make the currency static.");
+        donationTemplatePattern.setHelperText("Placeholders: {user} and {amount}\nExample: {user} just tipped {amount} EUR!");
+        donationTemplatePattern.setTooltipText("You can also copy the message template from the donation provider and adjust the placeholders as needed.");
         saveButton = new Button("Save");
         initInternal();
     }
@@ -198,7 +198,7 @@ public class UserConfigurationForm extends VerticalLayout {
                             } catch (IllegalArgumentException ex) {
                                 return false;
                             }
-                        }, "Invalid template! Only {amount} and {user} placeholders are allowed, they must have at least on character between them.")
+                        }, "Invalid template! Only {amount} and {user} placeholders are allowed, with at least one character between them.")
                 .bind("donationTemplatePattern");
         binder.bind(donationTemplateUser, "donationTemplateUser");
     }
