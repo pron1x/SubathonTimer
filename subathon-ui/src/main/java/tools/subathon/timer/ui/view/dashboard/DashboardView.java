@@ -69,7 +69,7 @@ public class DashboardView extends VerticalLayout {
 
         userConfigurationModel = presenter.getUserConfig();
         if(userConfigurationModel == null) {
-            userConfigurationModel = new UserConfigurationDto(null, null, null,
+            userConfigurationModel = new UserConfigurationDto(null, null,
                     null, null, null,
                     null, null, null,
                     null, null, null, null, null, null, null);

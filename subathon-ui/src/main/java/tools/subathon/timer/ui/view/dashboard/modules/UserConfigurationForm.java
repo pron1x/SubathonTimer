@@ -28,7 +28,6 @@ public class UserConfigurationForm extends VerticalLayout {
 
     private final TextField id;
     private final TextField channelId;
-    private final PasswordField seJwt;
     private final IntegerField followerSeconds;
     private final IntegerField raiderSeconds;
     private final IntegerField tier1Seconds;
@@ -48,7 +47,6 @@ public class UserConfigurationForm extends VerticalLayout {
         binder = new BeanValidationBinder<>(UserConfigurationDto.class);
         id = new TextField();
         channelId = new TextField();
-        seJwt = new PasswordField("StreamElements JWT Token");
         followerSeconds = new IntegerField("Follower");
         raiderSeconds = new IntegerField("per Raider");
         tier1Seconds = new IntegerField("Tier 1");
@@ -85,7 +83,6 @@ public class UserConfigurationForm extends VerticalLayout {
         channelId.setVisible(false);
         channelId.setEnabled(false);
 
-        seJwt.setRequired(true);
         followerSeconds.setRequired(true);
         raiderSeconds.setRequired(true);
         tier1Seconds.setRequired(true);
@@ -109,46 +106,44 @@ public class UserConfigurationForm extends VerticalLayout {
         configForm.setColumnWidth("15em");
 
         configForm.addFormRow(id);
-        FormLayout.FormRow row1 = new FormLayout.FormRow();
-        row1.add(seJwt, 2);
 
         Span eventsHeader = new Span("Configure seconds for each twitch event. 0 ignores events");
         eventsHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
         FormLayout.FormRow subheader1 = new FormLayout.FormRow();
         subheader1.add(eventsHeader, 2);
 
-        FormLayout.FormRow row2 = new FormLayout.FormRow();
-        row2.add(followerSeconds, raiderSeconds);
+        FormLayout.FormRow followerRaidRow = new FormLayout.FormRow();
+        followerRaidRow.add(followerSeconds, raiderSeconds);
 
-        FormLayout.FormRow row3 = new FormLayout.FormRow();
-        row3.add(tier1Seconds, tier1GiftSeconds);
+        FormLayout.FormRow tier1Row = new FormLayout.FormRow();
+        tier1Row.add(tier1Seconds, tier1GiftSeconds);
 
-        FormLayout.FormRow row4 = new FormLayout.FormRow();
-        row4.add(tier2Seconds, tier2GiftSeconds);
+        FormLayout.FormRow tier2Row = new FormLayout.FormRow();
+        tier2Row.add(tier2Seconds, tier2GiftSeconds);
 
-        FormLayout.FormRow row5 = new FormLayout.FormRow();
-        row5.add(tier3Seconds, tier3GiftSeconds);
+        FormLayout.FormRow tier3Row = new FormLayout.FormRow();
+        tier3Row.add(tier3Seconds, tier3GiftSeconds);
 
-        FormLayout.FormRow row6 = new FormLayout.FormRow();
-        row6.add(bitsSeconds, currencySeconds);
+        FormLayout.FormRow tipRow = new FormLayout.FormRow();
+        tipRow.add(bitsSeconds, currencySeconds);
 
         Span startingHeader = new Span("Configure start time of the timer in seconds");
         startingHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
         FormLayout.FormRow subheader2 = new FormLayout.FormRow();
         subheader2.add(startingHeader, 2);
 
-        FormLayout.FormRow row7 = new FormLayout.FormRow();
-        row7.add(initialSeconds, 2);
+        FormLayout.FormRow startTimeRow = new FormLayout.FormRow();
+        startTimeRow.add(initialSeconds, 2);
 
         Span donationMessageHeader = new Span("Configure the donation message template");
         donationMessageHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
         FormLayout.FormRow subheader3 = new FormLayout.FormRow();
         subheader3.add(donationMessageHeader, 2);
 
-        FormLayout.FormRow row8 = new FormLayout.FormRow();
-        row8.add(donationTemplatePattern, donationTemplateUser);
+        FormLayout.FormRow tipMessageRow = new FormLayout.FormRow();
+        tipMessageRow.add(donationTemplatePattern, donationTemplateUser);
 
-        configForm.add(row1, subheader1, row2, row3, row4, row5, row6, subheader2, row7, subheader3, row8);
+        configForm.add(followerRaidRow, subheader1, followerRaidRow, tier1Row, tier2Row, tier3Row, tipRow, subheader2, startTimeRow, subheader3, tipMessageRow);
         Div wrapper = new Div(configForm);
         wrapper.setSizeFull();
         wrapper.getStyle()
@@ -178,7 +173,6 @@ public class UserConfigurationForm extends VerticalLayout {
         binder.forField(id).withConverter(
                 stringValue -> !Objects.equals(stringValue, id.getEmptyValue()) ? Long.valueOf(stringValue) : null,
                 longValue -> longValue != null ? longValue.toString() : id.getEmptyValue()).bind("id");
-        binder.bind(seJwt, "seJwt");
         binder.bind(followerSeconds, "followerSeconds");
         binder.bind(raiderSeconds, "raiderSeconds");
         binder.bind(tier1Seconds, "tier1Seconds");

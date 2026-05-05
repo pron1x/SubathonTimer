@@ -3,7 +3,6 @@ package tools.subathon.timer.datamodel.user;
 public record UserConfigurationDto(
         Long id,
         String channelId,
-        String seJwt,
         Integer followerSeconds,
         Integer raiderSeconds,
         Integer tier1Seconds,
@@ -22,7 +21,6 @@ public record UserConfigurationDto(
         return new UserConfigurationDto(
                 userConfigurationModel.id(),
                 channelId,
-                userConfigurationModel.seJwt(),
                 userConfigurationModel.followerSeconds(),
                 userConfigurationModel.raiderSeconds(),
                 userConfigurationModel.tier1Seconds(),
