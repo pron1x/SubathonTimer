@@ -30,7 +30,4 @@ public class GlobalRabbitMQ {
     public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
     public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "dataservice.bot.channel-management";
 
-    // Importer Token Management RPC queue
-    public static final String IMPORTER_MANAGEMENT_QUEUE = "importer-management-rpc-queue";
-    public static final String IMPORTER_MANAGEMENT_ROUTING_KEY = "dataservice.importer.management";
 }
