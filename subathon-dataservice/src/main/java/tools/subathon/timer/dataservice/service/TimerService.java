@@ -5,6 +5,7 @@ import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
 import tools.subathon.timer.dataservice.data.domain.TimerEvent;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
+import tools.subathon.timer.dataservice.data.mapper.TimerMapper;
 import tools.subathon.timer.dataservice.data.repository.TimerRepository;
 import tools.subathon.timer.datamodel.SubathonBitCheerEvent;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
@@ -21,7 +22,6 @@ import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigur
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +40,7 @@ public class TimerService implements HasLogger {
     private final TimerRepository timerRepository;
     private final TimerEventService timerEventService;
     private final UserConfigurationService userConfigurationService;
-    private final ModelMapper mapper;
+    private final TimerMapper mapper;
 
     AdjustableScheduledExecutorService timerControl = new AdjustableScheduledExecutorService();
 
@@ -52,7 +52,7 @@ public class TimerService implements HasLogger {
 
 
     @Autowired
-    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, ModelMapper mapper, BotRpcService botRpcService) {
+    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, TimerMapper mapper, BotRpcService botRpcService) {
         this.botRpcService = botRpcService;
         this.timerRepository = timerRepository;
         this.timerEventService = timerEventService;
@@ -68,7 +68,7 @@ public class TimerService implements HasLogger {
 
         // This will check if a timer exists and schedule the end time for it
         for (TimerEntity timerEntity : timerList) {
-            Timer domainTimer = Timer.fromDto(mapper.map(timerEntity, TimerDto.class));
+            Timer domainTimer = Timer.fromDto(mapper.entityToDto(timerEntity));
             try {
                 initializeTwitchMessageSubscription(domainTimer.getChannelId());
                 initializeAllTwitchEventSubscriptions(domainTimer.getChannelId());
@@ -147,7 +147,7 @@ public class TimerService implements HasLogger {
 
         Timer domainTimer = Timer.initialize(channelId, channelName);
 
-        timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+        timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
 
         domainTimers.put(channelId, domainTimer);
         domainTimer.getAndClearPendingEvents().forEach(timerEventService::saveAndPublish);
@@ -173,7 +173,7 @@ public class TimerService implements HasLogger {
         }
 
         domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
-        TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> {
             try {
@@ -208,7 +208,7 @@ public class TimerService implements HasLogger {
         }
         domainTimer.pause();
 
-        TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
 
         timerControl.setPaused(channelId, true);
 
@@ -234,7 +234,7 @@ public class TimerService implements HasLogger {
             return null;
         }
         domainTimer.resume();
-        TimerDto returnTimer = mapper.map(timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class)), TimerDto.class);
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
 
         // Resume execution with new end
         timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
@@ -258,7 +258,7 @@ public class TimerService implements HasLogger {
         getLogger().debug("Stopping timer!");
 
         domainTimers.get(channelId).stop();
-        timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+        timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
         domainTimers.remove(channelId);
 
         // Save and publish timer event
@@ -292,7 +292,7 @@ public class TimerService implements HasLogger {
         getLogger().info("Adding {} seconds for event {}", secondsToAdd, event);
         domainTimer.addTime(Duration.ofSeconds(secondsToAdd));
 
-        TimerEntity returnTimer = timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
 
         // Change scheduled timer
         timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
@@ -303,7 +303,7 @@ public class TimerService implements HasLogger {
             timerEventService.saveAndPublish(domainEvent);
         });
 
-        return mapper.map(returnTimer, TimerDto.class);
+        return mapper.entityToDto(returnTimer);
     }
 
     public TimerDto subtractSubathonEventTime(String channelId, SubathonCommandEvent command) throws MissingTimerException {
@@ -322,7 +322,7 @@ public class TimerService implements HasLogger {
 
         domainTimer.subtractTime(Duration.ofSeconds(command.getSeconds()));
 
-        TimerEntity returnTimer = timerRepository.save(mapper.map(domainTimer.toDto(), TimerEntity.class));
+        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
         timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
 
         // Save and publish timer event
@@ -331,12 +331,12 @@ public class TimerService implements HasLogger {
             timerEventService.saveAndPublish(domainEvent);
         });
 
-        return mapper.map(returnTimer, TimerDto.class);
+        return mapper.entityToDto(returnTimer);
     }
 
     public TimerDto getLatestTimerForChannel(String channelId) {
         Optional<TimerEntity> entity = timerRepository.findLatestForChannelId(channelId);
-        return entity.map(timerEntity -> mapper.map(timerEntity, TimerDto.class)).orElse(null);
+        return entity.map(mapper::entityToDto).orElse(null);
     }
 
     private static long getSecondsToAdd(SubathonEvent event, UserConfigurationDto config) {

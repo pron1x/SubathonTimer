@@ -1,10 +1,10 @@
 package tools.subathon.timer.dataservice.service;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
+import tools.subathon.timer.dataservice.data.mapper.UserConfigMapper;
 import tools.subathon.timer.dataservice.data.repository.UserConfigurationRepository;
 
 import java.util.Optional;
@@ -35,27 +35,27 @@ public class UserConfigurationService {
     @Value("${timer.seconds.initial}")
     private int INITIAL_TIMER_SECONDS = 100;
 
-    private final ModelMapper modelMapper;
+    private final UserConfigMapper mapper;
 
     private final UserConfigurationRepository userConfigurationRepository;
 
     private final BotRpcService botRpcService;
 
-    public UserConfigurationService(ModelMapper modelMapper, UserConfigurationRepository userConfigurationRepository, BotRpcService botRpcService) {
-        this.modelMapper = modelMapper;
+    public UserConfigurationService(UserConfigMapper mapper, UserConfigurationRepository userConfigurationRepository, BotRpcService botRpcService) {
+        this.mapper = mapper;
         this.userConfigurationRepository = userConfigurationRepository;
         this.botRpcService = botRpcService;
     }
 
     public UserConfigurationDto save(UserConfigurationDto userConfigurationModel) {
-        UserConfigurationDto config = modelMapper.map(userConfigurationRepository.save(modelMapper.map(userConfigurationModel, UserConfigurationEntity.class)), UserConfigurationDto.class);
+        UserConfigurationDto config = mapper.entityToDto(userConfigurationRepository.save(mapper.dtoToEntity(userConfigurationModel)));
         botRpcService.requestMessageEventSubscription(config.channelId(), config.donationTemplatePattern(), config.donationTemplateUser());
         return config;
     }
 
     public Optional<UserConfigurationDto> getForChannel(String channelId) {
         UserConfigurationEntity config = userConfigurationRepository.findByChannelId(channelId);
-        return config != null ? Optional.of(modelMapper.map(config, UserConfigurationDto.class)) : Optional.empty();
+        return config != null ? Optional.of(mapper.entityToDto(config)) : Optional.empty();
     }
 
     public UserConfigurationDto getDefaultConfiguration() {
