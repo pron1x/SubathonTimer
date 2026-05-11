@@ -187,6 +187,9 @@ public class UserConfigurationForm extends VerticalLayout {
         binder.forField(donationTemplatePattern)
                         .withValidator(pattern -> {
                             try {
+                                if (pattern == null || pattern.isEmpty()) {
+                                    return true; // Allow empty pattern, which means no donation messages will be processed
+                                }
                                 TemplateParser.builder().withTemplate(pattern).build();
                                 return true;
                             } catch (IllegalArgumentException ex) {
@@ -194,7 +197,10 @@ public class UserConfigurationForm extends VerticalLayout {
                             }
                         }, "Invalid template! Only {amount} and {user} placeholders are allowed, with at least one character between them.")
                 .bind("donationTemplatePattern");
-        binder.bind(donationTemplateUser, "donationTemplateUser");
+        binder.forField(donationTemplateUser)
+                        .withValidator(user -> donationTemplatePattern.isEmpty() || (user != null && !user.isBlank()),
+                                "User must be set if a donation message template is configured.")
+                .bind("donationTemplateUser");
     }
 
     private <T, E extends HasValue.ValueChangeEvent<T>> HasValue.ValueChangeListener<HasValue.ValueChangeEvent<T>> createValueCopier(HasValue<E, T> other) {
