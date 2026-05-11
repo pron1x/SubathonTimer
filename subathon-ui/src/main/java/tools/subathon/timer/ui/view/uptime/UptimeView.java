@@ -1,6 +1,6 @@
 package tools.subathon.timer.ui.view.uptime;
 
-import jakarta.annotation.security.PermitAll;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.ui.component.UptimeClock;
@@ -14,7 +14,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("uptime")
-@PermitAll
+@AnonymousAllowed
 public class UptimeView extends Div implements HasUrlParameter<String> {
 
     private final UptimePresenter uptimePresenter;
