@@ -22,24 +22,14 @@ services:
     environment:
       - 'MARIADB_ROOT_PASSWORD='
 
-  subathon-importer:
-    container_name: 'seimporter'
-    image: 'seimporter:latest'
-    restart: always
-    environment:
-      - 'STREAMELEMENTS_JWT_TOKEN='
-      - 'SPRING_RABBITMQ_PASSWORD='
-      - 'SPRING_RABBITMQ_USERNAME='
-      - 'SPRING_RABBITMQ_HOST=rabbitmq'
-    depends_on:
-      - rabbitmq
-
   subathon-bot:
     container_name: 'subathonbot'
     image: 'subathonbot:latest'
     restart: always
     environment:
-      - 'TWITCH_OAUTH_TOKEN='
+      - 'BOT_TWITCH_USER_ID='
+      - 'BOT_TWITCH_OAUTH_CLIENT_ID='
+      - 'BOT_TWITCH_OAUTH_CLIENT_SECRET='
       - 'SPRING_RABBITMQ_PASSWORD='
       - 'SPRING_RABBITMQ_USERNAME='
       - 'SPRING_RABBITMQ_HOST=rabbitmq'
@@ -51,15 +41,16 @@ services:
     image: 'subathondataservice:latest'
     restart: always
     environment:
-      - 'DATASERVICE_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/subathon'
-      - 'DATASERVICE_DATASOURCE_USERNAME=root'
-      - 'DATASERVICE_DATASOURCE_PASSWORD='
+      - 'SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/subathon'
+      - 'SPRING_DATASOURCE_USERNAME=root'
+      - 'SPRING_DATASOURCE_PASSWORD='
       - 'SPRING_RABBITMQ_PASSWORD='
       - 'SPRING_RABBITMQ_USERNAME='
       - 'SPRING_RABBITMQ_HOST=rabbitmq'
     depends_on:
       - rabbitmq
       - mariadb
+      - subathon-bot
 
   subathon-ui:
     container_name: 'subathonui'
@@ -71,6 +62,8 @@ services:
       - 'SPRING_RABBITMQ_PASSWORD='
       - 'SPRING_RABBITMQ_USERNAME='
       - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TWITCH_CLIENT_ID='
+      - 'SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TWITCH_CLIENT_SECRET='
     depends_on:
       - subathon-dataservice
 

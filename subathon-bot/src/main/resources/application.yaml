@@ -1,7 +1,7 @@
 spring:
   rabbitmq:
-    password: 'secret'
-    username: 'myuser'
+    password:
+    username:
 
 bot:
   twitch:
@@ -13,10 +13,3 @@ bot:
   subathon:
     command:
       prefix: '!'
-
-logging:
-  level:
-    com:
-      pronixxx:
-        subathon:
-          bot: trace

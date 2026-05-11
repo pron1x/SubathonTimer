@@ -1,21 +1,12 @@
 spring:
   rabbitmq:
-    password: 'secret'
-    username: 'myuser'
+    password:
+    username:
   datasource:
-    url: ${DATASERVICE_DATASOURCE_URL}
-    username: ${DATASERVICE_DATASOURCE_USERNAME}
-    password: ${DATASERVICE_DATASOURCE_PASSWORD}
+    url:
+    username:
+    password:
     driver-class-name: org.mariadb.jdbc.Driver
-
-logging:
-  level:
-    com:
-      pronixxx:
-        subathon: debug
-
-server:
-  port: 8081
 
 timer:
   ignoremock: true
