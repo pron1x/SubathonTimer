@@ -152,7 +152,7 @@ public class UserConfigurationForm extends VerticalLayout {
                 .set("display", "flex")
                 .set("justify-content", "center");
 
-        saveButton.addClickListener(event -> {
+        saveButton.addClickListener(_ -> {
             if (binder.validate().isOk()) {
                 try {
                     saveHandler.save(binder.writeRecord());

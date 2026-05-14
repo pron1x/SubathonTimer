@@ -76,12 +76,12 @@ public class DashboardView extends VerticalLayout {
         }
 
         initTimerButton = new Button("Initialize a new timer");
-        initTimerButton.addClickListener(event -> presenter.initializeTimer());
+        initTimerButton.addClickListener(_ -> presenter.initializeTimer());
         startTimerButton = new Button("Start");
-        startTimerButton.addClickListener(event -> presenter.startTimer());
+        startTimerButton.addClickListener(_ -> presenter.startTimer());
 
         pauseTimerButton = new Button("Pause");
-        pauseTimerButton.addClickListener(event -> presenter.pauseTimer());
+        pauseTimerButton.addClickListener(_ -> presenter.pauseTimer());
 
         TimerDto timer = presenter.getTimer();
         timerInfoCard = new TimerInfo(timer);
@@ -181,7 +181,7 @@ public class DashboardView extends VerticalLayout {
         Button closeButton = new Button(new Icon("lumo", "cross"));
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         closeButton.setAriaLabel("Close");
-        closeButton.addClickListener(event -> notification.close());
+        closeButton.addClickListener(_ -> notification.close());
 
         HorizontalLayout layout = new HorizontalLayout(text, closeButton);
         layout.setAlignItems(Alignment.CENTER);
