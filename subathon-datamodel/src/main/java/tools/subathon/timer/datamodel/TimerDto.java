@@ -1,5 +1,6 @@
 package tools.subathon.timer.datamodel;
 
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
@@ -12,18 +13,24 @@ public record TimerDto(
         Instant startTime,
         Instant endTime,
         TimerState state,
-        Instant updateTime
+        Instant updateTime,
+        Integer monetizedSecondsPerPoint,
+        long totalMonetizedExtensionSeconds,
+        long points
 ) {
     @Override
-    public String toString() {
-        return "Timer{" +
+    public @NonNull String toString() {
+        return "TimerDto{" +
                 "id=" + id +
+                ", channelId='" + channelId + '\'' +
                 ", channelName='" + channelName + '\'' +
-                ", channelId=" + channelId +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", state=" + state +
                 ", updateTime=" + updateTime +
+                ", monetizedSecondsPerPoint=" + monetizedSecondsPerPoint +
+                ", totalMonetizedExtensionSeconds=" + totalMonetizedExtensionSeconds +
+                ", points=" + points +
                 '}';
     }
 }

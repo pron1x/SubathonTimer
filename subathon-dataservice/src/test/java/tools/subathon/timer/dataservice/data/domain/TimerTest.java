@@ -407,7 +407,10 @@ class TimerTest {
                 fixedClock.instant(),
                 fixedClock.instant().plus(Duration.ofMinutes(30)),
                 TimerState.TICKING,
-                fixedClock.instant().plus(Duration.ofMinutes(5)));
+                fixedClock.instant().plus(Duration.ofMinutes(5)),
+                300,
+                600,
+                2);
 
         // Convert to timer
         Timer timer = Timer.fromDto(dto);
@@ -422,5 +425,8 @@ class TimerTest {
         assertEquals(dto.endTime(), resultDto.endTime());
         assertEquals(dto.updateTime(), resultDto.updateTime());
         assertEquals(dto.state(), resultDto.state());
+        assertEquals(dto.monetizedSecondsPerPoint(), resultDto.monetizedSecondsPerPoint());
+        assertEquals(dto.totalMonetizedExtensionSeconds(), resultDto.totalMonetizedExtensionSeconds());
+        assertEquals(dto.points(), resultDto.points());
     }
 }

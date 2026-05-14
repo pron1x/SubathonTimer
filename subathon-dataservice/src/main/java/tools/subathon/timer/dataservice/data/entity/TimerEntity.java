@@ -1,7 +1,13 @@
 package tools.subathon.timer.dataservice.data.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.enums.TimerState;
-import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -35,6 +41,15 @@ public class TimerEntity {
 
     @Column(name = "update_time")
     private Instant updateTime;
+
+    @Column(name = "monetized_seconds_per_point")
+    private Integer monetizedSecondsPerPoint;
+
+    @Column(name = "total_monetized_extension_seconds")
+    private long totalMonetizedExtensionSeconds;
+
+    @Column(name = "points")
+    private long points;
 
     public UUID getId() {
         return id;
@@ -98,5 +113,46 @@ public class TimerEntity {
 
     public void setInsertTime(Instant insertTime) {
         this.insertTime = insertTime;
+    }
+
+    public Integer getMonetizedSecondsPerPoint() {
+        return monetizedSecondsPerPoint;
+    }
+
+    public void setMonetizedSecondsPerPoint(Integer monetizedSecondsPerPoint) {
+        this.monetizedSecondsPerPoint = monetizedSecondsPerPoint;
+    }
+
+    public long getTotalMonetizedExtensionSeconds() {
+        return totalMonetizedExtensionSeconds;
+    }
+
+    public void setTotalMonetizedExtensionSeconds(long totalMonetizedExtensionSeconds) {
+        this.totalMonetizedExtensionSeconds = totalMonetizedExtensionSeconds;
+    }
+
+    public long getPoints() {
+        return points;
+    }
+
+    public void setPoints(long points) {
+        this.points = points;
+    }
+
+    @Override
+    public @NonNull String toString() {
+        return "TimerEntity{" +
+                "id=" + id +
+                ", insertTime=" + insertTime +
+                ", channelName='" + channelName + '\'' +
+                ", channelId='" + channelId + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", state=" + state +
+                ", updateTime=" + updateTime +
+                ", monetizedSecondsPerPoint=" + monetizedSecondsPerPoint +
+                ", totalMonetizedExtensionSeconds=" + totalMonetizedExtensionSeconds +
+                ", points=" + points +
+                '}';
     }
 }

@@ -145,7 +145,7 @@ public class TimerService implements HasLogger {
         // Make sure all events are subscribed to
         initializeAllTwitchEventSubscriptions(channelId);
 
-        Timer domainTimer = Timer.initialize(channelId, channelName);
+        Timer domainTimer = Timer.initialize(channelId, channelName, (Integer) null);
 
         timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
 

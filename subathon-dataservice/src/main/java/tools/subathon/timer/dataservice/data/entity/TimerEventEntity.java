@@ -1,5 +1,6 @@
 package tools.subathon.timer.dataservice.data.entity;
 
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import jakarta.persistence.CascadeType;
@@ -44,6 +45,12 @@ public class TimerEventEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "current_timer_state", columnDefinition = "ENUM('UNINITIALIZED', 'INITIALIZED', 'PAUSED', 'TICKING', 'ENDED')")
     private TimerState currentTimerState;
+
+    @Column(name = "old_points")
+    private long oldPoints;
+
+    @Column(name = "new_points")
+    private long newPoints;
 
     @OneToOne(targetEntity = EventEntity.class, cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id", referencedColumnName = "id")
@@ -121,17 +128,35 @@ public class TimerEventEntity extends BaseEntity {
         this.subathonEvent = subathonEvent;
     }
 
+    public long getOldPoints() {
+        return oldPoints;
+    }
+
+    public void setOldPoints(long oldPoints) {
+        this.oldPoints = oldPoints;
+    }
+
+    public long getNewPoints() {
+        return newPoints;
+    }
+
+    public void setNewPoints(long newPoints) {
+        this.newPoints = newPoints;
+    }
+
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "TimerEventEntity{" +
                 "timestamp=" + timestamp +
                 ", timerId=" + timerId +
-                ", channelId=" + channelId +
+                ", channelId='" + channelId + '\'' +
                 ", type=" + type +
                 ", oldEndTime=" + oldEndTime +
                 ", currentEndTime=" + currentEndTime +
                 ", oldTimerState=" + oldTimerState +
                 ", currentTimerState=" + currentTimerState +
+                ", oldPoints=" + oldPoints +
+                ", newPoints=" + newPoints +
                 ", subathonEvent=" + subathonEvent +
                 "} " + super.toString();
     }

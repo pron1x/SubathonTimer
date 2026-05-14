@@ -1,5 +1,6 @@
 package tools.subathon.timer.datamodel;
 
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
@@ -15,11 +16,13 @@ public record TimerEventDto(
         Instant currentEndTime,
         TimerState oldTimerState,
         TimerState currentTimerState,
-        SubathonEvent subathonEvent
+        SubathonEvent subathonEvent,
+        long oldPoints,
+        long newPoints
 )
 {
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "TimerEvent{" +
                 "timerId=" + timerId +
                 ", channelId=" + channelId +
@@ -30,6 +33,8 @@ public record TimerEventDto(
                 ", oldTimerState=" + oldTimerState +
                 ", currentTimerState=" + currentTimerState +
                 ", subathonEvent=" + subathonEvent +
+                ", oldPoints=" + oldPoints +
+                ", newPoints=" + newPoints +
                 '}';
     }
 }

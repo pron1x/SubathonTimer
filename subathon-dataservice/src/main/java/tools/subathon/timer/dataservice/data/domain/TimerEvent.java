@@ -1,5 +1,6 @@
 package tools.subathon.timer.dataservice.data.domain;
 
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.SubathonEvent;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
@@ -17,6 +18,8 @@ public class TimerEvent {
     private TimerState oldTimerState;
     private TimerState currentTimerState;
     private SubathonEvent subathonEvent;
+    private long oldPoints;
+    private long newPoints;
 
     public UUID getTimerId() {
         return timerId;
@@ -90,11 +93,27 @@ public class TimerEvent {
         this.subathonEvent = subathonEvent;
     }
 
+    public long getOldPoints() {
+        return oldPoints;
+    }
+
+    public void setOldPoints(long oldPoints) {
+        this.oldPoints = oldPoints;
+    }
+
+    public long getNewPoints() {
+        return newPoints;
+    }
+
+    public void setNewPoints(long newPoints) {
+        this.newPoints = newPoints;
+    }
+
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "TimerEvent{" +
                 "timerId=" + timerId +
-                ", channelId=" + channelId +
+                ", channelId='" + channelId + '\'' +
                 ", timestamp=" + timestamp +
                 ", type=" + type +
                 ", oldEndTime=" + oldEndTime +
@@ -102,6 +121,8 @@ public class TimerEvent {
                 ", oldTimerState=" + oldTimerState +
                 ", currentTimerState=" + currentTimerState +
                 ", subathonEvent=" + subathonEvent +
+                ", oldPoints=" + oldPoints +
+                ", newPoints=" + newPoints +
                 '}';
     }
 }
