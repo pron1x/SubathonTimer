@@ -113,7 +113,7 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
         if(channelId.equals(timerEventDto.channelId())) {
             view.getUI().ifPresent(ui -> ui.access(
                     () -> {
-                        view.updateTimerInfo(timerEventDto.currentEndTime(), timerEventDto.timestamp(), timerEventDto.currentTimerState());
+                        view.updateTimerInfo(timerEventDto.currentEndTime(), timerEventDto.timestamp(), timerEventDto.currentTimerState(), timerEventDto.newPoints());
                         if(timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
                             view.updateTimerInfoStartTime(timerEventDto.timestamp());
                         }

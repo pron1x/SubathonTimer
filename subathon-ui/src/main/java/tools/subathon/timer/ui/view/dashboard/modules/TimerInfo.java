@@ -2,11 +2,8 @@ package tools.subathon.timer.ui.view.dashboard.modules;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.card.Card;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
@@ -21,6 +18,7 @@ public class TimerInfo extends Card {
     private Text startTime;
     private Text updateTime;
     private Text endTime;
+    private Text points;
 
     public TimerInfo(TimerDto timer) {
         createContent(timer);
@@ -36,12 +34,19 @@ public class TimerInfo extends Card {
         Span endDescription = new Span("End time");
         endDescription.getStyle().setFontSize("small");
 
-        setHeader(createHeader(timer));
+        setTitle(timer != null ? timer.channelName() : "-");
+        setSubtitle(timer != null ? timer.channelId() : "-");
+
         state = createTimerStateBadge(timer);
         setHeaderSuffix(state);
         startTime = new Text(timer != null ? formatInstant(timer.startTime()) : "-");
         updateTime = new Text(timer != null ? formatInstant(timer.updateTime()) : "-");
         endTime = new Text(timer != null ? formatInstant(timer.endTime()) : "-");
+        points = new Text(timer != null ? String.valueOf(timer.points()) : "-");
+
+        VerticalLayout pointsLayout = new VerticalLayout(new Span("Subathon points"), points);
+        pointsLayout.setPadding(false);
+        pointsLayout.setSpacing(false);
 
         VerticalLayout startLayout = new VerticalLayout(startDescription, startTime);
         startLayout.setPadding(false);
@@ -53,35 +58,18 @@ public class TimerInfo extends Card {
         endLayout.setPadding(false);
         endLayout.setSpacing(false);
 
-        add(new VerticalLayout(startLayout, updateLayout, endLayout));
-        setWidth("20em");
-    }
-
-    private static Div createHeader(TimerDto timer) {
-        Div header = new Div();
-        header.addClassNames(
-                LumoUtility.Display.FLEX,
-                LumoUtility.FlexDirection.COLUMN_REVERSE,
-                LumoUtility.LineHeight.XSMALL
-        );
-
-        H2 title = new H2(timer != null ? timer.channelName() : "-");
-
-        Div subtitle = new Div(timer != null ? timer.channelId() : "-");
-        subtitle.addClassNames(
-                LumoUtility.TextTransform.UPPERCASE,
-                LumoUtility.FontSize.XSMALL,
-                LumoUtility.TextColor.SECONDARY
-        );
-
-        header.add(title, subtitle);
-        return header;
+        add(new VerticalLayout(pointsLayout, startLayout, updateLayout, endLayout));
+        setWidth("25em");
     }
 
     private Span createTimerStateBadge(TimerDto timer) {
         Span badge = new Span(timer != null ? timer.state().toString() : TimerState.UNINITIALIZED.toString());
         badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.state() : TimerState.UNINITIALIZED));
         return badge;
+    }
+
+    public void updatePoints(long points) {
+        this.points.setText(String.valueOf(points));
     }
 
     public void updateStartTime(Instant startTime) {
@@ -115,6 +103,6 @@ public class TimerInfo extends Card {
         if(instant == null) {
             return "-";
         }
-        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'"));
     }
 }

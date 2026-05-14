@@ -131,10 +131,11 @@ public class DashboardView extends VerticalLayout {
         return form;
     }
 
-    protected void updateTimerInfo(Instant endTime, Instant updateTime, TimerState timerState) {
+    protected void updateTimerInfo(Instant endTime, Instant updateTime, TimerState timerState, long points) {
         timerInfoCard.updateEndTime(endTime);
         timerInfoCard.updateUpdateTime(updateTime);
         timerInfoCard.updateTimerState(timerState);
+        timerInfoCard.updatePoints(points);
         setTimerControlButtonStates(timerState);
     }
 
