@@ -43,14 +43,16 @@ public class MainLayout extends AppLayout {
                 .ifPresentOrElse(user -> {
                             MenuItem userItem = userBar.addItem(user.getName());
                             SubMenu userMenu = userItem.getSubMenu();
-                            userMenu.addItem("Timer", e ->
+                            userMenu.addItem("Timer", _ ->
                                     getUI().ifPresent(ui -> ui.navigate("timer/" + user.getAttribute("sub"))));
-                            userMenu.addItem("Uptime", e ->
+                            userMenu.addItem("Uptime", _ ->
                                     getUI().ifPresent(ui -> ui.navigate("uptime/" + user.getAttribute("sub"))));
-                            userMenu.addItem("Logout", e ->
-                                    getUI().ifPresent(ui -> authContext.logout()));
+                            userMenu.addItem("Subathon Points", _ ->
+                                    getUI().ifPresent(ui -> ui.navigate("points/" + user.getAttribute("sub"))));
+                            userMenu.addItem("Logout", _ ->
+                                    getUI().ifPresent(_ -> authContext.logout()));
                         },
-                        () -> userBar.addItem("Login", e -> loginDialog.open()));
+                        () -> userBar.addItem("Login", _ -> loginDialog.open()));
         return userBar;
     }
 
