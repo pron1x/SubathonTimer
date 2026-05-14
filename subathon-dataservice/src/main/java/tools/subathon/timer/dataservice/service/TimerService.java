@@ -292,7 +292,7 @@ public class TimerService implements HasLogger {
 
         long secondsToAdd = getSecondsToAdd(event, config);
         getLogger().info("Adding {} seconds for event {}", secondsToAdd, event);
-        domainTimer.addTime(Duration.ofSeconds(secondsToAdd));
+        domainTimer.addTime(Duration.ofSeconds(secondsToAdd), isMonetized(event));
 
         TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
 
@@ -364,6 +364,13 @@ public class TimerService implements HasLogger {
         };
 
         return (long) Math.ceil(seconds);
+    }
+
+    private static boolean isMonetized(SubathonEvent event) {
+        return switch (event.getType()) {
+            case SUBSCRIPTION, GIFT, TIP, CHEER -> true;
+            case RAID, FOLLOW, COMMAND -> false;
+        };
     }
 
 }

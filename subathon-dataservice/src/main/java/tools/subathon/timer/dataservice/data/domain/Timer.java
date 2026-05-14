@@ -134,8 +134,11 @@ public class Timer {
             oldEndTime = oldEndTime.plus(pausedDuration);
         }
         this.endTime = oldEndTime.plus(duration);
-        this.totalMonetizedExtensionSeconds += duration.getSeconds();
-        calculatePoints();
+
+        if (monetized) {
+            this.totalMonetizedExtensionSeconds += duration.getSeconds();
+            calculatePoints();
+        }
         this.updateTime = now;
         pendingEvents.add(createTimerEvent(TimerEventType.TIME_ADDITION, this.state, this.state, oldEndTime, this.endTime, oldPoints, this.points));
     }
