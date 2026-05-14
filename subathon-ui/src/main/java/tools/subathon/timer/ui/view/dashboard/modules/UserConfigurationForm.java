@@ -9,7 +9,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -39,6 +38,7 @@ public class UserConfigurationForm extends VerticalLayout {
     private final IntegerField bitsSeconds;
     private final IntegerField currencySeconds;
     private final IntegerField initialSeconds;
+    private final IntegerField monetizedSecondsPerPoint;
     private final TextField donationTemplatePattern;
     private final TextField donationTemplateUser;
     private final Button saveButton;
@@ -58,6 +58,7 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds = new IntegerField("per 100 bits");
         currencySeconds = new IntegerField("per EUR/USD");
         initialSeconds = new IntegerField("Starting Time (seconds)");
+        monetizedSecondsPerPoint = new IntegerField("Seconds per Subathon Point");
         donationTemplatePattern = new TextField("Donation message pattern");
         donationTemplateUser = new TextField("Donation message bot name");
 
@@ -94,6 +95,7 @@ public class UserConfigurationForm extends VerticalLayout {
         bitsSeconds.setRequired(true);
         currencySeconds.setRequired(true);
         initialSeconds.setRequired(true);
+        monetizedSecondsPerPoint.setMin(0);
 
         tier1Seconds.addValueChangeListener(createValueCopier(tier1GiftSeconds));
         tier2Seconds.addValueChangeListener(createValueCopier(tier2GiftSeconds));
@@ -127,13 +129,13 @@ public class UserConfigurationForm extends VerticalLayout {
         FormLayout.FormRow tipRow = new FormLayout.FormRow();
         tipRow.add(bitsSeconds, currencySeconds);
 
-        Span startingHeader = new Span("Configure start time of the timer in seconds");
+        Span startingHeader = new Span("Configure start time of the timer and monetized seconds added required for 1 subathon point.");
         startingHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
         FormLayout.FormRow subheader2 = new FormLayout.FormRow();
         subheader2.add(startingHeader, 2);
 
         FormLayout.FormRow startTimeRow = new FormLayout.FormRow();
-        startTimeRow.add(initialSeconds, 2);
+        startTimeRow.add(initialSeconds, monetizedSecondsPerPoint);
 
         Span donationMessageHeader = new Span("Configure the donation message template");
         donationMessageHeader.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.TextAlignment.CENTER);
@@ -184,6 +186,7 @@ public class UserConfigurationForm extends VerticalLayout {
         binder.bind(bitsSeconds, "bitsSeconds");
         binder.bind(currencySeconds, "currencySeconds");
         binder.bind(initialSeconds, "initialSeconds");
+        binder.bind(monetizedSecondsPerPoint, "monetizedSecondsPerPoint");
         binder.forField(donationTemplatePattern)
                         .withValidator(pattern -> {
                             try {

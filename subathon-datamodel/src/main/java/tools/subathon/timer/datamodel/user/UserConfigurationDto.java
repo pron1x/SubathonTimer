@@ -15,7 +15,8 @@ public record UserConfigurationDto(
         Integer bitsSeconds,
         Integer initialSeconds,
         String donationTemplatePattern,
-        String donationTemplateUser
+        String donationTemplateUser,
+        Integer monetizedSecondsPerPoint
 ) {
     public static UserConfigurationDto withChannelId(UserConfigurationDto userConfigurationModel, String channelId) {
         return new UserConfigurationDto(
@@ -33,7 +34,8 @@ public record UserConfigurationDto(
                 userConfigurationModel.bitsSeconds(),
                 userConfigurationModel.initialSeconds(),
                 userConfigurationModel.donationTemplatePattern(),
-                userConfigurationModel.donationTemplateUser()
+                userConfigurationModel.donationTemplateUser(),
+                userConfigurationModel.monetizedSecondsPerPoint()
         );
     }
 }

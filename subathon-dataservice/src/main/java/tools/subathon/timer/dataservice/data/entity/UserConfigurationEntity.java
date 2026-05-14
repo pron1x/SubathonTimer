@@ -50,6 +50,9 @@ public class UserConfigurationEntity extends BaseEntity {
     @Column(name = "donation_template_user")
     private String donationTemplateUser;
 
+    @Column(name = "monetized_seconds_per_point")
+    private Integer monetizedSecondsPerPoint;
+
     public String getChannelId() {
         return channelId;
     }
@@ -160,5 +163,13 @@ public class UserConfigurationEntity extends BaseEntity {
 
     public void setDonationTemplateUser(String donationTemplateUser) {
         this.donationTemplateUser = donationTemplateUser;
+    }
+
+    public Integer getMonetizedSecondsPerPoint() {
+        return monetizedSecondsPerPoint;
+    }
+
+    public void setMonetizedSecondsPerPoint(Integer monetizedSecondsPerPoint) {
+        this.monetizedSecondsPerPoint = monetizedSecondsPerPoint;
     }
 }
