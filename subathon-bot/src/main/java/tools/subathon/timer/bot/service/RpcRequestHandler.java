@@ -73,9 +73,7 @@ public class RpcRequestHandler implements HasLogger {
         itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_RAID.getName(), broadcasterUserId, twitchBot.subscribeToRaidEvents(broadcasterUserId)));
         itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_BITS_USE.getName(), broadcasterUserId, twitchBot.subscribeToBitsEvents(broadcasterUserId)));
 
-        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIBE.getName(), broadcasterUserId, twitchBot.subscribeToSubscriptionEvents(broadcasterUserId)));
-        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE.getName(), broadcasterUserId, twitchBot.subscribeToResubscriptionEvents(broadcasterUserId)));
-        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT.getName(), broadcasterUserId, twitchBot.subscribeToSubscriptionGiftEvents(broadcasterUserId)));
+        itemResults.add(subscriptionToItemResult(SubscriptionTypes.CHANNEL_CHAT_NOTIFICATION.getName(), broadcasterUserId, twitchBot.subscribeToChannelChatNotificationEvents(broadcasterUserId)));
 
         BatchResponse.BatchStatus status = itemResults.stream().allMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.SUCCESS :
             itemResults.stream().anyMatch(r -> r.status() == BatchResponse.ItemResult.Status.SUCCESS) ? BatchResponse.BatchStatus.PARTIAL_SUCCESS : BatchResponse.BatchStatus.FAILURE;

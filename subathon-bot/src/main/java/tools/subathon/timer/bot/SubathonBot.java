@@ -3,19 +3,17 @@ package tools.subathon.timer.bot;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
+import com.github.twitch4j.eventsub.events.ChannelChatNotificationEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
-import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
-import com.github.twitch4j.eventsub.events.ChannelSubscriptionGiftEvent;
-import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.eventsub.socket.IEventSubConduit;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionType;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import tools.subathon.timer.bot.handlers.ChannelBitsUseEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelChatMessageEventHandler;
+import tools.subathon.timer.bot.handlers.ChannelChatNotificationHandler;
 import tools.subathon.timer.bot.handlers.ChannelFollowEventHandler;
 import tools.subathon.timer.bot.handlers.ChannelRaidEventHandler;
-import tools.subathon.timer.bot.handlers.ChannelSubscriptionEventHandler;
 import tools.subathon.timer.util.interfaces.HasLogger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +39,18 @@ public class SubathonBot implements HasLogger {
     private final ChannelFollowEventHandler followEventHandler;
     private final ChannelRaidEventHandler raidEventHandler;
     private final ChannelBitsUseEventHandler bitsEventHandler;
-    private final ChannelSubscriptionEventHandler subscriptionEventHandler;
+    private final ChannelChatNotificationHandler chatNotificationHandler;
 
     @Autowired
     public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler,
                        ChannelFollowEventHandler followEventHandler, ChannelRaidEventHandler raidEventHandler,
-                       ChannelBitsUseEventHandler bitsEventHandler, ChannelSubscriptionEventHandler subscriptionEventHandler) {
+                       ChannelBitsUseEventHandler bitsEventHandler, ChannelChatNotificationHandler chatNotificationHandler) {
         this.chatMessageEventHandler = chatMessageEventHandler;
         this.conduit = conduit;
         this.followEventHandler = followEventHandler;
         this.raidEventHandler = raidEventHandler;
         this.bitsEventHandler = bitsEventHandler;
-        this.subscriptionEventHandler = subscriptionEventHandler;
+        this.chatNotificationHandler = chatNotificationHandler;
     }
 
     @PostConstruct
@@ -62,9 +60,7 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelFollowEvent.class, followEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelRaidEvent.class, raidEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelBitsUseEvent.class, bitsEventHandler::handle);
-        conduit.getEventManager().onEvent(ChannelSubscribeEvent.class, subscriptionEventHandler::handle);
-        conduit.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, subscriptionEventHandler::handle);
-        conduit.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class, subscriptionEventHandler::handle);
+        conduit.getEventManager().onEvent(ChannelChatNotificationEvent.class, chatNotificationHandler::handle);
     }
 
     public boolean subscribeToDonationMessages(String broadcasterUserId, String parserTemplate, String messageUser) {
@@ -125,6 +121,19 @@ public class SubathonBot implements HasLogger {
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_BITS_USE,
                 b -> b.broadcasterUserId(broadcasterUserId).build());
+        subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
+        return subscription;
+    }
+
+    public Optional<EventSubSubscription> subscribeToChannelChatNotificationEvents(String broadcasterUserId) {
+        getLogger().debug("Creating channel chat notification event subscription for broadcaster user id '{}'.", broadcasterUserId);
+        Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_CHAT_NOTIFICATION);
+        if (subscription.isPresent()) {
+            getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
+            return subscription;
+        }
+        subscription = conduit.register(SubscriptionTypes.CHANNEL_CHAT_NOTIFICATION,
+                b -> b.broadcasterUserId(broadcasterUserId).userId(botId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
         return subscription;
     }

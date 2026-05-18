@@ -1,7 +1,12 @@
 package tools.subathon.timer.bot.factories;
 
 import com.github.twitch4j.common.enums.SubscriptionPlan;
+import com.github.twitch4j.eventsub.domain.chat.NoticeType;
+import com.github.twitch4j.eventsub.domain.chat.Resubscription;
+import com.github.twitch4j.eventsub.domain.chat.SubGift;
+import com.github.twitch4j.eventsub.domain.chat.Subscription;
 import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
+import com.github.twitch4j.eventsub.events.ChannelChatNotificationEvent;
 import com.github.twitch4j.eventsub.events.ChannelFollowEvent;
 import com.github.twitch4j.eventsub.events.ChannelRaidEvent;
 import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
@@ -39,6 +44,56 @@ public class SubathonEventMessageFactory {
             case ChannelSubscriptionMessageEvent resubscribeEvent -> createSubathonSubscribeEvent(resubscribeEvent);
             case ChannelSubscriptionGiftEvent subGiftEvent -> createSubathonSubscriptionGiftEvent(subGiftEvent);
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
+        };
+
+        eventMessage.setSubathonEvent(subathonEvent);
+        return eventMessage;
+    }
+
+    public static SubathonEventMessage createSubathonSubscribeEventFromNotification(ChannelChatNotificationEvent event) {
+        SubathonEventMessage eventMessage = new SubathonEventMessage();
+        eventMessage.setChannelId(event.getBroadcasterUserId());
+        SubathonEvent subathonEvent = switch (event.getNoticeType()) {
+            case NoticeType.SUB -> {
+                Subscription subscription = event.getSub();
+                if (subscription == null) {
+                    throw new IllegalArgumentException("Notice type is SUB but sub is null");
+                }
+                SubathonSubEvent subEvent = new SubathonSubEvent();
+                subEvent.setSource(SOURCE);
+                subEvent.setTimestamp(Instant.now());
+                subEvent.setUsername(event.getChatterUserName());
+                subEvent.setGifted(false);
+                subEvent.setTier(subscription.isPrime() ? SubTier.PRIME : planToTier(subscription.getSubTier()));
+                yield subEvent;
+            }
+            case NoticeType.RESUB -> {
+                Resubscription resub = event.getResub();
+                if (resub == null) {
+                    throw new IllegalArgumentException("Notice type is RESUB but resub is null");
+                }
+                SubathonSubEvent subEvent = new SubathonSubEvent();
+                subEvent.setSource(SOURCE);
+                subEvent.setTimestamp(Instant.now());
+                subEvent.setUsername(event.getChatterUserName());
+                subEvent.setGifted(false);
+                subEvent.setTier(resub.isPrime() ? SubTier.PRIME : planToTier(resub.getSubTier()));
+                yield subEvent;
+            }
+            case NoticeType.SUB_GIFT -> {
+                SubGift subGift = event.getSubGift();
+                if (subGift == null) {
+                    throw new IllegalArgumentException("Notice type is SUB_GIFT but subGift is null");
+                }
+                SubathonSubEvent subEvent = new SubathonSubEvent();
+                subEvent.setSource(SOURCE);
+                subEvent.setTimestamp(Instant.now());
+                subEvent.setUsername(event.getChatterUserName());
+                subEvent.setGifted(true);
+                subEvent.setTier(planToTier(subGift.getSubTier()));
+                yield subEvent;
+            }
+            default -> throw new IllegalArgumentException("Unsupported notice type: " + event.getNoticeType());
         };
 
         eventMessage.setSubathonEvent(subathonEvent);
