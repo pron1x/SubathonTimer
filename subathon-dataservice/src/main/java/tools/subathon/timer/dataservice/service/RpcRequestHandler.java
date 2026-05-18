@@ -48,7 +48,7 @@ public class RpcRequestHandler implements HasLogger {
 
     @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
     public RpcResponse<UserConfigurationDto> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
-        getLogger().info("New user configuration request handler called with request '{}'", request);
+        getLogger().trace("New user configuration request handler called with request '{}'", request);
         return switch (request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
             case GET_CHANNEL_CONFIG -> {
@@ -78,7 +78,7 @@ public class RpcRequestHandler implements HasLogger {
 
     @RabbitListener(queues = TIMER_RPC_QUEUE)
     public RpcResponse<TimerDto> handleTimerRequest(RpcRequest<TimerPayload> request) {
-        getLogger().info("New timer request handler called with request '{}'", request);
+        getLogger().trace("New timer request handler called with request '{}'", request);
         return switch(request.getCommand()) {
             case null -> RpcResponse.error("Request command is null.");
             case GET_TIMER -> {
