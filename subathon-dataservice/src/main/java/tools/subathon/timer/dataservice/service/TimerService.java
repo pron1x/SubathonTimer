@@ -1,6 +1,7 @@
 package tools.subathon.timer.dataservice.service;
 
 import tools.subathon.rpc.payload.response.BatchResponse;
+import tools.subathon.timer.datamodel.enums.EventType;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
 import tools.subathon.timer.dataservice.data.domain.TimerEvent;
@@ -286,6 +287,11 @@ public class TimerService implements HasLogger {
         if(!domainTimer.isActive()) {
             // TODO: Add timer not active exception?
             getLogger().info("Not adding time to timer because it is not active. Ignoring {}.", event);
+            return null;
+        }
+
+        if (event.getType() == EventType.FOLLOW && timerEventService.hasUserFollowed(domainTimer.getId(), event.getUsername())) {
+            getLogger().info("'{}' tried to follow again, ignoring follow event.", event.getUsername());
             return null;
         }
         getLogger().debug("Adding time for event: {}", event);

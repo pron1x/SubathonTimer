@@ -10,6 +10,8 @@ import tools.subathon.timer.util.interfaces.HasLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class TimerEventService implements HasLogger {
 
@@ -44,5 +46,9 @@ public class TimerEventService implements HasLogger {
         } catch (AmqpException e) {
             getLogger().warn("Could not send message! {}", event, e);
         }
+    }
+
+    public boolean hasUserFollowed(UUID timerId, String username) {
+        return timerEventRepository.existsFollowEventForUserAndTimer(timerId, username);
     }
 }
