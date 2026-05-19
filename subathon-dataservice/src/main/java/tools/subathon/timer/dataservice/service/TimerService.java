@@ -189,8 +189,12 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(event -> {
-            event.setSubathonEvent(command);
-            timerEventService.saveAndPublish(event);
+            try {
+                event.setSubathonEvent(command);
+                timerEventService.saveAndPublish(event);
+            } catch (Exception e) {
+                getLogger().error("Exception while saving timer event!", e);
+            }
         });
 
         getLogger().info("Timer started. [Start: {}, End: {}]", returnTimer.startTime(), returnTimer.endTime());
@@ -217,8 +221,12 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(event -> {
-            event.setSubathonEvent(command);
-            timerEventService.saveAndPublish(event);
+            try {
+                event.setSubathonEvent(command);
+                timerEventService.saveAndPublish(event);
+            } catch (Exception e) {
+                getLogger().error("Exception saving timer event!", e);
+            }
         });
 
         return returnTimer;
@@ -245,8 +253,12 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(event -> {
-            event.setSubathonEvent(command);
-            timerEventService.saveAndPublish(event);
+            try {
+                event.setSubathonEvent(command);
+                timerEventService.saveAndPublish(event);
+            } catch (Exception e) {
+                getLogger().error("Exception while saving timer event!", e);
+            }
         });
 
         return returnTimer;
@@ -267,7 +279,11 @@ public class TimerService implements HasLogger {
         // Save and publish timer event
         TimerEvent domainTimerEvent = domainTimer.getAndClearPendingEvents().getFirst();
 
-        timerEventService.saveAndPublish(domainTimerEvent);
+        try {
+            timerEventService.saveAndPublish(domainTimerEvent);
+        } catch (Exception e) {
+            getLogger().error("Exception while saving timer event!", e);
+        }
 
         getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", domainTimer.getChannelId(), domainTimerEvent.getTimestamp(), domainTimerEvent.getCurrentEndTime());
     }
@@ -307,8 +323,12 @@ public class TimerService implements HasLogger {
 
         // Save and publish timerEvent
         domainTimer.getAndClearPendingEvents().forEach(domainEvent -> {
-            domainEvent.setSubathonEvent(event);
-            timerEventService.saveAndPublish(domainEvent);
+            try {
+                domainEvent.setSubathonEvent(event);
+                timerEventService.saveAndPublish(domainEvent);
+            } catch (Exception e) {
+                getLogger().error("Failed to save and publish timer event!", e);
+            }
         });
 
         return mapper.entityToDto(returnTimer);
@@ -335,8 +355,12 @@ public class TimerService implements HasLogger {
 
         // Save and publish timer event
         domainTimer.getAndClearPendingEvents().forEach(domainEvent -> {
-            domainEvent.setSubathonEvent(command);
-            timerEventService.saveAndPublish(domainEvent);
+            try {
+                domainEvent.setSubathonEvent(command);
+                timerEventService.saveAndPublish(domainEvent);
+            } catch (Exception e) {
+                getLogger().error("Failed to save and publish timer event!", e);
+            }
         });
 
         return mapper.entityToDto(returnTimer);

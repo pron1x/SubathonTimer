@@ -88,7 +88,7 @@ public class SubathonEventMessageFactory {
                 SubathonSubEvent subEvent = new SubathonSubEvent();
                 subEvent.setSource(SOURCE);
                 subEvent.setTimestamp(Instant.now());
-                subEvent.setUsername(event.getChatterUserName());
+                subEvent.setUsername(subGift.getRecipientUserName());
                 subEvent.setGifted(true);
                 subEvent.setTier(planToTier(subGift.getSubTier()));
                 yield subEvent;
