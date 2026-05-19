@@ -27,6 +27,9 @@ public class TimerEventService implements HasLogger {
     }
 
     private TimerEvent save(TimerEvent timerEvent) {
+        if (timerEvent.getSubathonEvent() != null && timerEvent.getSubathonEvent().getUsername() == null) {
+            timerEvent.getSubathonEvent().setUsername("anonymous");
+        }
         TimerEventEntity timerEventEntity = mapper.domainToEntity(timerEvent);
         if (timerEventEntity.getSubathonEvent() == null && timerEvent.getSubathonEvent() != null) {
             getLogger().warn("subathon event got mapped as null!");
