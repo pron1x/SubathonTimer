@@ -14,11 +14,32 @@ vaadin-card::part(header) {
     padding: var(--lumo-space-s) var(--lumo-space-m);
 }
 
-.neon {
-    color: #8f8;
-    text-shadow:
-        0 0 5px #2f2,
-        0 0 10px #2f2,
-        0 0 20px #0f0,
-        0 0 40px #0f0
+.time-added {
+    animation: neon-increment 3s ease-out;
+}
+
+@keyframes neon-increment {
+    0% {
+        color: #8f8;
+        text-shadow:
+                0 0 5px #2f2,
+                0 0 10px #2f2,
+                0 0 20px #0f0,
+                0 0 40px #0f0;
+    }
+
+    5% {
+        color: #cfc;
+        text-shadow:
+                0 0 5px #2f2,
+                0 0 10px #2f2,
+                0 0 20px #0f0,
+                0 0 40px #0f0,
+                0 0 60px #0f0;
+    }
+
+    100% {
+        color: inherit;
+        text-shadow: none;
+    }
 }

@@ -1,47 +1,33 @@
 package tools.subathon.timer.ui.component;
 
-import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEventDto;
+import com.vaadin.flow.component.react.ReactAdapterComponent;
+import com.vaadin.flow.signals.Signal;
 import tools.subathon.timer.util.interfaces.HasLogger;
-import com.vaadin.flow.component.ClientCallable;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 
-@JsModule("./src/subathon-timer.ts")
+@JsModule("./src/subathon-timer-adapter.tsx")
 @Tag("subathon-timer")
-public class SubathonTimer extends Component implements HasLogger {
+public class SubathonTimer extends ReactAdapterComponent implements HasLogger {
 
-    public SubathonTimer(TimerDto timer) {
+    public SubathonTimer() {
         setClassName("subathon-timer");
-        pushInitialState(timer);
     }
 
-    public void updateWithNewEvent(TimerEventDto event) {
-        if(event != null) {
-            pushNewTimerEvent(event);
-        }
+    public void bindEndtime(Signal<Long> signal) {
+        getElement().bindProperty("endTime", signal.map(l -> l != null ? l.doubleValue() : null), null);
     }
 
-    private void pushInitialState(TimerDto timer) {
-        if(timer == null) return;
-        long end = timer.endTime() != null ? timer.endTime().toEpochMilli() : 0;
-        long update = timer.updateTime() != null ? timer.updateTime().toEpochMilli() : 0;
-        String state = timer.state().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", end, update, state);
+    public void bindLastUpdateTime(Signal<Long> signal) {
+        getElement().bindProperty("lastUpdateTime", signal.map(l -> l != null ? l.doubleValue() : null), null);
     }
 
-    private void pushNewTimerEvent(TimerEventDto event) {
-        long end = event.currentEndTime().toEpochMilli();
-        long update = event.timestamp().toEpochMilli();
-        String state = event.currentTimerState().toString();
-        getElement().callJsFunction("updateToNewTimerEvent", end, update, state);
+    public void bindTimerState(Signal<String> signal) {
+        getElement().bindProperty("timerState", signal, null);
     }
 
-    @SuppressWarnings("unused")
-    @ClientCallable
-    public Long getCurrentServerTimestamp() {
-        return System.currentTimeMillis();
+    public void bindServerTime(Signal<Long> signal) {
+        getElement().bindProperty("serverTime", signal.map(l -> l != null ? l.doubleValue() : null), null);
     }
 
 }
