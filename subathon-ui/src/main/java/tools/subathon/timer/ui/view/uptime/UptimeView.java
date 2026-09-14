@@ -1,8 +1,6 @@
 package tools.subathon.timer.ui.view.uptime;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.ui.component.UptimeClock;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
@@ -10,25 +8,22 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.subathon.timer.ui.config.ServerTimeSignal;
 
 @Route("uptime")
 @AnonymousAllowed
 public class UptimeView extends Div implements HasUrlParameter<String> {
 
     private final UptimePresenter uptimePresenter;
+    private final ServerTimeSignal serverTimeSignal;
 
     private UptimeClock clock;
 
     @Autowired
-    public UptimeView(UptimePresenter uptimePresenter) {
+    public UptimeView(UptimePresenter uptimePresenter, ServerTimeSignal serverTimeSignal) {
         this.uptimePresenter = uptimePresenter;
-    }
-
-    @PostConstruct
-    private void init() {
-        uptimePresenter.init(this);
+        this.serverTimeSignal = serverTimeSignal;
     }
 
     @Override
@@ -45,16 +40,14 @@ public class UptimeView extends Div implements HasUrlParameter<String> {
 
     @Override
     public void setParameter(BeforeEvent beforeEvent, String s) {
-        clock = new UptimeClock(uptimePresenter.getTimerForChannel(s));
+        clock = new UptimeClock();
+        uptimePresenter.initForChannel(s);
+        clock.bindStartTime(uptimePresenter.getStartTimeSignal());
+        clock.bindEndTime(uptimePresenter.getEndTimeSignal());
+        clock.bindTimerState(uptimePresenter.getTimerStateSignal());
+        clock.bindServerTime(serverTimeSignal.getServerTimeSignal());
         Div uptimeWrapper = new Div(clock);
         add(uptimeWrapper);
     }
 
-    public void updateTimerState(TimerEventDto timerEventDto) {
-        clock.pushState(timerEventDto);
-    }
-
-    public void setTimer(TimerDto timer) {
-        clock.setTimer(timer);
-    }
 }

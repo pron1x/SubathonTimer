@@ -27,7 +27,7 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
 
     private final ValueSignal<Long> endTimeSignal = new ValueSignal<>(0L);
     private final ValueSignal<Long> lastUpdateTimeSignal = new ValueSignal<>(0L);
-    private final ValueSignal<String> timerStateSignal = new ValueSignal<>("");
+    private final ValueSignal<String> timerStateSignal = new ValueSignal<>(null);
 
     private TimerView timerView;
     private TimerDto timer;

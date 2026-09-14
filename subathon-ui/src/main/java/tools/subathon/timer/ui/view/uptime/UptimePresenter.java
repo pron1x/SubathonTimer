@@ -1,5 +1,7 @@
 package tools.subathon.timer.ui.view.uptime;
 
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.local.ValueSignal;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
@@ -20,9 +22,14 @@ public class UptimePresenter implements TimerEventListener {
     private final TimerService timerService;
     private final TimerEventService timerEventService;
 
-    private UptimeView uptimeView;
+    private final ValueSignal<TimerEventDto> eventDtoSignal = new ValueSignal<>(null);
+
+    private final ValueSignal<Long> startTimeSignal = new ValueSignal<>(0L);
+    private final ValueSignal<Long> endTimeSignal = new ValueSignal<>(0L);
+    private final ValueSignal<String> timerStateSignal = new ValueSignal<>(null);
 
     private TimerDto timer;
+    private String channelId;
 
     @Autowired
     public UptimePresenter(TimerService timerService, TimerEventService timerEventService) {
@@ -30,8 +37,14 @@ public class UptimePresenter implements TimerEventListener {
         this.timerEventService = timerEventService;
     }
 
-    protected void init(UptimeView uptimeView) {
-        this.uptimeView = uptimeView;
+    public void initForChannel(String channelId) {
+        this.channelId = channelId;
+        TimerDto timer = getTimerForChannel(channelId);
+        if (timer != null) {
+            startTimeSignal.set(timer.startTime().toEpochMilli());
+            endTimeSignal.set(timer.endTime().toEpochMilli());
+            timerStateSignal.set(timer.state().toString());
+        }
     }
 
     public void onAttach(AttachEvent attachEvent) {
@@ -42,30 +55,28 @@ public class UptimePresenter implements TimerEventListener {
         timerEventService.removeEventListener(this);
     }
 
+    @Override
+    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
+        if(!timer.id().equals(timerEventDto.timerId()) && !channelId.equals(timerEventDto.channelId())) {
+            return;
+        }
+        if (timerEventDto.oldTimerState() == TimerState.UNINITIALIZED) {
+            timer = fetchTimer(timerEventDto.channelId());
+        }
+        eventDtoSignal.set(timerEventDto);
+        startTimeSignal.set(timer.startTime().toEpochMilli());
+        endTimeSignal.set(timerEventDto.currentEndTime().toEpochMilli());
+        timerStateSignal.set(timerEventDto.currentTimerState().toString());
+    }
+
     // TODO: Handle cases where:
     //          - No previous timer was ever run -> timer is null on init
     //          - Previous timer stopped and new timer is started -> fetch new timer on event?
-    public TimerDto getTimerForChannel(String channelId) {
+    private TimerDto getTimerForChannel(String channelId) {
         if(timer == null || !channelId.equals(timer.channelId())) {
             timer = fetchTimer(channelId);
         }
         return timer;
-    }
-
-    @Override
-    public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
-        if(!timer.id().equals(timerEventDto.timerId())) {
-            return;
-        }
-
-        if(timerEventDto.currentTimerState() == TimerState.ENDED ||
-                (timerEventDto.currentTimerState() == TimerState.TICKING && timerEventDto.oldTimerState() == TimerState.INITIALIZED)) {
-            if(timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
-                timer = fetchTimer(timer.channelId()); // Refetch timer with correct start time!
-                uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.setTimer(timer)));
-            }
-            uptimeView.getUI().ifPresent(ui -> ui.access(() -> uptimeView.updateTimerState(timerEventDto)));
-        }
     }
 
     private TimerDto fetchTimer(String channelId) {
@@ -74,10 +85,22 @@ public class UptimePresenter implements TimerEventListener {
             case RpcResponse.Success<TimerDto> success -> {
                 return success.body();
             }
-            case RpcResponse.Failure<TimerDto> error -> {
+            case RpcResponse.Failure<TimerDto> _ -> {
                 return null;
             }
         }
+    }
+
+    public Signal<Long> getStartTimeSignal() {
+        return startTimeSignal.asReadonly();
+    }
+
+    public Signal<Long> getEndTimeSignal() {
+        return endTimeSignal.asReadonly();
+    }
+
+    public Signal<String> getTimerStateSignal() {
+        return timerStateSignal.asReadonly();
     }
 }
 
