@@ -6,7 +6,7 @@ import tools.subathon.timer.util.interfaces.HasLogger;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 
-@JsModule("./src/subathon-timer-adapter.tsx")
+@JsModule("./subathon-timer-adapter.tsx")
 @Tag("subathon-timer")
 public class SubathonTimer extends ReactAdapterComponent implements HasLogger {
 

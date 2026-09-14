@@ -6,7 +6,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-@JsModule("./src/uptime-clock-adapter.tsx")
+@JsModule("./uptime-clock-adapter.tsx")
 @Tag("uptime-clock")
 public class UptimeClock extends ReactAdapterComponent implements HasLogger {
 
