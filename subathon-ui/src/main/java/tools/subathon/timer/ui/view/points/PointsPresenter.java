@@ -1,5 +1,7 @@
 package tools.subathon.timer.ui.view.points;
 
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.local.ValueSignal;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
@@ -17,7 +19,7 @@ public class PointsPresenter implements TimerEventService.TimerEventListener, Ha
 
     private final TimerService timerService;
 
-    private PointsView pointsView;
+    private final ValueSignal<Long> pointSignal = new ValueSignal<>(0L);
 
     private TimerDto timerDto;
 
@@ -26,8 +28,11 @@ public class PointsPresenter implements TimerEventService.TimerEventListener, Ha
         this.timerService = timerService;
     }
 
-    protected void init(PointsView pointsView) {
-        this.pointsView = pointsView;
+    public void initForChannel(String channelId) {
+        TimerDto timer = getTimerForChannel(channelId);
+        if (timer != null) {
+            pointSignal.set(timer.points());
+        }
     }
 
     public TimerDto getTimerForChannel(String channelId) {
@@ -57,8 +62,10 @@ public class PointsPresenter implements TimerEventService.TimerEventListener, Ha
         if (!timerDto.id().equals(timerEventDto.timerId())) {
             return;
         }
+        pointSignal.set(timerEventDto.newPoints());
+    }
 
-        pointsView.getUI().ifPresent(
-                ui -> ui.access(() -> pointsView.setText(String.valueOf(timerEventDto.newPoints()))));
+    public Signal<Long> getPointSignal() {
+        return pointSignal.asReadonly();
     }
 }

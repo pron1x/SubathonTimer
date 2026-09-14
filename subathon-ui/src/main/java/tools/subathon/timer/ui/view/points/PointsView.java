@@ -7,8 +7,6 @@ import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import jakarta.annotation.PostConstruct;
-import tools.subathon.timer.datamodel.TimerDto;
 
 @Route(value = "points/")
 @AnonymousAllowed
@@ -18,11 +16,7 @@ public class PointsView extends Div implements HasUrlParameter<String> {
 
     public PointsView(PointsPresenter pointsPresenter) {
         this.pointsPresenter = pointsPresenter;
-    }
-
-    @PostConstruct
-    private void init() {
-        pointsPresenter.init(this);
+        setClassName("points");
     }
 
     @Override
@@ -39,11 +33,7 @@ public class PointsView extends Div implements HasUrlParameter<String> {
 
     @Override
     public void setParameter(BeforeEvent event, String parameter) {
-        TimerDto timerDto = pointsPresenter.getTimerForChannel(parameter);
-        if (timerDto != null) {
-            setText(String.valueOf(timerDto.points()));
-        } else {
-            setText("0");
-        }
+        pointsPresenter.initForChannel(parameter);
+        bindText(pointsPresenter.getPointSignal().map(String::valueOf));
     }
 }
