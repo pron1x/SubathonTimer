@@ -5,6 +5,7 @@ import com.vaadin.flow.signals.local.ValueSignal;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
+import tools.subathon.timer.datamodel.enums.TimerEventType;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.ui.service.TimerEventService;
 import tools.subathon.timer.ui.service.TimerEventService.TimerEventListener;
@@ -60,7 +61,7 @@ public class UptimePresenter implements TimerEventListener {
         if(!timer.id().equals(timerEventDto.timerId()) && !channelId.equals(timerEventDto.channelId())) {
             return;
         }
-        if (timerEventDto.oldTimerState() == TimerState.UNINITIALIZED) {
+        if (timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
             timer = fetchTimer(timerEventDto.channelId());
         }
         eventDtoSignal.set(timerEventDto);
