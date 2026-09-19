@@ -1,10 +1,13 @@
 package tools.subathon.timer.ui.view.dashboard.modules;
 
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import tools.subathon.timer.datamodel.TimerDto;
+import com.vaadin.flow.signals.Signal;
+import org.jspecify.annotations.NonNull;
 import tools.subathon.timer.datamodel.enums.TimerState;
 
 import java.time.Instant;
@@ -14,17 +17,17 @@ import java.time.format.DateTimeFormatter;
 
 public class TimerInfo extends Card {
 
-    private Span state;
-    private Text startTime;
-    private Text updateTime;
-    private Text endTime;
-    private Text points;
+    private final Badge state = new Badge();
+    private final Text startTime = new Text(null);
+    private final Text updateTime = new Text(null);
+    private final Text endTime = new Text(null);
+    private final Text points = new Text(null);
 
-    public TimerInfo(TimerDto timer) {
-        createContent(timer);
+    public TimerInfo(String channelName, String channelId) {
+        createContent(channelName, channelId);
     }
 
-    private void createContent(TimerDto timer) {
+    private void createContent(String channelName, String channelId) {
         Span startDescription = new Span("Start time");
         startDescription.getStyle().setFontSize("small");
 
@@ -34,15 +37,9 @@ public class TimerInfo extends Card {
         Span endDescription = new Span("End time");
         endDescription.getStyle().setFontSize("small");
 
-        setTitle(timer != null ? timer.channelName() : "-");
-        setSubtitle(timer != null ? timer.channelId() : "-");
-
-        state = createTimerStateBadge(timer);
+        setTitle(channelName);
+        setSubtitle(channelId);
         setHeaderSuffix(state);
-        startTime = new Text(timer != null ? formatInstant(timer.startTime()) : "-");
-        updateTime = new Text(timer != null ? formatInstant(timer.updateTime()) : "-");
-        endTime = new Text(timer != null ? formatInstant(timer.endTime()) : "-");
-        points = new Text(timer != null ? String.valueOf(timer.points()) : "-");
 
         VerticalLayout pointsLayout = new VerticalLayout(new Span("Subathon points"), points);
         pointsLayout.setPadding(false);
@@ -62,41 +59,27 @@ public class TimerInfo extends Card {
         setWidth("25em");
     }
 
-    private Span createTimerStateBadge(TimerDto timer) {
-        Span badge = new Span(timer != null ? timer.state().toString() : TimerState.UNINITIALIZED.toString());
-        badge.getElement().getThemeList().add(getTimerStateBadgeTheme(timer != null ? timer.state() : TimerState.UNINITIALIZED));
-        return badge;
+    public void bindPoints(Signal<Long> pointsSignal) {
+        points.bindText(pointsSignal.map(String::valueOf));
     }
 
-    public void updatePoints(long points) {
-        this.points.setText(String.valueOf(points));
+    public void bindStartTime(Signal<Instant> startTimeSignal) {
+        startTime.bindText(startTimeSignal.map(this::formatInstant));
     }
 
-    public void updateStartTime(Instant startTime) {
-        this.startTime.setText(formatInstant(startTime));
+    public void bindEndTime(Signal<Instant> endTimeSignal) {
+        endTime.bindText(endTimeSignal.map(this::formatInstant));
     }
 
-    public void updateEndTime(Instant endTime) {
-        this.endTime.setText(formatInstant(endTime));
+    public void bindUpdateTime(Signal<Instant> updateTimeSignal) {
+        updateTime.bindText(updateTimeSignal.map(this::formatInstant));
     }
 
-    public void updateUpdateTime(Instant updateTime) {
-        this.updateTime.setText(formatInstant(updateTime));
-    }
-
-    public void updateTimerState(TimerState timerState) {
-        this.state.setText(timerState.toString());
-        state.getElement().getThemeList().clear();
-        state.getElement().getThemeList().add(getTimerStateBadgeTheme(timerState));
-    }
-
-    private String getTimerStateBadgeTheme(TimerState state) {
-        return switch (state) {
-            case UNINITIALIZED, INITIALIZED -> "badge";
-            case PAUSED -> "badge error";
-            case TICKING -> "badge success";
-            case ENDED -> "badge contrast";
-        };
+    public void bindState(Signal<@NonNull TimerState> timerStateSignal) {
+        state.bindText(timerStateSignal.map(TimerState::toString));
+        state.bindThemeVariant(BadgeVariant.ERROR, timerStateSignal.map(TimerState.PAUSED::equals));
+        state.bindThemeVariant(BadgeVariant.SUCCESS, timerStateSignal.map(TimerState.TICKING::equals));
+        state.bindThemeVariant(BadgeVariant.CONTRAST, timerStateSignal.map(TimerState.ENDED::equals));
     }
 
     private String formatInstant(Instant instant) {

@@ -15,17 +15,15 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.Signal;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
-import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.ui.view.MainLayout;
 import tools.subathon.timer.ui.view.dashboard.modules.TimerInfo;
 import tools.subathon.timer.ui.view.dashboard.modules.UserConfigurationForm;
-
-import java.time.Instant;
 
 @PermitAll
 @Route(value = "/dashboard", layout = MainLayout.class)
@@ -59,7 +57,7 @@ public class DashboardView extends VerticalLayout {
         presenter.onDetach(detachEvent);
     }
 
-    protected void initViewInternal() {
+    protected void initViewInternal(String channelName, String channelId) {
         setWidthFull();
         setSpacing(false);
 
@@ -82,9 +80,10 @@ public class DashboardView extends VerticalLayout {
 
         pauseTimerButton = new Button("Pause");
         pauseTimerButton.addClickListener(_ -> presenter.pauseTimer());
+        configureTimerControls();
 
-        TimerDto timer = presenter.getTimer();
-        timerInfoCard = new TimerInfo(timer);
+        timerInfoCard = new TimerInfo(channelName, channelId);
+        configureTimerInfo();
 
         VerticalLayout timerControls = new VerticalLayout();
         HorizontalLayout timerStateControls = new HorizontalLayout();
@@ -98,10 +97,6 @@ public class DashboardView extends VerticalLayout {
         timerControls.add(initTimerButton);
         initTimerButton.setWidthFull();
         timerInfoCard.addToFooter(timerControls);
-
-        if(timer != null) {
-            setTimerControlButtonStates(timer.state());
-        }
 
         VerticalLayout timerColumn = new VerticalLayout(timerInfoCard);
         timerColumn.setAlignItems(Alignment.END);
@@ -131,40 +126,29 @@ public class DashboardView extends VerticalLayout {
         return form;
     }
 
-    protected void updateTimerInfo(Instant endTime, Instant updateTime, TimerState timerState, long points) {
-        timerInfoCard.updateEndTime(endTime);
-        timerInfoCard.updateUpdateTime(updateTime);
-        timerInfoCard.updateTimerState(timerState);
-        timerInfoCard.updatePoints(points);
-        setTimerControlButtonStates(timerState);
+    private void configureTimerInfo() {
+        timerInfoCard.bindStartTime(presenter.getTimerStartTimeSignal());
+        timerInfoCard.bindUpdateTime(presenter.getTimerUpdateTimeSignal());
+        timerInfoCard.bindEndTime(presenter.getTimerEndTimeSignal());
+        timerInfoCard.bindState(presenter.getTimerStateSignal());
+        timerInfoCard.bindPoints(presenter.getTimerPointsSignal());
     }
 
-    protected void updateTimerInfoStartTime(Instant startTime) {
-        timerInfoCard.updateStartTime(startTime);
-    }
+    private void configureTimerControls() {
+        Signal<TimerState> timerStateSignal = presenter.getTimerStateSignal();
 
-    private void setTimerControlButtonStates(TimerState timerState) {
-        startTimerButton.setEnabled(false);
-        startTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        pauseTimerButton.setEnabled(false);
-        pauseTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        initTimerButton.setEnabled(false);
-        initTimerButton.setVisible(false);
-        initTimerButton.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        if(timerState == TimerState.INITIALIZED) {
-            startTimerButton.setEnabled(true);
-            startTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        } else if(timerState == TimerState.ENDED || timerState == TimerState.UNINITIALIZED) {
-            initTimerButton.setEnabled(true);
-            initTimerButton.setVisible(true);
-            initTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        } else if(timerState == TimerState.PAUSED) {
-            startTimerButton.setEnabled(true);
-            startTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        } else if(timerState == TimerState.TICKING) {
-            pauseTimerButton.setEnabled(true);
-            pauseTimerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        }
+        Signal<Boolean> initTimerButtonEnabledSignal = timerStateSignal.map(state -> TimerState.ENDED.equals(state) || TimerState.UNINITIALIZED.equals(state));
+        initTimerButton.bindEnabled(initTimerButtonEnabledSignal);
+        initTimerButton.bindThemeVariant(ButtonVariant.PRIMARY, initTimerButtonEnabledSignal);
+        initTimerButton.bindVisible(initTimerButtonEnabledSignal);
+
+        Signal<Boolean> startTimerButtonEnabledSignal = timerStateSignal.map(state -> TimerState.INITIALIZED.equals(state) || TimerState.PAUSED.equals(state));
+        startTimerButton.bindEnabled(startTimerButtonEnabledSignal);
+        startTimerButton.bindThemeVariant(ButtonVariant.PRIMARY, startTimerButtonEnabledSignal);
+
+        Signal<Boolean> pauseTimerButtonEnabledSignal = timerStateSignal.map(TimerState.TICKING::equals);
+        pauseTimerButton.bindEnabled(pauseTimerButtonEnabledSignal);
+        pauseTimerButton.bindThemeVariant(ButtonVariant.PRIMARY, pauseTimerButtonEnabledSignal);
     }
 
     protected void showSuccessNotification(String message) {

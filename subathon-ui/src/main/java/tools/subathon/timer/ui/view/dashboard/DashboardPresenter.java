@@ -2,7 +2,10 @@ package tools.subathon.timer.ui.view.dashboard;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.local.ValueSignal;
 import com.vaadin.flow.spring.annotation.UIScope;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -22,6 +25,8 @@ import tools.subathon.timer.ui.service.TimerService;
 import tools.subathon.timer.ui.service.UserConfigurationService;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
+import java.time.Instant;
+
 @UIScope
 @Component
 public class DashboardPresenter implements TimerEventListener, HasLogger {
@@ -32,6 +37,12 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     private final TimerService timerService;
     private final UserConfigurationService userConfigurationService;
     private DashboardView view;
+
+    private final ValueSignal<Instant> timerStartTimeSignal = new ValueSignal<>(null);
+    private final ValueSignal<Instant> timerUpdateTimeSignal = new ValueSignal<>(null);
+    private final ValueSignal<Instant> timerEndTimeSignal = new ValueSignal<>(null);
+    private final ValueSignal<@NonNull TimerState> timerStateSignal = new ValueSignal<>(TimerState.UNINITIALIZED);
+    private final ValueSignal<Long> timerPointsSignal = new ValueSignal<>(0L);
 
     @Autowired
     public DashboardPresenter(TimerService timerService, TimerEventService timerEventService, UserConfigurationService userConfigurationService) {
@@ -50,7 +61,15 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
 
     protected void init(DashboardView dashboardView) {
         this.view = dashboardView;
-        view.initViewInternal();
+        TimerDto timer = getTimer();
+        if (timer != null) {
+            timerStartTimeSignal.set(timer.startTime());
+            timerUpdateTimeSignal.set(timer.updateTime());
+            timerEndTimeSignal.set(timer.endTime());
+            timerStateSignal.set(timer.state());
+            timerPointsSignal.set(timer.points());
+        }
+        view.initViewInternal(channelName, channelId);
     }
 
     protected TimerDto getTimer() {
@@ -111,14 +130,37 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     @Override
     public void handleIncomingTimerEvent(TimerEventDto timerEventDto) {
         if(channelId.equals(timerEventDto.channelId())) {
-            view.getUI().ifPresent(ui -> ui.access(
-                    () -> {
-                        view.updateTimerInfo(timerEventDto.currentEndTime(), timerEventDto.timestamp(), timerEventDto.currentTimerState(), timerEventDto.newPoints());
-                        if(timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
-                            view.updateTimerInfoStartTime(timerEventDto.timestamp());
-                        }
-                    }));
+
+            if (timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
+                TimerDto timer = getTimer();
+                timerStartTimeSignal.set(timer.startTime());
+            }
+
+            timerUpdateTimeSignal.set(timerEventDto.timestamp());
+            timerEndTimeSignal.set(timerEventDto.currentEndTime());
+            timerStateSignal.set(timerEventDto.currentTimerState());
+            timerPointsSignal.set(timerEventDto.newPoints());
         }
+    }
+
+    public Signal<Instant> getTimerStartTimeSignal() {
+        return timerStartTimeSignal.asReadonly();
+    }
+
+    public Signal<Instant> getTimerUpdateTimeSignal() {
+        return timerUpdateTimeSignal.asReadonly();
+    }
+
+    public Signal<Instant> getTimerEndTimeSignal() {
+        return timerEndTimeSignal.asReadonly();
+    }
+
+    public Signal<@NonNull TimerState> getTimerStateSignal() {
+        return timerStateSignal.asReadonly();
+    }
+
+    public Signal<Long> getTimerPointsSignal() {
+        return timerPointsSignal.asReadonly();
     }
 
     public void onAttach(AttachEvent event) {
