@@ -19,52 +19,35 @@ import tools.subathon.timer.util.TemplateParser;
 
 import java.util.Objects;
 
-@SuppressWarnings("FieldCanBeLocal")
 public class UserConfigurationForm extends VerticalLayout {
 
     private final Binder<UserConfigurationDto> binder;
     private SaveHandler saveHandler;
 
-    private final TextField id;
-    private final TextField channelId;
-    private final IntegerField followerSeconds;
-    private final IntegerField raiderSeconds;
-    private final IntegerField tier1Seconds;
-    private final IntegerField tier2Seconds;
-    private final IntegerField tier3Seconds;
-    private final IntegerField tier1GiftSeconds;
-    private final IntegerField tier2GiftSeconds;
-    private final IntegerField tier3GiftSeconds;
-    private final IntegerField bitsSeconds;
-    private final IntegerField currencySeconds;
-    private final IntegerField initialSeconds;
-    private final IntegerField monetizedSecondsPerPoint;
-    private final TextField donationTemplatePattern;
-    private final TextField donationTemplateUser;
-    private final Button saveButton;
+    private final TextField id = new TextField();
+    private final TextField channelId = new TextField();
+    private final IntegerField followerSeconds = new IntegerField("Follower");
+    private final IntegerField raiderSeconds = new IntegerField("per Raider");
+    private final IntegerField tier1Seconds = new IntegerField("Tier 1");
+    private final IntegerField tier2Seconds = new IntegerField("Tier 2");
+    private final IntegerField tier3Seconds = new IntegerField("Tier 3");
+    private final IntegerField tier1GiftSeconds = new IntegerField("Tier 1 Gift");
+    private final IntegerField tier2GiftSeconds = new IntegerField("Tier 2 Gift");
+    private final IntegerField tier3GiftSeconds = new IntegerField("Tier 3 Gift");
+    private final IntegerField bitsSeconds = new IntegerField("per 100 bits");
+    private final IntegerField currencySeconds = new IntegerField("per EUR/USD");
+    private final IntegerField initialSeconds = new IntegerField("Starting Time (seconds)");
+    private final IntegerField monetizedSecondsPerPoint = new IntegerField("Seconds per Subathon Point");
+    private final TextField donationTemplatePattern = new TextField("Donation message pattern");
+    private final TextField donationTemplateUser = new TextField("Donation message bot name");
+
+    private final Button saveButton = new Button("Save");
 
     public UserConfigurationForm() {
         binder = new BeanValidationBinder<>(UserConfigurationDto.class);
-        id = new TextField();
-        channelId = new TextField();
-        followerSeconds = new IntegerField("Follower");
-        raiderSeconds = new IntegerField("per Raider");
-        tier1Seconds = new IntegerField("Tier 1");
-        tier2Seconds = new IntegerField("Tier 2");
-        tier3Seconds = new IntegerField("Tier 3");
-        tier1GiftSeconds = new IntegerField("Tier 1 Gift");
-        tier2GiftSeconds = new IntegerField("Tier 2 Gift");
-        tier3GiftSeconds = new IntegerField("Tier 3 Gift");
-        bitsSeconds = new IntegerField("per 100 bits");
-        currencySeconds = new IntegerField("per EUR/USD");
-        initialSeconds = new IntegerField("Starting Time (seconds)");
-        monetizedSecondsPerPoint = new IntegerField("Seconds per Subathon Point");
-        donationTemplatePattern = new TextField("Donation message pattern");
-        donationTemplateUser = new TextField("Donation message bot name");
 
         donationTemplatePattern.setHelperText("Placeholders: {user} and {amount}\nExample: {user} just tipped {amount} EUR!");
         donationTemplatePattern.setTooltipText("You can also copy the message template from the donation provider and adjust the placeholders as needed.");
-        saveButton = new Button("Save");
         initInternal();
     }
 
