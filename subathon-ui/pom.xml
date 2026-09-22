@@ -11,10 +11,6 @@
 
     <artifactId>subathon-ui</artifactId>
 
-    <properties>
-        <vaadin.version>25.2.8</vaadin.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.vaadin</groupId>

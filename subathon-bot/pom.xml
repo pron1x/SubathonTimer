@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.github.twitch4j</groupId>
             <artifactId>twitch4j</artifactId>
-            <version>1.27.0</version>
+            <version>${twitch4j.version}</version>
         </dependency>
         <dependency>
             <groupId>tools.subathon</groupId>

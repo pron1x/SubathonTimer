@@ -11,10 +11,6 @@
 
     <artifactId>subathon-dataservice</artifactId>
 
-    <properties>
-        <mapstruct.version>1.6.3</mapstruct.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -86,7 +82,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
