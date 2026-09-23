@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
+import tools.subathon.timer.proto.configuration.v1.UserConfiguration;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UserConfigMapper {
@@ -13,4 +14,8 @@ public interface UserConfigMapper {
     UserConfigurationEntity dtoToEntity(UserConfigurationDto dto);
 
     UserConfigurationDto entityToDto(UserConfigurationEntity entity);
+
+    UserConfiguration dtoToProto(UserConfigurationDto dto);
+
+    UserConfigurationDto protoToDto(UserConfiguration proto);
 }

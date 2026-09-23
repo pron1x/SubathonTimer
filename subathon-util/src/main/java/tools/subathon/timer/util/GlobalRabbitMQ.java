@@ -18,8 +18,8 @@ public class GlobalRabbitMQ {
     public static final String TWITCH_EVENT_ROUTING_KEY = "event.twitch"; // Routes to twitch-event-queue
 
     // User-Configuration RPC queue
-    public static final String USER_CONFIG_RPC_QUEUE =  "dataservice-user-config-rpc-queue";
-    public static final String USER_CONFIG_ROUTING_KEY = "ui.dataservice.user-config";
+    @Deprecated public static final String USER_CONFIG_RPC_QUEUE =  "dataservice-user-config-rpc-queue";
+    @Deprecated public static final String USER_CONFIG_ROUTING_KEY = "ui.dataservice.user-config";
 
     // Timer RPC queue [<src>.<dest>.<type>]
     public static final String TIMER_RPC_QUEUE = "dataservice-timer-rpc-queue";

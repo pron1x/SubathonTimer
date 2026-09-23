@@ -46,6 +46,7 @@ public class RpcRequestHandler implements HasLogger {
         this.timerService = timerService;
     }
 
+    @Deprecated
     @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
     public RpcResponse<UserConfigurationDto> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
         getLogger().trace("New user configuration request handler called with request '{}'", request);
