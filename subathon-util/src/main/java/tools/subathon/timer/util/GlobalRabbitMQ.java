@@ -22,9 +22,9 @@ public class GlobalRabbitMQ {
     @Deprecated public static final String USER_CONFIG_ROUTING_KEY = "ui.dataservice.user-config";
 
     // Timer RPC queue [<src>.<dest>.<type>]
-    public static final String TIMER_RPC_QUEUE = "dataservice-timer-rpc-queue";
-    public static final String TIMER_ROUTING_KEY = "ui.dataservice.timer";
-    public static final String BOT_COMMAND_ROUTING_KEY = "bot.dataservice.timer";
+    @Deprecated public static final String TIMER_RPC_QUEUE = "dataservice-timer-rpc-queue";
+    @Deprecated public static final String TIMER_ROUTING_KEY = "ui.dataservice.timer";
+    @Deprecated public static final String BOT_COMMAND_ROUTING_KEY = "bot.dataservice.timer";
 
     // Bot Channel Management RPC queue
     public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";

@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package tools.subathon.grpc.timer;
+
+import "google/protobuf/timestamp.proto";
+
+option java_package = "tools.subathon.timer.proto.timer";
+option java_multiple_files = true;
+
+service TimerService {
+  rpc GetTimer(GetTimerRequest) returns (Timer);
+  rpc GetCurrentTimerForChannel(GetCurrenTimerForChannelRequest) returns (Timer);
+  rpc InitializeNewTimer(InitializeNewTimerRequest) returns (Timer);
+  rpc StartTimer(StartTimerRequest) returns (Timer);
+  rpc PauseTimer(PauseTimerRequest) returns (Timer);
+}
+
+message GetTimerRequest {
+  string timer_id = 1;
+}
+
+message GetCurrenTimerForChannelRequest {
+  string channel_id = 1;
+}
+
+message InitializeNewTimerRequest {
+  string channel_id = 1;
+  string username = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string source = 4;
+}
+
+message StartTimerRequest {
+  string channel_id = 1;
+  string username = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string source = 4;
+}
+
+message PauseTimerRequest {
+  string channel_id = 1;
+  string username = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string source = 4;
+}
+
+enum TimerState {
+  TIMER_STATE_UNSPECIFIED = 0;
+  TIMER_STATE_UNINITIALIZED = 1;
+  TIMER_STATE_INITIALIZED = 2;
+  TIMER_STATE_PAUSED = 3;
+  TIMER_STATE_TICKING = 4;
+  TIMER_STATE_ENDED = 5;
+}
+
+message Timer {
+  optional string id = 1;
+  optional string channel_id = 2;
+  optional string channel_name = 3;
+  optional google.protobuf.Timestamp start_time = 4;
+  optional google.protobuf.Timestamp end_time = 5;
+  optional TimerState state = 6;
+  optional google.protobuf.Timestamp update_time = 7;
+  optional int32 monetized_seconds_per_point = 8;
+  optional int64 total_monetized_extension_seconds = 9;
+  optional int64 points = 10;
+}

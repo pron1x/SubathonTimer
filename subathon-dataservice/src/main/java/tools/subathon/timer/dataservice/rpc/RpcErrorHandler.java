@@ -15,7 +15,7 @@ public class RpcErrorHandler {
             if (ex instanceof EntityNotFoundException) {
                 return Status.NOT_FOUND.asException();
             }
-            return Status.INTERNAL.withDescription("Internal error.").asException();
+            return Status.INTERNAL.withDescription("Error: " + ex.getMessage()).asException();
         };
     }
 }

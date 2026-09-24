@@ -15,6 +15,10 @@ public interface UserConfigMapper {
 
     UserConfigurationDto entityToDto(UserConfigurationEntity entity);
 
+    @ProtoMapping
+    @Mapping(target = "channelIdBytes" ,ignore = true)
+    @Mapping(target = "donationTemplatePatternBytes" ,ignore = true)
+    @Mapping(target = "donationTemplateUserBytes" ,ignore = true)
     UserConfiguration dtoToProto(UserConfigurationDto dto);
 
     UserConfigurationDto protoToDto(UserConfiguration proto);

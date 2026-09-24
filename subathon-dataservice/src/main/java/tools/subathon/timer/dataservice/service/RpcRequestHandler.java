@@ -77,6 +77,7 @@ public class RpcRequestHandler implements HasLogger {
         };
     }
 
+    @Deprecated
     @RabbitListener(queues = TIMER_RPC_QUEUE)
     public RpcResponse<TimerDto> handleTimerRequest(RpcRequest<TimerPayload> request) {
         getLogger().trace("New timer request handler called with request '{}'", request);
