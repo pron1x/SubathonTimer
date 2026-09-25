@@ -13,6 +13,8 @@ service TimerService {
   rpc InitializeNewTimer(InitializeNewTimerRequest) returns (Timer);
   rpc StartTimer(StartTimerRequest) returns (Timer);
   rpc PauseTimer(PauseTimerRequest) returns (Timer);
+  rpc AddTime(AddTimeRequest) returns (Timer);
+  rpc SubtractTime(AddTimeRequest) returns (Timer);
 }
 
 message GetTimerRequest {
@@ -42,6 +44,22 @@ message PauseTimerRequest {
   string username = 2;
   google.protobuf.Timestamp timestamp = 3;
   string source = 4;
+}
+
+message AddTimeRequest {
+  string channel_id = 1;
+  int64 seconds = 2;
+  string username = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string source = 5;
+}
+
+message SubtractTimeRequest {
+  string channel_id = 1;
+  int64 seconds = 2;
+  string username = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string source = 5;
 }
 
 enum TimerState {

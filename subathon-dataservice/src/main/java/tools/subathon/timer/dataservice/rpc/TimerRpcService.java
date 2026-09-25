@@ -10,6 +10,7 @@ import tools.subathon.timer.dataservice.data.mapper.TimerMapper;
 import tools.subathon.timer.dataservice.service.TimerService;
 import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
+import tools.subathon.timer.proto.timer.AddTimeRequest;
 import tools.subathon.timer.proto.timer.GetCurrenTimerForChannelRequest;
 import tools.subathon.timer.proto.timer.GetTimerRequest;
 import tools.subathon.timer.proto.timer.InitializeNewTimerRequest;
@@ -81,6 +82,36 @@ public class TimerRpcService extends TimerServiceGrpc.TimerServiceImplBase {
         SubathonCommandEvent command = createEvent(Command.PAUSE, request.getUsername(), timestamp, request.getSource());
         try {
             TimerDto timer = timerService.pauseTimer(request.getChannelId(), command);
+            responseObserver.onNext(timerMapper.dtoToProto(timer));
+        } catch (MissingTimerException e) {
+            responseObserver.onError(e);
+        } finally {
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void addTime(AddTimeRequest request, StreamObserver<Timer> responseObserver) {
+        Instant timestamp = Instant.ofEpochSecond(request.getTimestamp().getSeconds(), request.getTimestamp().getNanos());
+        SubathonCommandEvent command = createEvent(Command.ADD, request.getUsername(), timestamp, request.getSource());
+        command.setSeconds(request.getSeconds());
+        try {
+            TimerDto timer = timerService.addSubathonEventTime(request.getChannelId(), command);
+            responseObserver.onNext(timerMapper.dtoToProto(timer));
+        } catch (MissingTimerException e) {
+            responseObserver.onError(e);
+        } finally {
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void subtractTime(AddTimeRequest request, StreamObserver<Timer> responseObserver) {
+        Instant timestamp = Instant.ofEpochSecond(request.getTimestamp().getSeconds(), request.getTimestamp().getNanos());
+        SubathonCommandEvent command = createEvent(Command.REMOVE, request.getUsername(), timestamp, request.getSource());
+        command.setSeconds(request.getSeconds());
+        try {
+            TimerDto timer = timerService.subtractSubathonEventTime(request.getChannelId(), command);
             responseObserver.onNext(timerMapper.dtoToProto(timer));
         } catch (MissingTimerException e) {
             responseObserver.onError(e);
