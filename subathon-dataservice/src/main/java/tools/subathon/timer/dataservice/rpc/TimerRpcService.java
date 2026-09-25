@@ -10,14 +10,14 @@ import tools.subathon.timer.dataservice.data.mapper.TimerMapper;
 import tools.subathon.timer.dataservice.service.TimerService;
 import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
-import tools.subathon.timer.proto.timer.AddTimeRequest;
-import tools.subathon.timer.proto.timer.GetCurrenTimerForChannelRequest;
-import tools.subathon.timer.proto.timer.GetTimerRequest;
-import tools.subathon.timer.proto.timer.InitializeNewTimerRequest;
-import tools.subathon.timer.proto.timer.PauseTimerRequest;
-import tools.subathon.timer.proto.timer.StartTimerRequest;
-import tools.subathon.timer.proto.timer.Timer;
-import tools.subathon.timer.proto.timer.TimerServiceGrpc;
+import tools.subathon.timer.proto.timer.v1.AddTimeRequest;
+import tools.subathon.timer.proto.timer.v1.GetCurrenTimerForChannelRequest;
+import tools.subathon.timer.proto.timer.v1.GetTimerRequest;
+import tools.subathon.timer.proto.timer.v1.InitializeNewTimerRequest;
+import tools.subathon.timer.proto.timer.v1.PauseTimerRequest;
+import tools.subathon.timer.proto.timer.v1.StartTimerRequest;
+import tools.subathon.timer.proto.timer.v1.Timer;
+import tools.subathon.timer.proto.timer.v1.TimerServiceGrpc;
 
 import java.time.Instant;
 

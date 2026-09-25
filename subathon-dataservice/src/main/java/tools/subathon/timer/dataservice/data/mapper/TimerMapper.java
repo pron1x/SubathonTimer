@@ -8,8 +8,8 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.dataservice.data.entity.TimerEntity;
-import tools.subathon.timer.proto.timer.Timer;
-import tools.subathon.timer.proto.timer.TimerState;
+import tools.subathon.timer.proto.timer.v1.Timer;
+import tools.subathon.timer.proto.timer.v1.TimerState;
 
 import java.time.Instant;
 
