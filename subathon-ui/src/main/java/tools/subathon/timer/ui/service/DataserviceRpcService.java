@@ -25,6 +25,7 @@ import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_ROUTING_KEY;
 
+@Deprecated
 @Service
 public class DataserviceRpcService implements HasLogger {
 

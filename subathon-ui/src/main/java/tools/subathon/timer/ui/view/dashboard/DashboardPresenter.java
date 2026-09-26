@@ -5,6 +5,7 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 import com.vaadin.flow.spring.annotation.UIScope;
+import io.grpc.StatusRuntimeException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -12,8 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Component;
-import tools.subathon.rpc.RpcResponse;
-import tools.subathon.rpc.RpcStatus;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
@@ -73,58 +72,64 @@ public class DashboardPresenter implements TimerEventListener, HasLogger {
     }
 
     protected TimerDto getTimer() {
-        RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
-        return switch(timerResponse) {
-            case RpcResponse.Success<TimerDto> success -> success.body();
-            case RpcResponse.Failure<TimerDto> error -> {
-                if(error.statusCode() == RpcStatus.ERROR) {
-                    getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
-                    view.showErrorNotification("Error loading timer!");
-                }
-                yield null;
-            }
-        };
+        TimerDto timer = null;
+        try {
+            timer = timerService.getTimer(channelId);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error getting timer for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Error loading timer. Status was: " + ex.getStatus().getCode());
+        }
+        return timer;
     }
 
     protected void initializeTimer() {
-        timerService.initializeTimerForChannel(channelId, channelName);
+        try {
+            timerService.initialize(channelId, channelName);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error initializing timer for channel '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Error initializing timer, please try again. Status was " + ex.getStatus().getCode());
+        }
     }
 
     protected void startTimer() {
-        timerService.startTimerForChannel(channelId, channelName);
+        try {
+            timerService.start(channelId, channelName);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error starting timer for channel '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Error starting timer, please try again. Status was " + ex.getStatus().getCode());
+        }
     }
 
     protected void pauseTimer() {
-        timerService.pauseTimerForChannel(channelId, channelName);
+        try {
+            timerService.pause(channelId, channelName);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error pausing timer for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Error pausing timer, please try again. Status was " + ex.getStatus().getCode());
+        }
     }
 
     protected UserConfigurationDto getUserConfig() {
-        RpcResponse<UserConfigurationDto> configResponse = userConfigurationService.getUserConfiguration(channelId);
-        return switch(configResponse) {
-            case RpcResponse.Success<UserConfigurationDto> success -> success.body();
-            case RpcResponse.Failure<UserConfigurationDto> error -> {
-                if(error.statusCode() == RpcStatus.ERROR) {
-                    getLogger().error("Error while fetching user configuration for channelId {}: {}", channelId, error.errorMessage());
-                    view.showErrorNotification("Error loading channel configuration!");
-                }
-                yield null;
-            }
-        };
+        UserConfigurationDto config = null;
+        try {
+            config = userConfigurationService.getUserConfiguration(channelId);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error getting user configuration for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Error loading your configuration, status was: " + ex.getStatus().getCode());
+        }
+        return config;
     }
 
     protected UserConfigurationDto saveUserConfig(UserConfigurationDto userConfigurationModel) {
-        RpcResponse<UserConfigurationDto> response = userConfigurationService.saveUserConfiguration(channelId, UserConfigurationDto.withChannelId(userConfigurationModel, channelId));
-        if(response instanceof RpcResponse.Failure<UserConfigurationDto> error) {
-            getLogger().error("Error saving user configuration for channelId {}: {}", channelId, error.errorMessage());
-            view.showErrorNotification("Could not save channel configuration! Please try again.");
-            return userConfigurationModel;
-        } else if(response instanceof RpcResponse.Success<UserConfigurationDto>(UserConfigurationDto body)) {
+        UserConfigurationDto config = null;
+        try {
+            config = userConfigurationService.saveUserConfiguration(userConfigurationModel);
             view.showSuccessNotification("Configuration saved successfully!");
-            return body;
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC saving user configuration for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
+            view.showErrorNotification("Could not save channel configuration! Please try again. Status: " + ex.getStatus().getCode());
         }
-        // Should never happen!
-        getLogger().warn("Unknown response while saving user configuration for channelId {}: {}", channelId, response);
-        return userConfigurationModel;
+        return config;
     }
 
     @Override

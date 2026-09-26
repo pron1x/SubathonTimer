@@ -46,7 +46,7 @@ public interface TimerMapper {
     TimerState enumToProto(tools.subathon.timer.datamodel.enums.TimerState value);
 
     @EnumMapping(nameTransformationStrategy = MappingConstants.STRIP_PREFIX_TRANSFORMATION, configuration = "TIMER_STATE_")
-    @ValueMapping(source = MappingConstants.ANY_UNMAPPED, target = MappingConstants.THROW_EXCEPTION)
+    @ValueMapping(source = MappingConstants.ANY_REMAINING, target = MappingConstants.THROW_EXCEPTION)
     tools.subathon.timer.datamodel.enums.TimerState protoToEnum(TimerState value);
 
 }

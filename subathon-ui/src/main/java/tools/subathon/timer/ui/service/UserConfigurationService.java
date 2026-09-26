@@ -1,25 +1,30 @@
 package tools.subathon.timer.ui.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
+import tools.subathon.timer.proto.configuration.v1.ConfigurationServiceGrpc;
+import tools.subathon.timer.proto.configuration.v1.GetConfigurationRequest;
+import tools.subathon.timer.proto.configuration.v1.UserConfiguration;
+import tools.subathon.timer.ui.mapper.UserConfigMapper;
 
 @Service
 public class UserConfigurationService {
 
-    private final DataserviceRpcService dataserviceRpcService;
+    private final UserConfigMapper mapper;
+    private final ConfigurationServiceGrpc.ConfigurationServiceBlockingStub configRpcService;
 
-    @Autowired
-    public UserConfigurationService(DataserviceRpcService dataserviceRpcService) {
-        this.dataserviceRpcService = dataserviceRpcService;
+    public UserConfigurationService(UserConfigMapper mapper, ConfigurationServiceGrpc.ConfigurationServiceBlockingStub configRpcService) {
+        this.mapper = mapper;
+        this.configRpcService = configRpcService;
     }
 
-    public RpcResponse<UserConfigurationDto> getUserConfiguration(String channelId) {
-        return dataserviceRpcService.getUserConfiguration(channelId);
+    public UserConfigurationDto getUserConfiguration(String channelId) {
+        UserConfiguration configProto = configRpcService.getConfiguration(GetConfigurationRequest.newBuilder().setChannelId(channelId).build());
+        return mapper.protoToDto(configProto);
     }
 
-    public RpcResponse<UserConfigurationDto> saveUserConfiguration(String channelId, UserConfigurationDto config) {
-        return dataserviceRpcService.saveUserConfiguration(channelId, config);
+    public UserConfigurationDto saveUserConfiguration(UserConfigurationDto configDto) {
+        UserConfiguration configProto = mapper.dtoToProto(configDto);
+        return mapper.protoToDto(configRpcService.putConfiguration(configProto));
     }
 }
