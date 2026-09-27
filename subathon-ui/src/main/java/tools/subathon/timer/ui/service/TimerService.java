@@ -1,7 +1,6 @@
 package tools.subathon.timer.ui.service;
 
 import com.google.protobuf.Timestamp;
-import tools.subathon.rpc.RpcResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.subathon.timer.datamodel.TimerDto;
@@ -20,13 +19,11 @@ public class TimerService {
     private static final String SOURCE = "UI";
 
     private final TimerMapper timerMapper;
-    private final DataserviceRpcService dataserviceRpcService;
     private final TimerServiceGrpc.TimerServiceBlockingStub timerRpcService;
 
     @Autowired
-    public TimerService(TimerMapper timerMapper, DataserviceRpcService dataserviceRpcService, TimerServiceGrpc.TimerServiceBlockingStub timerRpcService) {
+    public TimerService(TimerMapper timerMapper, TimerServiceGrpc.TimerServiceBlockingStub timerRpcService) {
         this.timerMapper = timerMapper;
-        this.dataserviceRpcService = dataserviceRpcService;
         this.timerRpcService = timerRpcService;
     }
 
@@ -79,25 +76,4 @@ public class TimerService {
                 )
         );
     }
-
-    @Deprecated
-    public RpcResponse<TimerDto> getTimerForChannel(String channelId) {
-        return dataserviceRpcService.getTimerForChannel(channelId);
-    }
-
-    @Deprecated
-    public RpcResponse<TimerDto> initializeTimerForChannel(String channelId, String channelName) {
-        return dataserviceRpcService.initializeTimerForChannel(channelId, channelName);
-    }
-
-    @Deprecated
-    public RpcResponse<TimerDto> startTimerForChannel(String channelId, String channelName) {
-        return dataserviceRpcService.startTimerForChannel(channelId, channelName);
-    }
-
-    @Deprecated
-    public RpcResponse<TimerDto> pauseTimerForChannel(String channelId, String channelName) {
-        return dataserviceRpcService.pauseTimerForChannel(channelId, channelName);
-    }
-
 }
