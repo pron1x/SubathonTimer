@@ -1,5 +1,6 @@
 package tools.subathon.rpc;
 
+@Deprecated
 public enum RpcCommand {
     GET_TIMER,
     INIT_TIMER,

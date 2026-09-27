@@ -3,6 +3,7 @@ package tools.subathon.rpc;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import tools.subathon.rpc.payload.RpcPayload;
 
+@Deprecated
 public class RpcRequest<P extends RpcPayload> {
 
     private RpcCommand command;
