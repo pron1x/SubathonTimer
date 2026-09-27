@@ -2,7 +2,7 @@ package tools.subathon.timer.ui.view.uptime;
 
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
-import tools.subathon.rpc.RpcResponse;
+import io.grpc.StatusRuntimeException;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
@@ -15,10 +15,11 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import tools.subathon.timer.util.interfaces.HasLogger;
 
 @UIScope
 @Controller
-public class UptimePresenter implements TimerEventListener {
+public class UptimePresenter implements TimerEventListener, HasLogger {
 
     private final TimerService timerService;
     private final TimerEventService timerEventService;
@@ -40,7 +41,7 @@ public class UptimePresenter implements TimerEventListener {
 
     public void initForChannel(String channelId) {
         this.channelId = channelId;
-        TimerDto timer = getTimerForChannel(channelId);
+        timer = getTimerForChannel(channelId);
         if (timer != null) {
             startTimeSignal.set(timer.startTime().toEpochMilli());
             endTimeSignal.set(timer.endTime().toEpochMilli());
@@ -62,7 +63,7 @@ public class UptimePresenter implements TimerEventListener {
             return;
         }
         if (timerEventDto.type() == TimerEventType.STATE_CHANGE && timerEventDto.oldTimerState() == TimerState.INITIALIZED) {
-            timer = fetchTimer(timerEventDto.channelId());
+            timer = getTimerForChannel(timerEventDto.channelId());
         }
         eventDtoSignal.set(timerEventDto);
         startTimeSignal.set(timer.startTime().toEpochMilli());
@@ -74,22 +75,13 @@ public class UptimePresenter implements TimerEventListener {
     //          - No previous timer was ever run -> timer is null on init
     //          - Previous timer stopped and new timer is started -> fetch new timer on event?
     private TimerDto getTimerForChannel(String channelId) {
-        if(timer == null || !channelId.equals(timer.channelId())) {
-            timer = fetchTimer(channelId);
+        TimerDto timer = null;
+        try {
+            timer = timerService.getTimer(channelId);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error getting timer for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
         }
         return timer;
-    }
-
-    private TimerDto fetchTimer(String channelId) {
-        RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
-        switch (timerResponse) {
-            case RpcResponse.Success<TimerDto> success -> {
-                return success.body();
-            }
-            case RpcResponse.Failure<TimerDto> _ -> {
-                return null;
-            }
-        }
     }
 
     public Signal<Long> getStartTimeSignal() {

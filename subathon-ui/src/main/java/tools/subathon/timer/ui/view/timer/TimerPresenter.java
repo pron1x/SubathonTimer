@@ -2,7 +2,7 @@ package tools.subathon.timer.ui.view.timer;
 
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
-import tools.subathon.rpc.RpcResponse;
+import io.grpc.StatusRuntimeException;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.datamodel.enums.TimerEventType;
@@ -43,7 +43,7 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
     }
 
     public void initForChannel(String channelId) {
-        TimerDto timer = getTimerForChannel(channelId);
+        timer = getTimerForChannel(channelId);
         if (timer != null) {
             endTimeSignal.set(timer.endTime().toEpochMilli());
             lastUpdateTimeSignal.set(timer.updateTime().toEpochMilli());
@@ -67,15 +67,11 @@ public class TimerPresenter implements TimerEventListener, HasLogger {
     }
 
     public TimerDto getTimerForChannel(String channelId) {
-        if(timer == null || !channelId.equals(timer.channelId())) {
-            RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(channelId);
-            timer = switch(timerResponse) {
-                case RpcResponse.Success<TimerDto> success -> success.body();
-                case RpcResponse.Failure<TimerDto> error -> {
-                    getLogger().error("Error while fetching timer for channelId {}: {}", channelId, error.errorMessage());
-                    yield null;
-                }
-            };
+        TimerDto timer = null;
+        try {
+            timer = timerService.getTimer(channelId);
+        } catch (StatusRuntimeException ex) {
+            getLogger().error("gRPC error getting timer for channelId '{}', Status {}", channelId, ex.getStatus(), ex);
         }
         return timer;
     }

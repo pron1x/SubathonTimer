@@ -1,12 +1,11 @@
 package tools.subathon.timer.ui.api;
 
+import io.grpc.StatusRuntimeException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tools.subathon.rpc.RpcResponse;
-import tools.subathon.rpc.RpcStatus;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.ui.service.TimerService;
 
@@ -22,15 +21,10 @@ public class TimerController {
 
     @GetMapping("/{broadcasterUserId}")
     public ResponseEntity<TimerDto> getTimerForBroadcaster(@PathVariable String broadcasterUserId) {
-        RpcResponse<TimerDto> timerResponse = timerService.getTimerForChannel(broadcasterUserId);
-        return switch(timerResponse) {
-            case RpcResponse.Success<TimerDto> success -> ResponseEntity.ok(success.body());
-            case RpcResponse.Failure<TimerDto> error -> {
-                if (error.statusCode() == RpcStatus.NOT_FOUND) {
-                    yield ResponseEntity.notFound().build();
-                }
-                yield ResponseEntity.internalServerError().build();
-            }
-        };
+        try {
+            return ResponseEntity.ok(timerService.getTimer(broadcasterUserId));
+        } catch (StatusRuntimeException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
