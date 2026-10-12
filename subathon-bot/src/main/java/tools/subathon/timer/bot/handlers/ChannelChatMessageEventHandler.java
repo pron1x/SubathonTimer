@@ -5,17 +5,11 @@ import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.factories.SubathonEventMessageFactory;
 import tools.subathon.timer.bot.service.RabbitMessageService;
 import tools.subathon.timer.bot.service.TimerService;
 import tools.subathon.timer.bot.util.CommandUtils;
-import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.bot.service.TwitchChatService;
-import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.TimerDto;
-import tools.subathon.timer.datamodel.enums.Command;
-import tools.subathon.timer.datamodel.enums.TimerState;
 import tools.subathon.timer.util.Tuple;
 import tools.subathon.timer.util.TemplateParser;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -42,14 +36,12 @@ public class ChannelChatMessageEventHandler implements HasLogger {
 
     private final TwitchChatService twitchChatService;
     private final TimerService timerService;
-    private final DataserviceRpcService dataserviceRpcService;
     private final RabbitMessageService rabbitMessageService;
 
     @Autowired
-    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, TimerService timerService, DataserviceRpcService dataserviceRpcService, RabbitMessageService rabbitMessageService) {
+    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, TimerService timerService, RabbitMessageService rabbitMessageService) {
         this.twitchChatService = twitchChatService;
         this.timerService = timerService;
-        this.dataserviceRpcService = dataserviceRpcService;
         this.rabbitMessageService = rabbitMessageService;
     }
 
@@ -149,40 +141,6 @@ public class ChannelChatMessageEventHandler implements HasLogger {
             twitchChatService.sendChatMessage(broadcasterUserId, "Removed " + seconds + " seconds from the timer.");
         } else {
             twitchChatService.sendChatMessage(broadcasterUserId, "Could not remove time, please try again...");
-        }
-    }
-
-    private boolean executeStateChange(String broadcasterUserId, SubathonCommandEvent event, TimerState expectedState) {
-        getLogger().debug("Handling timer state change command [{}]", event.getCommand());
-        try {
-            RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(broadcasterUserId, event);
-            return switch (response) {
-                case RpcResponse.Success<TimerDto> success -> success.body().state() == expectedState;
-                case RpcResponse.Failure<TimerDto> error -> {
-                    getLogger().error("Error while executing state change command for broadcasterUserId {}: {}", broadcasterUserId, error.errorMessage());
-                    yield false;
-                }
-            };
-        } catch (Exception e) {
-            getLogger().error("Failed to send and receive state change command!", e);
-            return false;
-        }
-    }
-
-    private boolean executeCommand(String broadcasterUserId, SubathonCommandEvent event) {
-        getLogger().debug("Handling timer time change command [{}]", event.getCommand());
-        try {
-            RpcResponse<TimerDto> response = dataserviceRpcService.executeBotCommand(broadcasterUserId, event);
-            return switch (response) {
-                case RpcResponse.Success<TimerDto> success -> true;
-                case RpcResponse.Failure<TimerDto> error -> {
-                    getLogger().warn("Error while executing time change command for broadcasterUserId {}: {}", broadcasterUserId, error.errorMessage());
-                    yield false;
-                }
-            };
-        } catch (Exception e) {
-            getLogger().error("Failed to send and receive time change command!", e);
-            return false;
         }
     }
 

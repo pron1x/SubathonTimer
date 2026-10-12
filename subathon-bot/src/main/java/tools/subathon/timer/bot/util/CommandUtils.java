@@ -1,16 +1,11 @@
 package tools.subathon.timer.bot.util;
 
 import org.jspecify.annotations.NonNull;
-import tools.subathon.timer.datamodel.SubathonCommandEvent;
-import tools.subathon.timer.datamodel.enums.Command;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 
 public class CommandUtils {
-
-    private final static String EVENT_SOURCE = "twitch-chat";
 
     private CommandUtils() {
         // Hide constructor
@@ -33,17 +28,4 @@ public class CommandUtils {
         return seconds;
     }
 
-    public static SubathonCommandEvent createCommandEvent(String user, Command command) {
-        return createCommandEvent(user, command, 0);
-    }
-
-    public static SubathonCommandEvent createCommandEvent(String user, Command command, long seconds) {
-        SubathonCommandEvent event = new SubathonCommandEvent();
-        event.setSource(EVENT_SOURCE);
-        event.setUsername(user);
-        event.setCommand(command);
-        event.setSeconds(seconds);
-        event.setTimestamp(Instant.now());
-        return event;
-    }
 }
