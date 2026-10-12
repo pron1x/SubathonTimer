@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import tools.subathon.rpc.RpcResponse;
 import tools.subathon.timer.bot.factories.SubathonEventMessageFactory;
 import tools.subathon.timer.bot.service.RabbitMessageService;
+import tools.subathon.timer.bot.service.TimerService;
 import tools.subathon.timer.bot.util.CommandUtils;
 import tools.subathon.timer.bot.service.DataserviceRpcService;
 import tools.subathon.timer.bot.service.TwitchChatService;
@@ -40,12 +41,14 @@ public class ChannelChatMessageEventHandler implements HasLogger {
     private String commandPrefix;
 
     private final TwitchChatService twitchChatService;
+    private final TimerService timerService;
     private final DataserviceRpcService dataserviceRpcService;
     private final RabbitMessageService rabbitMessageService;
 
     @Autowired
-    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, DataserviceRpcService dataserviceRpcService, RabbitMessageService rabbitMessageService) {
+    public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, TimerService timerService, DataserviceRpcService dataserviceRpcService, RabbitMessageService rabbitMessageService) {
         this.twitchChatService = twitchChatService;
+        this.timerService = timerService;
         this.dataserviceRpcService = dataserviceRpcService;
         this.rabbitMessageService = rabbitMessageService;
     }
@@ -102,7 +105,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
     }
 
     private void handleStartCommand(String broadcasterUserId, String userName) {
-        if (executeStateChange(broadcasterUserId, CommandUtils.createCommandEvent(userName, Command.START), TimerState.TICKING)) {
+        if (timerService.start(broadcasterUserId, userName)) {
             twitchChatService.sendChatMessage(broadcasterUserId, "Timer started.");
         } else {
             twitchChatService.sendChatMessage(broadcasterUserId, "Failed to start the timer. Please try again...");
@@ -110,7 +113,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
     }
 
     private void handlePauseCommand(String broadcasterUserId, String userName) {
-        if (executeStateChange(broadcasterUserId, CommandUtils.createCommandEvent(userName, Command.PAUSE), TimerState.PAUSED)) {
+        if (timerService.pause(broadcasterUserId, userName)) {
             twitchChatService.sendChatMessage(broadcasterUserId, "Timer paused.");
         } else {
             twitchChatService.sendChatMessage(broadcasterUserId, "Failed to pause the timer. Please try again...");
@@ -126,7 +129,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
             twitchChatService.sendChatMessage(broadcasterUserId, "Invalid arguments!");
             return;
         }
-        if (executeCommand(broadcasterUserId, CommandUtils.createCommandEvent(userName, Command.ADD, seconds))) {
+        if (timerService.addTime(broadcasterUserId, userName, seconds)) {
             twitchChatService.sendChatMessage(broadcasterUserId, "Added " + seconds + " seconds to the timer.");
         } else {
             twitchChatService.sendChatMessage(broadcasterUserId, "Could not add time, please try again...");
@@ -142,7 +145,7 @@ public class ChannelChatMessageEventHandler implements HasLogger {
             twitchChatService.sendChatMessage(broadcasterUserId, "Invalid arguments!");
             return;
         }
-        if (executeCommand(broadcasterUserId, CommandUtils.createCommandEvent(userName, Command.REMOVE, seconds))) {
+        if (timerService.subtractTime(broadcasterUserId, userName, seconds)) {
             twitchChatService.sendChatMessage(broadcasterUserId, "Removed " + seconds + " seconds from the timer.");
         } else {
             twitchChatService.sendChatMessage(broadcasterUserId, "Could not remove time, please try again...");

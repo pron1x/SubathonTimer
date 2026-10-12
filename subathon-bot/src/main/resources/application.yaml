@@ -2,6 +2,13 @@ spring:
   rabbitmq:
     password:
     username:
+  grpc:
+    client:
+      channel:
+        dataservice:
+          target:
+          default:
+            deadline: 3s
 
 bot:
   twitch:
