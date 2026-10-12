@@ -16,6 +16,7 @@ import tools.subathon.timer.proto.timer.v1.GetTimerRequest;
 import tools.subathon.timer.proto.timer.v1.InitializeNewTimerRequest;
 import tools.subathon.timer.proto.timer.v1.PauseTimerRequest;
 import tools.subathon.timer.proto.timer.v1.StartTimerRequest;
+import tools.subathon.timer.proto.timer.v1.SubtractTimeRequest;
 import tools.subathon.timer.proto.timer.v1.Timer;
 import tools.subathon.timer.proto.timer.v1.TimerServiceGrpc;
 
@@ -106,7 +107,7 @@ public class TimerRpcService extends TimerServiceGrpc.TimerServiceImplBase {
     }
 
     @Override
-    public void subtractTime(AddTimeRequest request, StreamObserver<Timer> responseObserver) {
+    public void subtractTime(SubtractTimeRequest request, StreamObserver<Timer> responseObserver) {
         Instant timestamp = Instant.ofEpochSecond(request.getTimestamp().getSeconds(), request.getTimestamp().getNanos());
         SubathonCommandEvent command = createEvent(Command.REMOVE, request.getUsername(), timestamp, request.getSource());
         command.setSeconds(request.getSeconds());

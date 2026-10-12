@@ -14,7 +14,7 @@ service TimerService {
   rpc StartTimer(StartTimerRequest) returns (Timer);
   rpc PauseTimer(PauseTimerRequest) returns (Timer);
   rpc AddTime(AddTimeRequest) returns (Timer);
-  rpc SubtractTime(AddTimeRequest) returns (Timer);
+  rpc SubtractTime(SubtractTimeRequest) returns (Timer);
 }
 
 message GetTimerRequest {
