@@ -3,12 +3,8 @@ package tools.subathon.timer.dataservice.service;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.json.JsonMapper;
 import tools.subathon.rpc.RpcRequest;
 import tools.subathon.rpc.RpcResponse;
-import tools.subathon.rpc.payload.configuration.ChannelConfigPayload;
-import tools.subathon.rpc.payload.configuration.GetChannelConfigPayload;
-import tools.subathon.rpc.payload.configuration.UpdateChannelConfigPayload;
 import tools.subathon.rpc.payload.timer.DecrementTimerPayload;
 import tools.subathon.rpc.payload.timer.GetTimerPayload;
 import tools.subathon.rpc.payload.timer.IncrementTimerPayload;
@@ -19,7 +15,6 @@ import tools.subathon.rpc.payload.timer.TimerPayload;
 import tools.subathon.timer.datamodel.SubathonCommandEvent;
 import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
-import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.exception.IllegalTimerStateException;
 import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
 import tools.subathon.timer.dataservice.service.exception.InitializationException;
@@ -27,54 +22,16 @@ import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigur
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
 
-import java.util.Optional;
-
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
-import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 
 @Component
 public class RpcRequestHandler implements HasLogger {
 
-    private final JsonMapper mapper;
-    private final UserConfigurationService userConfigurationService;
     private final TimerService timerService;
 
     @Autowired
-    public RpcRequestHandler(JsonMapper mapper, UserConfigurationService userConfigurationService, TimerService timerService) {
-        this.mapper = mapper;
-        this.userConfigurationService = userConfigurationService;
+    public RpcRequestHandler(TimerService timerService) {
         this.timerService = timerService;
-    }
-
-    @Deprecated
-    @RabbitListener(queues = USER_CONFIG_RPC_QUEUE)
-    public RpcResponse<UserConfigurationDto> handleUserConfigurationRequest(RpcRequest<ChannelConfigPayload> request) {
-        getLogger().trace("New user configuration request handler called with request '{}'", request);
-        return switch (request.getCommand()) {
-            case null -> RpcResponse.error("Request command is null.");
-            case GET_CHANNEL_CONFIG -> {
-                GetChannelConfigPayload payload = (GetChannelConfigPayload) request.getPayload();
-                if(payload == null) {
-                    yield RpcResponse.error("Request payload is null!");
-                }
-                Optional<UserConfigurationDto> configOpt = userConfigurationService.getForChannel(payload.channelId());
-                yield configOpt.map(RpcResponse::ok).orElseGet(RpcResponse::notFound);
-            }
-            case UPDATE_CHANNEL_CONFIG -> {
-                UpdateChannelConfigPayload payload = (UpdateChannelConfigPayload) request.getPayload();
-                UserConfigurationDto config = mapper.convertValue(payload.channelConfig(), UserConfigurationDto.class);
-                if(config == null) {
-                    yield RpcResponse.error("UserConfiguration is null!");
-                }
-                try {
-                    yield RpcResponse.ok(userConfigurationService.save(config));
-                } catch (Exception e) {
-                    getLogger().error("Error while saving user configuration {}", payload.channelConfig(), e);
-                    yield RpcResponse.error("Error saving user configuration.");
-                }
-            }
-            default -> RpcResponse.error("Request command is not available for this queue.");
-        };
     }
 
     @Deprecated

@@ -16,8 +16,6 @@ import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_ROUTING_KEY;
-import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_ROUTING_KEY;
-import static tools.subathon.timer.util.GlobalRabbitMQ.USER_CONFIG_RPC_QUEUE;
 
 @EnableRabbit
 @Configuration
@@ -34,11 +32,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue userConfigRpcQueue() {
-        return new Queue(USER_CONFIG_RPC_QUEUE, true);
-    }
-
-    @Bean
     Queue timerRpcQueue() {
         return new Queue(TIMER_RPC_QUEUE, true);
     }
@@ -51,11 +44,6 @@ public class RabbitMQConfig {
     @Bean
     Binding botCommandRpcBinding(TopicExchange exchange) {
         return BindingBuilder.bind(timerRpcQueue()).to(exchange).with(BOT_COMMAND_ROUTING_KEY);
-    }
-
-    @Bean
-    Binding userConfigRpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(userConfigRpcQueue()).to(exchange).with(USER_CONFIG_ROUTING_KEY);
     }
 
     @Bean
