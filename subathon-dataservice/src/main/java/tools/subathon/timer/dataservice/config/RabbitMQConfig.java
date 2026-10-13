@@ -10,10 +10,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static tools.subathon.timer.util.GlobalRabbitMQ.BOT_COMMAND_ROUTING_KEY;
 import static tools.subathon.timer.util.GlobalRabbitMQ.EXCHANGE_NAME;
-import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_ROUTING_KEY;
-import static tools.subathon.timer.util.GlobalRabbitMQ.TIMER_RPC_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_QUEUE;
 import static tools.subathon.timer.util.GlobalRabbitMQ.TWITCH_EVENT_ROUTING_KEY;
 
@@ -32,23 +29,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    Queue timerRpcQueue() {
-        return new Queue(TIMER_RPC_QUEUE, true);
-    }
-
-    @Bean
     Binding twitchEventBinding(TopicExchange exchange) {
         return BindingBuilder.bind(twitchEventQueue()).to(exchange).with(TWITCH_EVENT_ROUTING_KEY);
-    }
-
-    @Bean
-    Binding botCommandRpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(timerRpcQueue()).to(exchange).with(BOT_COMMAND_ROUTING_KEY);
-    }
-
-    @Bean
-    Binding timerRpcBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(timerRpcQueue()).to(exchange).with(TIMER_ROUTING_KEY);
     }
 
     @Bean
