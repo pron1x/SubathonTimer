@@ -20,7 +20,7 @@ public class GlobalRabbitMQ {
     @Deprecated public static final String BOT_COMMAND_ROUTING_KEY = "bot.dataservice.timer";
 
     // Bot Channel Management RPC queue
-    public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
-    public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "dataservice.bot.channel-management";
+    @Deprecated public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
+    @Deprecated public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "dataservice.bot.channel-management";
 
 }

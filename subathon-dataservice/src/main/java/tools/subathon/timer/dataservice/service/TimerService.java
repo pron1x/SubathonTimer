@@ -1,6 +1,5 @@
 package tools.subathon.timer.dataservice.service;
 
-import tools.subathon.rpc.payload.response.BatchResponse;
 import tools.subathon.timer.datamodel.enums.EventType;
 import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.domain.Timer;
@@ -18,7 +17,6 @@ import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.SubTier;
 import tools.subathon.timer.dataservice.executor.AdjustableScheduledExecutorService;
 import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
-import tools.subathon.timer.dataservice.service.exception.InitializationException;
 import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.util.interfaces.HasLogger;
@@ -37,7 +35,6 @@ import static tools.subathon.timer.datamodel.enums.TimerState.ENDED;
 @Service
 public class TimerService implements HasLogger {
 
-    private final BotRpcService botRpcService;
     private final TimerRepository timerRepository;
     private final TimerEventService timerEventService;
     private final UserConfigurationService userConfigurationService;
@@ -53,8 +50,7 @@ public class TimerService implements HasLogger {
 
 
     @Autowired
-    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, TimerMapper mapper, BotRpcService botRpcService) {
-        this.botRpcService = botRpcService;
+    public TimerService(TimerRepository timerRepository, TimerEventService timerEventService, UserConfigurationService userConfigurationService, TimerMapper mapper) {
         this.timerRepository = timerRepository;
         this.timerEventService = timerEventService;
         this.userConfigurationService = userConfigurationService;
