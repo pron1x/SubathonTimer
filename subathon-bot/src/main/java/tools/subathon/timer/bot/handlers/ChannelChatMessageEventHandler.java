@@ -2,7 +2,6 @@ package tools.subathon.timer.bot.handlers;
 
 import com.github.twitch4j.eventsub.domain.chat.Badge;
 import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.subathon.timer.bot.factories.SubathonEventMessageFactory;
@@ -38,7 +37,6 @@ public class ChannelChatMessageEventHandler implements HasLogger {
     private final TimerService timerService;
     private final RabbitMessageService rabbitMessageService;
 
-    @Autowired
     public ChannelChatMessageEventHandler(TwitchChatService twitchChatService, TimerService timerService, RabbitMessageService rabbitMessageService) {
         this.twitchChatService = twitchChatService;
         this.timerService = timerService;

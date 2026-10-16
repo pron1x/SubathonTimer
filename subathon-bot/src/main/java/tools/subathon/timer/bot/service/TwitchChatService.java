@@ -2,7 +2,6 @@ package tools.subathon.timer.bot.service;
 
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.helix.domain.ChatMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,6 @@ public class TwitchChatService {
 
     private final TwitchClient twitchClient;
 
-    @Autowired
     public TwitchChatService(TwitchClient twitchClient) {
         this.twitchClient = twitchClient;
     }

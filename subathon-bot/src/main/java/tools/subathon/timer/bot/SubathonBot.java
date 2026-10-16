@@ -63,14 +63,12 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelChatNotificationEvent.class, chatNotificationHandler::handle);
     }
 
-    public boolean subscribeToDonationMessages(String broadcasterUserId, String parserTemplate, String messageUser) {
+    public void subscribeToDonationMessages(String broadcasterUserId, String parserTemplate, String messageUser) {
         try {
             chatMessageEventHandler.registerNewDonationMessageParser(broadcasterUserId, parserTemplate, messageUser);
         } catch (IllegalArgumentException ex) {
             getLogger().info("Failed to create donation message parser for broadcaster user id '{}'. Error: {}", broadcasterUserId, ex.getMessage());
-            return false;
         }
-        return true;
     }
 
     public void removeDonationMessageParser(String broadcasterUserId) {
@@ -85,69 +83,64 @@ public class SubathonBot implements HasLogger {
         subscribeToChannelChatNotificationEvents(broadcasterUserId);
     }
 
-    public Optional<EventSubSubscription> subscribeToChannelMessages(String broadcasterUserId) {
+    public void subscribeToChannelMessages(String broadcasterUserId) {
         getLogger().debug("Creating chat message subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_CHAT_MESSAGE);
         if (subscription.isPresent()) {
             getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
-            return subscription;
+            return;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_CHAT_MESSAGE,
                 b -> b.broadcasterUserId(broadcasterUserId).userId(botId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
-        return subscription;
     }
 
-    public Optional<EventSubSubscription> subscribeToFollowEvents(String broadcasterUserId) {
+    public void subscribeToFollowEvents(String broadcasterUserId) {
         getLogger().debug("Creating follow event subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_FOLLOW_V2);
         if (subscription.isPresent()) {
             getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
-            return subscription;
+            return;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_FOLLOW_V2,
                 b -> b.broadcasterUserId(broadcasterUserId).moderatorUserId(broadcasterUserId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
-        return subscription;
     }
 
-    public Optional<EventSubSubscription> subscribeToRaidEvents(String broadcasterUserId) {
+    public void subscribeToRaidEvents(String broadcasterUserId) {
         getLogger().debug("Creating raid event subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_RAID);
         if (subscription.isPresent()) {
             getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
-            return subscription;
+            return;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_RAID,
                 b -> b.toBroadcasterUserId(broadcasterUserId).build());
         subscription.ifPresent(s ->  subscriptions.get(broadcasterUserId).add(s));
-        return subscription;
     }
 
-    public Optional<EventSubSubscription> subscribeToBitsEvents(String broadcasterUserId) {
+    public void subscribeToBitsEvents(String broadcasterUserId) {
         getLogger().debug("Creating bit event subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_BITS_USE);
         if (subscription.isPresent()) {
             getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
-            return subscription;
+            return;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_BITS_USE,
                 b -> b.broadcasterUserId(broadcasterUserId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
-        return subscription;
     }
 
-    public Optional<EventSubSubscription> subscribeToChannelChatNotificationEvents(String broadcasterUserId) {
+    public void subscribeToChannelChatNotificationEvents(String broadcasterUserId) {
         getLogger().debug("Creating channel chat notification event subscription for broadcaster user id '{}'.", broadcasterUserId);
         Optional<EventSubSubscription> subscription = getIfExists(broadcasterUserId, SubscriptionTypes.CHANNEL_CHAT_NOTIFICATION);
         if (subscription.isPresent()) {
             getLogger().debug("Subscription of type '{}' for broadcaster user id '{}' already exists.", subscription.get().getRawType(), broadcasterUserId);
-            return subscription;
+            return;
         }
         subscription = conduit.register(SubscriptionTypes.CHANNEL_CHAT_NOTIFICATION,
                 b -> b.broadcasterUserId(broadcasterUserId).userId(botId).build());
         subscription.ifPresent(s -> subscriptions.get(broadcasterUserId).add(s));
-        return subscription;
     }
 
     private Optional<EventSubSubscription> getIfExists(String broadcasterUserId, SubscriptionType<?,?,?> subscriptionType) {
