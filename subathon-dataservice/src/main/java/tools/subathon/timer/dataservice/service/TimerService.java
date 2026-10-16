@@ -85,59 +85,11 @@ public class TimerService implements HasLogger {
         }
     }
 
-    private void initializeTwitchMessageSubscription(String broadcasterUserId) throws InitializationException {
-        BatchResponse response;
-        Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(broadcasterUserId);
-        String donationTemplatePattern = config.map(UserConfigurationDto::donationTemplatePattern).orElse(null);
-        String donationTemplateUser = config.map(UserConfigurationDto::donationTemplateUser).orElse(null);
-        for (int tries = 0; tries < 3; tries++) {
-            try {
-                response = botRpcService.requestMessageEventSubscription(broadcasterUserId, donationTemplatePattern, donationTemplateUser);
-            } catch (RuntimeException e) {
-                getLogger().error("Failed to get answer from RPC for broadcaster user id '{}', unsure if subscribed to messages! Trying again...", broadcasterUserId, e);
-                continue;
-            }
-            if (response.batchStatus() == BatchResponse.BatchStatus.SUCCESS) {
-                getLogger().info("Subscribed to messages for broadcaster user id '{}'", broadcasterUserId);
-                return;
-            } else {
-                getLogger().info("Subscribing to message events for broadcaster user id '{}' returned status '{}', trying again...", broadcasterUserId, response.batchStatus());
-            }
-        }
-        getLogger().warn("Failed to subscribe to message events for broadcaster user id '{}', after multiple tries! Bot might not work properly for this channel!", broadcasterUserId);
-        throw new InitializationException(broadcasterUserId, "Message subscription");
-    }
-
-    private void initializeAllTwitchEventSubscriptions(String broadcasterUserId) throws InitializationException {
-        BatchResponse response;
-        for (int tries = 0; tries < 3; tries++) {
-            try {
-                response = botRpcService.requestAllEventSubscriptions(broadcasterUserId);
-            } catch (RuntimeException e) {
-                getLogger().error("Failed to get answer from RPC for broadcaster user id '{}', unsure if subscribed to events! Trying again...", broadcasterUserId, e);
-                continue;
-            }
-            if (response.batchStatus() == BatchResponse.BatchStatus.SUCCESS) {
-                getLogger().info("Subscribed to events for broadcaster user id '{}'", broadcasterUserId);
-                return;
-            } else {
-                getLogger().info("Subscribing to events for broadcaster user id '{}' returned status '{}', trying again...", broadcasterUserId, response.batchStatus());
-            }
-        }
-        getLogger().warn("Failed to subscribe to events for broadcaster user id '{}', after multiple tries! Bot might not work properly for this channel!", broadcasterUserId);
-        throw new InitializationException(broadcasterUserId, "Event subscription");
-    }
-
-    public TimerDto initializeTimer(String channelId, String channelName) throws MissingChannelConfigurationException, DuplicateTimerException, InitializationException {
+    public TimerDto initializeTimer(String channelId, String channelName, SubathonCommandEvent command) throws DuplicateTimerException {
         if (domainTimers.containsKey(channelId)) {
             getLogger().info("Timer for channel id '{}'already exists.", channelId);
             throw new DuplicateTimerException(channelId);
         }
-        // Make sure messages are subscribed to
-        initializeTwitchMessageSubscription(channelId);
-
-        // Make sure all events are subscribed to
-        initializeAllTwitchEventSubscriptions(channelId);
 
         Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(channelId);
 
@@ -146,7 +98,14 @@ public class TimerService implements HasLogger {
         timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
 
         domainTimers.put(channelId, domainTimer);
-        domainTimer.getAndClearPendingEvents().forEach(timerEventService::saveAndPublish);
+        domainTimer.getAndClearPendingEvents().forEach(event -> {
+            try {
+                event.setSubathonEvent(command);
+                timerEventService.saveAndPublish(event);
+            } catch (Exception e) {
+                getLogger().error("Exception while saving timer event!", e);
+            }
+        });
 
         return domainTimer.toDto();
     }

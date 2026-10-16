@@ -8,6 +8,7 @@ import tools.subathon.timer.datamodel.TimerDto;
 import tools.subathon.timer.datamodel.enums.Command;
 import tools.subathon.timer.dataservice.data.mapper.TimerMapper;
 import tools.subathon.timer.dataservice.service.TimerService;
+import tools.subathon.timer.dataservice.service.exception.DuplicateTimerException;
 import tools.subathon.timer.dataservice.service.exception.MissingChannelConfigurationException;
 import tools.subathon.timer.dataservice.service.exception.MissingTimerException;
 import tools.subathon.timer.proto.timer.v1.AddTimeRequest;
@@ -54,9 +55,9 @@ public class TimerRpcService extends TimerServiceGrpc.TimerServiceImplBase {
         Instant timestamp = Instant.ofEpochSecond(request.getTimestamp().getSeconds(), request.getTimestamp().getNanos());
         SubathonCommandEvent command = createEvent(Command.INIT, request.getUsername(), timestamp, request.getSource());
         try {
-            TimerDto timer = timerService.startTimer(request.getChannelId(), command);
+            TimerDto timer = timerService.initializeTimer(request.getChannelId(), request.getUsername(), command);
             responseObserver.onNext(timerMapper.dtoToProto(timer));
-        } catch (MissingTimerException | MissingChannelConfigurationException e) {
+        } catch (DuplicateTimerException e) {
             responseObserver.onError(e);
         } finally {
             responseObserver.onCompleted();
