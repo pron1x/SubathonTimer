@@ -17,10 +17,4 @@ public class GlobalRabbitMQ {
     public static final String TWITCH_EVENT_QUEUE = "twitch-event-queue"; // Bound to 'event.twitch' in dataservice
     public static final String TWITCH_EVENT_ROUTING_KEY = "event.twitch"; // Routes to twitch-event-queue
 
-    @Deprecated public static final String BOT_COMMAND_ROUTING_KEY = "bot.dataservice.timer";
-
-    // Bot Channel Management RPC queue
-    @Deprecated public static final String CHANNEL_MANAGEMENT_QUEUE = "bot-channel-management-rpc-queue";
-    @Deprecated public static final String CHANNEL_MANAGEMENT_ROUTING_KEY = "dataservice.bot.channel-management";
-
 }
