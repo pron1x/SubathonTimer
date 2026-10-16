@@ -70,13 +70,6 @@ public class TimerService implements HasLogger {
         // This will check if a timer exists and schedule the end time for it
         for (TimerEntity timerEntity : timerList) {
             Timer domainTimer = Timer.fromDto(mapper.entityToDto(timerEntity));
-            try {
-                initializeTwitchMessageSubscription(domainTimer.getChannelId());
-                initializeAllTwitchEventSubscriptions(domainTimer.getChannelId());
-            } catch (InitializationException e) {
-                getLogger().warn("Could not initialize twitch event subscriptions! Skipping this timer!");
-                continue;
-            }
             domainTimers.put(domainTimer.getChannelId(), domainTimer);
 
             if (domainTimer.isActive()) {

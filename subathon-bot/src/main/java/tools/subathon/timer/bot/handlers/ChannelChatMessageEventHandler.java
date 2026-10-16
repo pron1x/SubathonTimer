@@ -156,4 +156,8 @@ public class ChannelChatMessageEventHandler implements HasLogger {
         donationMessageParsers.put(broadcasterUserId, new Tuple<>(messageUser, TemplateParser.builder().withTemplate(parserTemplate).build()));
     }
 
+    public void removeDonationMessageParser(String broadcasterUserId) {
+        donationMessageParsers.remove(broadcasterUserId);
+    }
+
 }

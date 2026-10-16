@@ -9,6 +9,8 @@ spring:
           target:
           default:
             deadline: 3s
+        dataservice-stream:
+          target:
 
 bot:
   twitch:

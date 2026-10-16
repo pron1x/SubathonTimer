@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package tools.subathon.grpc.subscription.v1;
+
+import "google/protobuf/empty.proto";
+
+option java_package = "tools.subathon.timer.proto.subscription.v1";
+option java_multiple_files = true;
+
+service EventSubscriptionService {
+  rpc WatchTargets(google.protobuf.Empty) returns (stream SubscriptionTargetUpdate);
+}
+
+message SubscriptionTargetUpdate {
+  uint64 revision = 1;
+
+  oneof update {
+    SubscriptionTargetSnapshot snapshot = 2;
+    SubscriptionTargetChange change = 3;
+  }
+}
+
+message SubscriptionTargetSnapshot {
+  repeated SubscriptionTarget targets = 1;
+}
+
+message SubscriptionTargetChange {
+  SubscriptionTarget target = 1;
+}
+
+message SubscriptionTarget {
+  string broadcaster_id = 1;
+  optional DonationMessageParser donation_message_parser = 2;
+}
+
+message DonationMessageParser {
+  optional string pattern = 1;
+  optional string user = 2;
+}

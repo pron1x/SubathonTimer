@@ -6,6 +6,7 @@ import tools.subathon.timer.datamodel.user.UserConfigurationDto;
 import tools.subathon.timer.dataservice.data.entity.UserConfigurationEntity;
 import tools.subathon.timer.dataservice.data.mapper.UserConfigMapper;
 import tools.subathon.timer.dataservice.data.repository.UserConfigurationRepository;
+import tools.subathon.timer.dataservice.subscriptions.SubscriptionTargetRegistry;
 
 import java.util.Optional;
 
@@ -39,17 +40,17 @@ public class UserConfigurationService {
 
     private final UserConfigurationRepository userConfigurationRepository;
 
-    private final BotRpcService botRpcService;
+    private final SubscriptionTargetRegistry subscriptionTargetRegistry;
 
-    public UserConfigurationService(UserConfigMapper mapper, UserConfigurationRepository userConfigurationRepository, BotRpcService botRpcService) {
+    public UserConfigurationService(UserConfigMapper mapper, UserConfigurationRepository userConfigurationRepository, SubscriptionTargetRegistry subscriptionTargetRegistry) {
         this.mapper = mapper;
         this.userConfigurationRepository = userConfigurationRepository;
-        this.botRpcService = botRpcService;
+        this.subscriptionTargetRegistry = subscriptionTargetRegistry;
     }
 
     public UserConfigurationDto save(UserConfigurationDto userConfigurationModel) {
         UserConfigurationDto config = mapper.entityToDto(userConfigurationRepository.save(mapper.dtoToEntity(userConfigurationModel)));
-        botRpcService.requestMessageEventSubscription(config.channelId(), config.donationTemplatePattern(), config.donationTemplateUser());
+        subscriptionTargetRegistry.publishUpdate(userConfigurationRepository.findByChannelId(config.channelId()));
         return config;
     }
 
