@@ -15,9 +15,9 @@ public class SecurityConfiguration {
 
     @Bean
     protected SecurityFilterChain configureFilterChain(HttpSecurity http) {
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.oauth2LoginPage("/oauth2/authorization/twitch");
-        });
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer ->
+                configurer.oauth2LoginPage("/oauth2/authorization/twitch")
+                .defaultSuccessUrl("/dashboard", true));
 
         http.authorizeHttpRequests(auth -> {
             auth.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll();
