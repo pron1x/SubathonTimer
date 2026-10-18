@@ -25,9 +25,8 @@ public class ConfigurationRpcService extends ConfigurationServiceGrpc.Configurat
 
     @Override
     public void getConfiguration(GetConfigurationRequest request, StreamObserver<UserConfiguration> responseObserver) {
-        Optional<UserConfiguration> config = configurationService.getForChannel(request.getChannelId()).map(configMapper::dtoToProto);
-        config.ifPresentOrElse(responseObserver::onNext,
-                () -> { throw new EntityNotFoundException(); });
+        UserConfiguration config = configMapper.dtoToProto(configurationService.getOrCreateForChannel(request.getChannelId()));
+        responseObserver.onNext(config);
         responseObserver.onCompleted();
     }
 
