@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package tools.subathon.grpc.configuration.v1;
 
+import "google/protobuf/wrappers.proto";
+
 option java_package = "tools.subathon.timer.proto.configuration.v1";
 option java_multiple_files = true;
 
@@ -24,8 +26,8 @@ message UserConfiguration {
   optional int32 currency_seconds = 11;
   optional int32 bits_seconds = 12;
   optional int32 initial_seconds = 13;
-  optional string donation_template_pattern = 14;
-  optional string donation_template_user = 15;
+  optional google.protobuf.StringValue donation_template_pattern = 14;
+  optional google.protobuf.StringValue donation_template_user = 15;
   optional int32 monetized_seconds_per_point = 16;
 }
 

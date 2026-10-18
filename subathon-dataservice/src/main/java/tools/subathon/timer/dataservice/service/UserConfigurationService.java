@@ -49,9 +49,9 @@ public class UserConfigurationService {
     }
 
     public UserConfigurationDto save(UserConfigurationDto userConfigurationModel) {
-        UserConfigurationDto config = mapper.entityToDto(userConfigurationRepository.save(mapper.dtoToEntity(userConfigurationModel)));
-        subscriptionTargetRegistry.publishUpdate(userConfigurationRepository.findByChannelId(config.channelId()));
-        return config;
+        UserConfigurationEntity config = userConfigurationRepository.save(mapper.dtoToEntity(userConfigurationModel));
+        subscriptionTargetRegistry.publishUpdate(config);
+        return mapper.entityToDto(config);
     }
 
     public Optional<UserConfigurationDto> getForChannel(String channelId) {

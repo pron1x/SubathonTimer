@@ -39,10 +39,7 @@ public class SubscriptionTargetRegistry implements HasLogger {
 
     public void publishUpdate(UserConfigurationEntity userConfigurationEntity) {
         SubscriptionTargetChange update = SubscriptionTargetChange.newBuilder()
-                .setTarget(SubscriptionTarget.newBuilder().setBroadcasterId(userConfigurationEntity.getChannelId())
-                        .setDonationMessageParser(DonationMessageParser.newBuilder()
-                                .setUser(userConfigurationEntity.getDonationTemplateUser())
-                                .setPattern(userConfigurationEntity.getDonationTemplatePattern())))
+                .setTarget(configEntityToSubscriptionTarget(userConfigurationEntity))
                 .build();
         synchronized (lock) {
             clients.entrySet().removeIf(entry -> {
@@ -67,13 +64,24 @@ public class SubscriptionTargetRegistry implements HasLogger {
     private SubscriptionTargetUpdate snapshotUpdate(Iterable<UserConfigurationEntity> targets) {
         SubscriptionTargetSnapshot.Builder snapshotBuilder = SubscriptionTargetSnapshot.newBuilder();
         targets.forEach(target -> snapshotBuilder.addTargets(
-                SubscriptionTarget.newBuilder()
-                        .setBroadcasterId(target.getChannelId())
-                        .setDonationMessageParser(
-                                DonationMessageParser.newBuilder()
-                                        .setUser(target.getDonationTemplateUser())
-                                        .setPattern(target.getDonationTemplatePattern()))));
+                configEntityToSubscriptionTarget(target)
+        ));
 
         return SubscriptionTargetUpdate.newBuilder().setSnapshot(snapshotBuilder).build();
+    }
+
+    private SubscriptionTarget configEntityToSubscriptionTarget(UserConfigurationEntity entity) {
+        DonationMessageParser.Builder parserBuilder = DonationMessageParser.newBuilder();
+        if (entity.getDonationTemplateUser() != null) {
+            parserBuilder.setUser(entity.getDonationTemplateUser());
+        }
+        if (entity.getDonationTemplatePattern() != null) {
+            parserBuilder.setPattern(entity.getDonationTemplatePattern());
+        }
+
+        return SubscriptionTarget.newBuilder()
+                .setBroadcasterId(entity.getChannelId())
+                .setDonationMessageParser(parserBuilder)
+                .build();
     }
 }
