@@ -1,6 +1,12 @@
 package tools.subathon.timer.bot;
 
+import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.eventsub.EventSubSubscription;
+import com.github.twitch4j.eventsub.EventSubSubscriptionStatus;
+import com.github.twitch4j.eventsub.condition.ChannelChatCondition;
+import com.github.twitch4j.eventsub.condition.ChannelEventSubCondition;
+import com.github.twitch4j.eventsub.condition.ChannelFollowV2Condition;
+import com.github.twitch4j.eventsub.condition.ChannelRaidCondition;
 import com.github.twitch4j.eventsub.events.ChannelBitsUseEvent;
 import com.github.twitch4j.eventsub.events.ChannelChatMessageEvent;
 import com.github.twitch4j.eventsub.events.ChannelChatNotificationEvent;
@@ -40,17 +46,19 @@ public class SubathonBot implements HasLogger {
     private final ChannelRaidEventHandler raidEventHandler;
     private final ChannelBitsUseEventHandler bitsEventHandler;
     private final ChannelChatNotificationHandler chatNotificationHandler;
+    private final TwitchClient twitchClient;
 
     @Autowired
     public SubathonBot(IEventSubConduit conduit, ChannelChatMessageEventHandler chatMessageEventHandler,
                        ChannelFollowEventHandler followEventHandler, ChannelRaidEventHandler raidEventHandler,
-                       ChannelBitsUseEventHandler bitsEventHandler, ChannelChatNotificationHandler chatNotificationHandler) {
+                       ChannelBitsUseEventHandler bitsEventHandler, ChannelChatNotificationHandler chatNotificationHandler, TwitchClient twitchClient) {
         this.chatMessageEventHandler = chatMessageEventHandler;
         this.conduit = conduit;
         this.followEventHandler = followEventHandler;
         this.raidEventHandler = raidEventHandler;
         this.bitsEventHandler = bitsEventHandler;
         this.chatNotificationHandler = chatNotificationHandler;
+        this.twitchClient = twitchClient;
     }
 
     @PostConstruct
@@ -61,6 +69,37 @@ public class SubathonBot implements HasLogger {
         conduit.getEventManager().onEvent(ChannelRaidEvent.class, raidEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelBitsUseEvent.class, bitsEventHandler::handle);
         conduit.getEventManager().onEvent(ChannelChatNotificationEvent.class, chatNotificationHandler::handle);
+
+        getLogger().info("Conduit ID: {}", conduit.getConduitId());
+        twitchClient.getHelix().getEventSubSubscriptions(null, null, null, null, null, null).execute()
+                .getSubscriptions().forEach(sub -> {
+                    if (!conduit.getConduitId().equals(sub.getTransport().getConduitId())) {
+                        getLogger().debug("Stale '{}' event sub subscription for old conduit '{}' found. Status: {}", sub.getType().getName(), sub.getTransport().getConduitId(), sub.getStatus());
+                        return;
+                    }
+                    if (!sub.getStatus().equals(EventSubSubscriptionStatus.ENABLED)) {
+                        getLogger().info("Inactive '{}' event sub subscription for active conduit found. Status: {}", sub.getType().getName(), sub.getStatus());
+                        return;
+                    }
+                    String broadcasterId = switch (sub.getCondition()) {
+                        case ChannelChatCondition chatCondition -> chatCondition.getBroadcasterUserId();
+                        case ChannelFollowV2Condition followCondition -> followCondition.getBroadcasterUserId();
+                        case ChannelRaidCondition raidCondition -> raidCondition.getToBroadcasterUserId();
+                        case ChannelEventSubCondition eventSubCondition -> eventSubCondition.getBroadcasterUserId();
+                        default -> {
+                            getLogger().info("Unexpected condition type '{}' in existing event sub subscriptions for active conduit", sub.getCondition().getClass().getSimpleName());
+                            yield null;
+                        }
+                    };
+                    if (broadcasterId == null) {
+                        return;
+                    }
+                    getLogger().info("Adding existing '{}' event sub subscription for broadcaster '{}' with status '{}' to cache...", sub.getType().getName(), broadcasterId, sub.getStatus());
+                    if (!subscriptions.containsKey(broadcasterId)) {
+                        subscriptions.put(broadcasterId, new ArrayList<>());
+                    }
+                    subscriptions.get(broadcasterId).add(sub);
+                });
     }
 
     public void subscribeToDonationMessages(String broadcasterUserId, String parserTemplate, String messageUser) {
