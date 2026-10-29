@@ -1,13 +1,13 @@
 package tools.subathon.timer.dataservice.service;
 
 import org.springframework.amqp.AmqpException;
+import org.springframework.context.event.EventListener;
 import tools.subathon.timer.datamodel.TimerEventDto;
 import tools.subathon.timer.dataservice.data.domain.TimerEvent;
 import tools.subathon.timer.dataservice.data.entity.TimerEventEntity;
 import tools.subathon.timer.dataservice.data.mapper.TimerEventMapper;
 import tools.subathon.timer.dataservice.data.repository.TimerEventRepository;
 import tools.subathon.timer.util.interfaces.HasLogger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -19,7 +19,6 @@ public class TimerEventService implements HasLogger {
     private final TimerEventMapper mapper;
     private final TimerEventRepository timerEventRepository;
 
-    @Autowired
     public TimerEventService(RabbitMessageService messageService, TimerEventMapper mapper, TimerEventRepository timerEventRepository) {
         this.messageService = messageService;
         this.mapper = mapper;
@@ -38,6 +37,7 @@ public class TimerEventService implements HasLogger {
         return mapper.entityToDomain(timerEventEntity);
     }
 
+    @EventListener
     public void saveAndPublish(TimerEvent timerEvent) {
         TimerEvent savedEvent = save(timerEvent);
         publishEvent(mapper.domainToDto(savedEvent));
