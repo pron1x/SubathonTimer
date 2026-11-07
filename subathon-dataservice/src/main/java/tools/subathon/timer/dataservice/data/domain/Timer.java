@@ -9,13 +9,10 @@ import tools.subathon.timer.dataservice.data.domain.exception.InsufficientTimeRe
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class Timer {
-
-    private final List<TimerEvent> pendingEvents = new ArrayList<>();
+public final class Timer {
 
     private final Clock clock;
 
@@ -45,25 +42,25 @@ public class Timer {
         this(channelId, channelName, monetizedSecondsPerPoint, Clock.systemUTC());
     }
 
-    public static Timer initialize(String channelId, String channelName, Clock clock) {
+    public static TimerInitialization initialize(String channelId, String channelName, Clock clock) {
         return initialize(channelId, channelName, null, clock);
     }
 
-    public static Timer initialize(String channelId, String channelName, Integer monetizedSecondsPerPoint, Clock clock) {
+    public static TimerInitialization initialize(String channelId, String channelName, Integer monetizedSecondsPerPoint, Clock clock) {
         Timer timer = new Timer(channelId, channelName, monetizedSecondsPerPoint, clock);
         timer.state = TimerState.INITIALIZED;
         timer.updateTime = clock.instant();
-        timer.pendingEvents.add(
-                timer.createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.UNINITIALIZED, TimerState.INITIALIZED, null, null, 0, 0));
+        TimerEvent event =
+                timer.createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.UNINITIALIZED, TimerState.INITIALIZED, null, null, 0, 0);
 
-        return timer;
+        return new TimerInitialization(timer, event);
     }
 
-    public static Timer initialize(String channelId, String channelName, Integer monetizedSecondsPerPoint) {
+    public static TimerInitialization initialize(String channelId, String channelName, Integer monetizedSecondsPerPoint) {
         return initialize(channelId, channelName, monetizedSecondsPerPoint, Clock.systemUTC());
     }
 
-    public void start(Duration startTime) {
+    public TimerEvent start(Duration startTime) {
         if(this.state != TimerState.INITIALIZED) {
             throw new IllegalTimerStateException(TimerState.INITIALIZED, this.state, "start");
         }
@@ -73,10 +70,10 @@ public class Timer {
         this.startTime = now;
         this.endTime = now.plus(startTime);
         this.updateTime = now;
-        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.INITIALIZED, TimerState.TICKING, null, this.endTime, this.points, this.points));
+        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.INITIALIZED, TimerState.TICKING, null, this.endTime, this.points, this.points);
     }
 
-    public void stop() {
+    public TimerEvent stop() {
         if(this.state != TimerState.TICKING) {
             throw new IllegalTimerStateException(TimerState.TICKING, this.state, "stop");
         }
@@ -87,10 +84,10 @@ public class Timer {
         this.endTime = now;
         this.updateTime = now;
 
-        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, oldEndTime, this.endTime, this.points, this.points));
+        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.ENDED, oldEndTime, this.endTime, this.points, this.points);
     }
 
-    public void pause() {
+    public TimerEvent pause() {
         if(this.state != TimerState.TICKING) {
             throw new IllegalTimerStateException(TimerState.TICKING, this.state, "pause");
         }
@@ -98,10 +95,10 @@ public class Timer {
         this.state = TimerState.PAUSED;
         this.updateTime = now;
 
-        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.PAUSED, this.endTime, this.endTime, this.points, this.points));
+        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.TICKING, TimerState.PAUSED, this.endTime, this.endTime, this.points, this.points);
     }
 
-    public void resume() {
+    public TimerEvent resume() {
         if(this.state != TimerState.PAUSED) {
             throw new IllegalTimerStateException(TimerState.PAUSED, this.state, "resume");
         }
@@ -114,14 +111,14 @@ public class Timer {
         this.endTime = oldEndTime.plus(pausedDuration);
         this.updateTime = now;
 
-        pendingEvents.add(createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.PAUSED, TimerState.TICKING, oldEndTime, this.endTime, this.points, this.points));
+        return createTimerEvent(TimerEventType.STATE_CHANGE, TimerState.PAUSED, TimerState.TICKING, oldEndTime, this.endTime, this.points, this.points);
     }
 
-    public void addTime(Duration duration) {
-        addTime(duration, false);
+    public TimerEvent addTime(Duration duration) {
+        return addTime(duration, false);
     }
 
-    public void addTime(Duration duration, boolean monetized) {
+    public TimerEvent addTime(Duration duration, boolean monetized) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
             throw new IllegalTimerStateException(List.of(TimerState.TICKING, TimerState.PAUSED), this.state, "add time");
         }
@@ -140,10 +137,10 @@ public class Timer {
             calculatePoints();
         }
         this.updateTime = now;
-        pendingEvents.add(createTimerEvent(TimerEventType.TIME_ADDITION, this.state, this.state, oldEndTime, this.endTime, oldPoints, this.points));
+        return createTimerEvent(TimerEventType.TIME_ADDITION, this.state, this.state, oldEndTime, this.endTime, oldPoints, this.points);
     }
 
-    public void subtractTime(Duration duration) {
+    public TimerEvent subtractTime(Duration duration) {
         if(this.state != TimerState.TICKING && this.state != TimerState.PAUSED) {
             throw new IllegalTimerStateException(List.of(TimerState.TICKING, TimerState.PAUSED), this.state, "subtract time");
         }
@@ -160,7 +157,7 @@ public class Timer {
         }
         this.endTime = newEnd;
         this.updateTime = now;
-        pendingEvents.add(createTimerEvent(TimerEventType.TIME_SUBTRACTION, this.state, this.state, oldEndTime, this.endTime, this.points, this.points));
+        return createTimerEvent(TimerEventType.TIME_SUBTRACTION, this.state, this.state, oldEndTime, this.endTime, this.points, this.points);
     }
 
     private void calculatePoints() {
@@ -263,9 +260,5 @@ public class Timer {
         };
     }
 
-    public List<TimerEvent> getAndClearPendingEvents() {
-        List<TimerEvent> events = List.copyOf(pendingEvents);
-        pendingEvents.clear();
-        return events;
-    }
+    public record TimerInitialization(Timer timer, TimerEvent event) {}
 }
