@@ -69,18 +69,18 @@ public class TimerService implements HasLogger {
 
         // This will check if a timer exists and schedule the end time for it
         for (TimerEntity timerEntity : timerList) {
-            Timer domainTimer = Timer.fromDto(mapper.entityToDto(timerEntity));
-            domainTimers.put(domainTimer.getChannelId(), domainTimer);
+            Timer timer = Timer.fromDto(mapper.entityToDto(timerEntity));
+            domainTimers.put(timer.getChannelId(), timer);
 
-            if (domainTimer.isActive()) {
-                timerControl.scheduleCommand(domainTimer.getChannelId(), () -> {
+            if (timer.isActive()) {
+                timerControl.scheduleCommand(timer.getChannelId(), () -> {
                     try {
-                        stopTimer(domainTimer.getChannelId());
+                        stopTimer(timer.getChannelId());
                     } catch (MissingTimerException e) {
                         getLogger().error("Something went VERY wrong here! Timer with scheduled command is missing!", e);
                     }
-                }, domainTimer.getEndTime());
-                timerControl.setPaused(domainTimer.getChannelId(), domainTimer.isPaused());
+                }, timer.getEndTime());
+                timerControl.setPaused(timer.getChannelId(), timer.isPaused());
             }
         }
     }
@@ -106,15 +106,15 @@ public class TimerService implements HasLogger {
         return timer.toDto();
     }
 
-    public TimerDto startTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException, MissingChannelConfigurationException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
+    public TimerDto startTimer(String channelId, SubathonCommandEvent commandEvent) throws MissingTimerException, MissingChannelConfigurationException {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to start it!", channelId);
             throw new MissingTimerException(channelId, "start");
         }
-        if (domainTimer.isActive()) {
+        if (timer.isActive()) {
             getLogger().warn("Cannot start the timer if it is already active. An active timer has to be resumed! Delegating to resumeTimer...");
-            return resumeTimer(channelId, command);
+            return resumeTimer(channelId, commandEvent);
         }
         getLogger().debug("Starting timer");
         Optional<UserConfigurationDto> config = userConfigurationService.getForChannel(channelId);
@@ -123,9 +123,9 @@ public class TimerService implements HasLogger {
             throw new MissingChannelConfigurationException(channelId);
         }
 
-        TimerEvent event = domainTimer.start(Duration.ofSeconds(config.get().initialSeconds()));
-        event.setSubathonEvent(command);
-        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
+        TimerEvent timerEvent = timer.start(Duration.ofSeconds(config.get().initialSeconds()));
+        timerEvent.setSubathonEvent(commandEvent);
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(timer.toDto())));
         // Schedule `stopTimer` command
         timerControl.scheduleCommand(channelId, () -> {
             try {
@@ -133,86 +133,86 @@ public class TimerService implements HasLogger {
             } catch (MissingTimerException e) {
                 getLogger().error("Something went VERY wrong here! Timer with scheduled command is missing!", e);
             }
-        }, domainTimer.getEndTime());
+        }, timer.getEndTime());
         timerControl.setPaused(channelId, false);
 
-        publisher.publishEvent(event);
+        publisher.publishEvent(timerEvent);
 
         getLogger().info("Timer started. [Start: {}, End: {}]", returnTimer.startTime(), returnTimer.endTime());
         return returnTimer;
     }
 
-    public TimerDto pauseTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
+    public TimerDto pauseTimer(String channelId, SubathonCommandEvent commandEvent) throws MissingTimerException {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to pause it!", channelId);
             throw new MissingTimerException(channelId, "pause");
         }
 
         getLogger().debug("Pausing timer");
-        if(domainTimer.isPaused() || !domainTimer.isActive()) {
+        if(timer.isPaused() || !timer.isActive()) {
             getLogger().info("Timer for channel id '{}' not active or already paused, not able to pause it!", channelId);
             return null;
         }
-        TimerEvent event = domainTimer.pause();
-        event.setSubathonEvent(command);
+        TimerEvent timerEvent = timer.pause();
+        timerEvent.setSubathonEvent(commandEvent);
 
-        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(timer.toDto())));
 
         timerControl.setPaused(channelId, true);
 
-        publisher.publishEvent(event);
+        publisher.publishEvent(timerEvent);
 
         return returnTimer;
     }
 
-    private TimerDto resumeTimer(String channelId, SubathonCommandEvent command) throws MissingTimerException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
+    private TimerDto resumeTimer(String channelId, SubathonCommandEvent commandEvent) throws MissingTimerException {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to resume it!", channelId);
             throw new MissingTimerException(channelId, "resume");
         }
         getLogger().debug("Resuming timer!");
 
-        if(!domainTimer.isPaused() || !domainTimer.isActive()) {
+        if(!timer.isPaused() || !timer.isActive()) {
             getLogger().info("Timer for channel id '{}' not active or not paused, not able to resume it!", channelId);
             return null;
         }
-        TimerEvent event = domainTimer.resume();
-        event.setSubathonEvent(command);
-        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(domainTimer.toDto())));
+        TimerEvent timerEvent = timer.resume();
+        timerEvent.setSubathonEvent(commandEvent);
+        TimerDto returnTimer = mapper.entityToDto(timerRepository.save(mapper.dtoToEntity(timer.toDto())));
 
         // Resume execution with new end
-        timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
+        timerControl.setExecutionTime(channelId, timer.getEndTime());
         timerControl.setPaused(channelId, false);
 
-        publisher.publishEvent(event);
+        publisher.publishEvent(timerEvent);
 
         return returnTimer;
     }
 
     public void stopTimer(String channelId) throws MissingTimerException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
             getLogger().info("Timer for channel id '{}' not found, not able to stop!", channelId);
             throw new MissingTimerException(channelId, "stop");
         }
         getLogger().debug("Stopping timer!");
 
-        TimerEvent event = domainTimers.get(channelId).stop();
-        timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
+        TimerEvent timerEvent = domainTimers.get(channelId).stop();
+        timerRepository.save(mapper.dtoToEntity(timer.toDto()));
         domainTimers.remove(channelId);
 
 
-        publisher.publishEvent(event);
+        publisher.publishEvent(timerEvent);
 
-        getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", domainTimer.getChannelId(), event.getTimestamp(), event.getCurrentEndTime());
+        getLogger().info("Stopped timer for channel '{}' at {}. End timestamp: {}", timer.getChannelId(), timerEvent.getTimestamp(), timerEvent.getCurrentEndTime());
     }
 
-    public TimerDto addSubathonEventTime(String channelId, SubathonEvent event) throws MissingTimerException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
-            getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, event);
+    public TimerDto addSubathonEventTime(String channelId, SubathonEvent subathonEvent) throws MissingTimerException {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to handle subathon event '{}'!", channelId, subathonEvent);
             throw new MissingTimerException(channelId, "add time to");
         }
         UserConfigurationDto config = userConfigurationService.getForChannel(channelId).orElse(null);
@@ -221,53 +221,53 @@ public class TimerService implements HasLogger {
             config = userConfigurationService.getDefaultConfiguration();
         }
 
-        if(!domainTimer.isActive()) {
+        if(!timer.isActive()) {
             // TODO: Add timer not active exception?
-            getLogger().info("Not adding time to timer because it is not active. Ignoring {}.", event);
+            getLogger().info("Not adding time to timer because it is not active. Ignoring {}.", subathonEvent);
             return null;
         }
 
-        if (event.getType() == EventType.FOLLOW && timerEventService.hasUserFollowed(domainTimer.getId(), event.getUsername())) {
-            getLogger().info("'{}' tried to follow again, ignoring follow event.", event.getUsername());
+        if (subathonEvent.getType() == EventType.FOLLOW && timerEventService.hasUserFollowed(timer.getId(), subathonEvent.getUsername())) {
+            getLogger().info("'{}' tried to follow again, ignoring follow event.", subathonEvent.getUsername());
             return null;
         }
-        getLogger().debug("Adding time for event: {}", event);
+        getLogger().debug("Adding time for event: {}", subathonEvent);
 
-        long secondsToAdd = getSecondsToAdd(event, config);
-        getLogger().info("Adding {} seconds for event {}", secondsToAdd, event);
-        TimerEvent timerEvent = domainTimer.addTime(Duration.ofSeconds(secondsToAdd), isMonetized(event));
-        timerEvent.setSubathonEvent(event);
-        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
+        long secondsToAdd = getSecondsToAdd(subathonEvent, config);
+        getLogger().info("Adding {} seconds for event {}", secondsToAdd, subathonEvent);
+        TimerEvent timerEvent = timer.addTime(Duration.ofSeconds(secondsToAdd), isMonetized(subathonEvent));
+        timerEvent.setSubathonEvent(subathonEvent);
+        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(timer.toDto()));
 
         // Change scheduled timer
-        timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
+        timerControl.setExecutionTime(channelId, timer.getEndTime());
 
         publisher.publishEvent(timerEvent);
 
         return mapper.entityToDto(returnTimer);
     }
 
-    public TimerDto subtractSubathonEventTime(String channelId, SubathonCommandEvent command) throws MissingTimerException {
-        Timer domainTimer = domainTimers.get(channelId);
-        if (domainTimer == null) {
-            getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, command);
+    public TimerDto subtractSubathonEventTime(String channelId, SubathonCommandEvent commandEvent) throws MissingTimerException {
+        Timer timer = domainTimers.get(channelId);
+        if (timer == null) {
+            getLogger().info("Timer for channel id '{}' not found, not able to execute subtract command '{}'!", channelId, commandEvent);
             throw new MissingTimerException(channelId, "subtract time from");
         }
 
-        if(!domainTimer.isActive()) {
+        if(!timer.isActive()) {
             // TODO: Add timer not active exception?
-            getLogger().info("Not removing time from timer because it is not active. Ignoring {}.", command);
+            getLogger().info("Not removing time from timer because it is not active. Ignoring {}.", commandEvent);
             return null;
         }
         getLogger().debug("Removing time from the timer.");
 
-        TimerEvent domainEvent = domainTimer.subtractTime(Duration.ofSeconds(command.getSeconds()));
-        domainEvent.setSubathonEvent(command);
+        TimerEvent timerEvent = timer.subtractTime(Duration.ofSeconds(commandEvent.getSeconds()));
+        timerEvent.setSubathonEvent(commandEvent);
 
-        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(domainTimer.toDto()));
-        timerControl.setExecutionTime(channelId, domainTimer.getEndTime());
+        TimerEntity returnTimer = timerRepository.save(mapper.dtoToEntity(timer.toDto()));
+        timerControl.setExecutionTime(channelId, timer.getEndTime());
 
-        publisher.publishEvent(domainEvent);
+        publisher.publishEvent(timerEvent);
 
         return mapper.entityToDto(returnTimer);
     }
@@ -277,12 +277,12 @@ public class TimerService implements HasLogger {
         return entity.map(mapper::entityToDto).orElse(null);
     }
 
-    private static long getSecondsToAdd(SubathonEvent event, UserConfigurationDto config) {
-        double seconds = switch (event.getType()) {
+    private static long getSecondsToAdd(SubathonEvent subathonEvent, UserConfigurationDto config) {
+        double seconds = switch (subathonEvent.getType()) {
             case FOLLOW -> config.followerSeconds();
-            case RAID -> ((SubathonRaidEvent) event).getAmount() * config.raiderSeconds();
+            case RAID -> ((SubathonRaidEvent) subathonEvent).getAmount() * config.raiderSeconds();
             case SUBSCRIPTION -> {
-                SubathonSubEvent subEvent = (SubathonSubEvent) event;
+                SubathonSubEvent subEvent = (SubathonSubEvent) subathonEvent;
                 if (subEvent.isGifted()) {
                     yield subEvent.getTier() == SubTier.TIER_3 ? config.tier3GiftSeconds() :
                             subEvent.getTier() == SubTier.TIER_2 ? config.tier2GiftSeconds() : config.tier1GiftSeconds();
@@ -294,16 +294,16 @@ public class TimerService implements HasLogger {
             /* Since we cannot guarantee that community gift get send before the individual sub gifts, we add no time for them but only log!
             Time is added for the individual gifted subscriptions */
             case GIFT -> 0;
-            case TIP -> config.currencySeconds() * ((SubathonTipEvent) event).getAmount();
-            case CHEER -> config.bitsSeconds() * (((SubathonBitCheerEvent) event).getAmount() / 100.0);
-            case COMMAND -> ((SubathonCommandEvent) event).getSeconds();
+            case TIP -> config.currencySeconds() * ((SubathonTipEvent) subathonEvent).getAmount();
+            case CHEER -> config.bitsSeconds() * (((SubathonBitCheerEvent) subathonEvent).getAmount() / 100.0);
+            case COMMAND -> ((SubathonCommandEvent) subathonEvent).getSeconds();
         };
 
         return (long) Math.ceil(seconds);
     }
 
-    private static boolean isMonetized(SubathonEvent event) {
-        return switch (event.getType()) {
+    private static boolean isMonetized(SubathonEvent subathonEvent) {
+        return switch (subathonEvent.getType()) {
             case SUBSCRIPTION, GIFT, TIP, CHEER -> true;
             case RAID, FOLLOW, COMMAND -> false;
         };
